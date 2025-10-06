@@ -5,26 +5,23 @@ import { Subject, takeUntil } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatTableModule } from '@angular/material/table';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatStepperModule } from '@angular/material/stepper';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
-import { NgxSpinnerService } from 'ngx-spinner';
 
 import { ProductService } from '../../core/services/product.service';
 import { SaleService } from '../../core/services/sale.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Product } from '../../core/models/product.model';
-import { CartItem, Sale, PaymentMethod } from '../../core/models/sale.model';
-import { CustomerDialogComponent } from './customer-dialog/customer-dialog.component';
+import { CartItem, Sale } from '../../core/models/sale.model';
+import { User } from '../../core/models/user.model';
 import { PaymentDialogComponent } from './payment-dialog/payment-dialog.component';
+
+interface CartTotals {
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+}
 
 @Component({
   selector: 'app-pos',
@@ -35,635 +32,156 @@ import { PaymentDialogComponent } from './payment-dialog/payment-dialog.componen
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatTableModule,
-    MatSelectModule,
     MatDialogModule,
-    MatSnackBarModule,
-    MatChipsModule,
-    MatTabsModule,
-    MatStepperModule,
     MatProgressSpinnerModule
   ],
-  template: `
-    <div class="pos-container">
-      <!-- Header -->
-      <div class="pos-header">
-        <h1>Punto de Venta</h1>
-        <div class="header-actions">
-          <button mat-raised-button color="primary" (click)="openCustomerDialog()">
-            <mat-icon>person_add</mat-icon>
-            Cliente
-          </button>
-          <button mat-raised-button color="accent" (click)="clearCart()">
-            <mat-icon>clear_all</mat-icon>
-            Limpiar
-          </button>
-        </div>
-      </div>
-
-      <div class="pos-content">
-        <!-- Left Panel - Product Search & Categories -->
-        <div class="left-panel">
-          <mat-card class="search-card">
-            <mat-card-header>
-              <mat-card-title>Buscar Producto</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Código o Nombre</mat-label>
-                <input matInput 
-                       [(ngModel)]="searchTerm" 
-                       (keyup.enter)="searchProduct()"
-                       placeholder="Ingrese código de barras o nombre">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
-              
-              <button mat-raised-button 
-                      color="primary" 
-                      class="full-width" 
-                      (click)="searchProduct()"
-                      [disabled]="!searchTerm">
-                Buscar
-              </button>
-            </mat-card-content>
-          </mat-card>
-
-          <!-- Product Categories -->
-          <mat-card class="categories-card">
-            <mat-card-header>
-              <mat-card-title>Categorías</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="categories-grid">
-                <button mat-raised-button 
-                        *ngFor="let category of categories" 
-                        [class.selected]="selectedCategory === category"
-                        (click)="selectCategory(category)"
-                        class="category-button">
-                  {{ category }}
-                </button>
-                <button mat-raised-button 
-                        [class.selected]="!selectedCategory"
-                        (click)="selectCategory(null)"
-                        class="category-button">
-                  Todas
-                </button>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <!-- Product Grid -->
-          <mat-card class="products-card">
-            <mat-card-header>
-              <mat-card-title>Productos</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="products-grid" *ngIf="!isLoadingProducts">
-                <div class="product-item" 
-                     *ngFor="let product of filteredProducts" 
-                     (click)="addToCart(product)">
-                  <div class="product-image">
-                    <mat-icon>inventory_2</mat-icon>
-                  </div>
-                  <div class="product-info">
-                    <h4 class="product-name">{{ product.name }}</h4>
-                    <p class="product-code">{{ product.code }}</p>
-                    <p class="product-price">${{ product.price | number:'1.2-2' }}</p>
-                    <p class="product-stock" [class.low-stock]="product.stock <= product.minStock">
-                      Stock: {{ product.stock }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="loading-container" *ngIf="isLoadingProducts">
-                <mat-spinner diameter="40"></mat-spinner>
-                <p>Cargando productos...</p>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <!-- Right Panel - Cart & Checkout -->
-        <div class="right-panel">
-          <!-- Cart -->
-          <mat-card class="cart-card">
-            <mat-card-header>
-              <mat-card-title>Carrito de Compras</mat-card-title>
-              <span class="cart-count">{{ cartItems.length }} items</span>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="cart-items" *ngIf="cartItems.length > 0; else emptyCart">
-                <div class="cart-item" *ngFor="let item of cartItems; let i = index">
-                  <div class="item-info">
-                    <h4>{{ item.product.name }}</h4>
-                    <p>${{ item.unitPrice | number:'1.2-2' }} x {{ item.quantity }}</p>
-                  </div>
-                  <div class="item-actions">
-                    <button mat-icon-button (click)="decreaseQuantity(i)">
-                      <mat-icon>remove</mat-icon>
-                    </button>
-                    <span class="quantity">{{ item.quantity }}</span>
-                    <button mat-icon-button (click)="increaseQuantity(i)">
-                      <mat-icon>add</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="removeFromCart(i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                  <div class="item-total">
-                    ${{ item.total | number:'1.2-2' }}
-                  </div>
-                </div>
-              </div>
-
-              <ng-template #emptyCart>
-                <div class="empty-cart">
-                  <mat-icon>shopping_cart</mat-icon>
-                  <p>Carrito vacío</p>
-                </div>
-              </ng-template>
-            </mat-card-content>
-          </mat-card>
-
-          <!-- Cart Summary -->
-          <mat-card class="summary-card" *ngIf="cartItems.length > 0">
-            <mat-card-content>
-              <div class="summary-row">
-                <span>Subtotal:</span>
-                <span>${{ cartTotals.subtotal | number:'1.2-2' }}</span>
-              </div>
-              <div class="summary-row">
-                <span>Impuestos:</span>
-                <span>${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
-              </div>
-              <div class="summary-row total-row">
-                <span>Total:</span>
-                <span>${{ cartTotals.total | number:'1.2-2' }}</span>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <!-- Checkout -->
-          <mat-card class="checkout-card" *ngIf="cartItems.length > 0">
-            <mat-card-content>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tipo de Factura</mat-label>
-                <mat-select [(ngModel)]="invoiceType">
-                  <mat-option value="consumidor_final">Consumidor Final</mat-option>
-                  <mat-option value="credito_fiscal">Crédito Fiscal</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <button mat-raised-button 
-                      color="primary" 
-                      class="checkout-button full-width"
-                      (click)="proceedToCheckout()"
-                      [disabled]="isProcessingSale">
-                <mat-spinner *ngIf="isProcessingSale" diameter="20"></mat-spinner>
-                <span *ngIf="!isProcessingSale">
-                  <mat-icon>payment</mat-icon>
-                  Proceder al Pago
-                </span>
-              </button>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .pos-container {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: #f5f5f5;
-    }
-
-    .pos-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      background-color: #1976d2;
-      color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .pos-header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .pos-content {
-      flex: 1;
-      display: flex;
-      gap: 16px;
-      padding: 16px;
-      overflow: hidden;
-    }
-
-    .left-panel {
-      flex: 2;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-    }
-
-    .right-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-    }
-
-    .full-width {
-      width: 100%;
-    }
-
-    .search-card,
-    .categories-card,
-    .products-card,
-    .cart-card,
-    .summary-card,
-    .checkout-card {
-      margin-bottom: 16px;
-    }
-
-    .categories-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 8px;
-    }
-
-    .category-button {
-      font-size: 12px;
-    }
-
-    .category-button.selected {
-      background-color: #1976d2;
-      color: white;
-    }
-
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .product-item {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background-color: white;
-    }
-
-    .product-item:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transform: translateY(-2px);
-    }
-
-    .product-image {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .product-image mat-icon {
-      font-size: 32px;
-      color: #666;
-    }
-
-    .product-name {
-      font-size: 14px;
-      font-weight: 500;
-      margin: 0 0 4px 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .product-code {
-      font-size: 12px;
-      color: #666;
-      margin: 0 0 4px 0;
-    }
-
-    .product-price {
-      font-size: 16px;
-      font-weight: 600;
-      color: #1976d2;
-      margin: 0 0 4px 0;
-    }
-
-    .product-stock {
-      font-size: 12px;
-      margin: 0;
-    }
-
-    .product-stock.low-stock {
-      color: #f44336;
-      font-weight: 500;
-    }
-
-    .loading-container {
-      text-align: center;
-      padding: 40px;
-    }
-
-    .cart-count {
-      background-color: #1976d2;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-    }
-
-    .cart-items {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .cart-item {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      gap: 12px;
-    }
-
-    .item-info {
-      flex: 1;
-    }
-
-    .item-info h4 {
-      margin: 0 0 4px 0;
-      font-size: 14px;
-    }
-
-    .item-info p {
-      margin: 0;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .item-actions {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .quantity {
-      min-width: 20px;
-      text-align: center;
-      font-weight: 500;
-    }
-
-    .item-total {
-      font-weight: 600;
-      color: #1976d2;
-    }
-
-    .empty-cart {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-
-    .empty-cart mat-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .total-row {
-      font-weight: 600;
-      font-size: 1.1rem;
-      border-top: 1px solid #ddd;
-      padding-top: 8px;
-      color: #1976d2;
-    }
-
-    .checkout-button {
-      height: 48px;
-      font-size: 16px;
-    }
-  `]
+  templateUrl: './pos.component.html',
+  styleUrls: ['./pos.component.scss']
 })
 export class PosComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
-  // Product search and filtering
-  searchTerm = '';
-  selectedCategory: string | null = null;
-  categories: string[] = [];
+  products: Product[] = [];
   filteredProducts: Product[] = [];
-  isLoadingProducts = false;
-
-  // Cart management
   cartItems: CartItem[] = [];
-  cartTotals = { subtotal: 0, taxAmount: 0, total: 0 };
-
-  // Sale configuration
-  invoiceType: 'consumidor_final' | 'credito_fiscal' = 'consumidor_final';
-  isProcessingSale = false;
-
-  // Customer information
-  customerInfo = {
-    name: '',
-    document: '',
-    email: ''
-  };
+  cartTotals: CartTotals = { subtotal: 0, taxAmount: 0, total: 0 };
+  currentUser: User | null = null;
+  searchTerm = '';
+  isLoadingProducts = true;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private productService: ProductService,
     private saleService: SaleService,
     private authService: AuthService,
     private dialog: MatDialog,
-    private toastr: ToastrService,
-    private spinner: NgxSpinnerService
+    private toastr: ToastrService
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.currentUser = this.authService.getCurrentUser();
     this.loadProducts();
-    this.loadCategories();
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  loadProducts() {
+  private loadProducts(): void {
     this.isLoadingProducts = true;
+    
     this.productService.getProducts()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (products) => {
-          this.filteredProducts = products.filter(p => p.isActive);
+          this.products = products.filter(p => p.isActive);
+          this.filteredProducts = this.products;
           this.isLoadingProducts = false;
         },
         error: (error) => {
+          console.error('Error loading products:', error);
+          this.toastr.error('Error al cargar los productos');
           this.isLoadingProducts = false;
-          this.toastr.error('Error al cargar productos', 'Error');
         }
       });
   }
 
-  loadCategories() {
-    this.productService.getCategories()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (categories) => {
-          this.categories = categories.map(c => c.name);
-        },
-        error: (error) => {
-          console.error('Error loading categories:', error);
-        }
-      });
-  }
-
-  searchProduct() {
-    if (!this.searchTerm.trim()) return;
-
-    this.isLoadingProducts = true;
-    this.productService.getProducts({ search: this.searchTerm })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (products) => {
-          this.filteredProducts = products.filter(p => p.isActive);
-          this.isLoadingProducts = false;
-        },
-        error: (error) => {
-          this.isLoadingProducts = false;
-          this.toastr.error('Error al buscar productos', 'Error');
-        }
-      });
-  }
-
-  selectCategory(category: string | null) {
-    this.selectedCategory = category;
-    this.filterProducts();
-  }
-
-  filterProducts() {
-    if (this.selectedCategory) {
-      this.filteredProducts = this.filteredProducts.filter(
-        p => p.category === this.selectedCategory
-      );
+  searchProducts(): void {
+    if (!this.searchTerm.trim()) {
+      this.filteredProducts = this.products;
+      return;
     }
+
+    const term = this.searchTerm.toLowerCase();
+    this.filteredProducts = this.products.filter(product =>
+      product.code.toLowerCase().includes(term) ||
+      product.name.toLowerCase().includes(term) ||
+      (product.barcode && product.barcode.toLowerCase().includes(term))
+    );
   }
 
-  addToCart(product: Product) {
-    const existingItem = this.cartItems.find(item => item.product.id === product.id);
+  addToCart(product: Product): void {
+    if (product.stock <= 0) {
+      this.toastr.warning('Producto sin stock disponible');
+      return;
+    }
+
+    const existingItem = this.cartItems.find(item => item.productId === product.id);
     
     if (existingItem) {
       if (existingItem.quantity < product.stock) {
         existingItem.quantity++;
-        this.updateItemTotal(existingItem);
-        this.calculateCartTotals();
+        this.updateCartItemTotals(existingItem);
       } else {
-        this.toastr.warning('Stock insuficiente', 'Advertencia');
+        this.toastr.warning('Stock insuficiente');
+        return;
       }
     } else {
-      if (product.stock > 0) {
-        const newItem: CartItem = {
-          product,
-          quantity: 1,
-          unitPrice: product.price,
-          subtotal: product.price,
-          tax: product.taxRate,
-          total: this.calculateItemTotal(product.price, 1, product.taxRate)
-        };
-        this.cartItems.push(newItem);
-        this.calculateCartTotals();
-      } else {
-        this.toastr.warning('Producto sin stock', 'Advertencia');
-      }
+      const newItem: CartItem = {
+        productId: product.id,
+        productName: product.name,
+        quantity: 1,
+        unitPrice: product.price,
+        subtotal: product.price,
+        tax: product.taxRate,
+        total: product.price * (1 + product.taxRate / 100)
+      };
+      
+      this.cartItems.push(newItem);
     }
+
+    this.calculateCartTotals();
+    this.toastr.success(`${product.name} agregado al carrito`);
   }
 
-  increaseQuantity(index: number) {
+  removeFromCart(index: number): void {
+    this.cartItems.splice(index, 1);
+    this.calculateCartTotals();
+  }
+
+  increaseQuantity(index: number): void {
     const item = this.cartItems[index];
-    if (item.quantity < item.product.stock) {
+    const product = this.products.find(p => p.id === item.productId);
+    
+    if (product && item.quantity < product.stock) {
       item.quantity++;
-      this.updateItemTotal(item);
+      this.updateCartItemTotals(item);
       this.calculateCartTotals();
     } else {
-      this.toastr.warning('Stock insuficiente', 'Advertencia');
+      this.toastr.warning('Stock insuficiente');
     }
   }
 
-  decreaseQuantity(index: number) {
+  decreaseQuantity(index: number): void {
     const item = this.cartItems[index];
+    
     if (item.quantity > 1) {
       item.quantity--;
-      this.updateItemTotal(item);
+      this.updateCartItemTotals(item);
       this.calculateCartTotals();
     } else {
       this.removeFromCart(index);
     }
   }
 
-  removeFromCart(index: number) {
-    this.cartItems.splice(index, 1);
-    this.calculateCartTotals();
-  }
-
-  clearCart() {
+  clearCart(): void {
     this.cartItems = [];
     this.calculateCartTotals();
   }
 
-  private updateItemTotal(item: CartItem) {
+  private updateCartItemTotals(item: CartItem): void {
     item.subtotal = item.unitPrice * item.quantity;
-    item.total = this.calculateItemTotal(item.unitPrice, item.quantity, item.tax);
+    item.total = item.subtotal * (1 + item.tax / 100);
   }
 
-  private calculateItemTotal(unitPrice: number, quantity: number, taxRate: number): number {
-    const subtotal = unitPrice * quantity;
-    const tax = subtotal * (taxRate / 100);
-    return subtotal + tax;
+  private calculateCartTotals(): void {
+    this.cartTotals.subtotal = this.cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+    this.cartTotals.taxAmount = this.cartItems.reduce((sum, item) => sum + (item.total - item.subtotal), 0);
+    this.cartTotals.total = this.cartItems.reduce((sum, item) => sum + item.total, 0);
   }
 
-  private calculateCartTotals() {
-    const totals = this.saleService.calculateCartTotals(this.cartItems);
-    this.cartTotals = totals;
-  }
-
-  openCustomerDialog() {
-    const dialogRef = this.dialog.open(CustomerDialogComponent, {
-      width: '400px',
-      data: { ...this.customerInfo }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.customerInfo = result;
-      }
-    });
-  }
-
-  proceedToCheckout() {
+  openPaymentDialog(): void {
     if (this.cartItems.length === 0) {
-      this.toastr.warning('Agregue productos al carrito', 'Advertencia');
+      this.toastr.warning('El carrito está vacío');
       return;
     }
 
@@ -672,8 +190,7 @@ export class PosComponent implements OnInit, OnDestroy {
       data: {
         cartItems: this.cartItems,
         cartTotals: this.cartTotals,
-        invoiceType: this.invoiceType,
-        customerInfo: this.customerInfo
+        currentUser: this.currentUser
       }
     });
 
@@ -684,21 +201,13 @@ export class PosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private processSale(paymentData: any) {
-    this.isProcessingSale = true;
-    this.spinner.show();
-
-    const currentUser = this.authService.getCurrentUser();
-    if (!currentUser) {
-      this.toastr.error('Usuario no autenticado', 'Error');
-      return;
-    }
-
-    const saleData = {
-      customerName: this.customerInfo.name || undefined,
-      customerDocument: this.customerInfo.document || undefined,
-      customerEmail: this.customerInfo.email || undefined,
-      invoiceType: this.invoiceType,
+  private processSale(paymentData: any): void {
+    const saleData: Omit<Sale, 'id' | 'createdAt'> = {
+      invoiceNumber: this.generateInvoiceNumber(),
+      customerName: paymentData.customerName,
+      customerDocument: paymentData.customerDocument,
+      customerEmail: paymentData.customerEmail,
+      invoiceType: paymentData.invoiceType,
       items: this.cartItems,
       subtotal: this.cartTotals.subtotal,
       taxAmount: this.cartTotals.taxAmount,
@@ -707,27 +216,43 @@ export class PosComponent implements OnInit, OnDestroy {
       paymentMethod: paymentData.paymentMethod,
       paymentAmount: paymentData.paymentAmount,
       change: paymentData.change,
-      cashierId: currentUser.id,
-      cashierName: currentUser.name,
-      status: 'completed' as const
+      cashierId: this.currentUser?.id || 0,
+      cashierName: this.currentUser?.name || '',
+      status: 'completed'
     };
 
     this.saleService.createSale(saleData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (sale) => {
-          this.isProcessingSale = false;
-          this.spinner.hide();
-          this.toastr.success('Venta procesada exitosamente', 'Éxito');
+          this.toastr.success('Venta procesada exitosamente');
           this.clearCart();
-          this.customerInfo = { name: '', document: '', email: '' };
-          // Aquí podrías abrir un diálogo para imprimir el ticket
+          // Aquí podrías abrir un diálogo de recibo o redirigir
         },
         error: (error) => {
-          this.isProcessingSale = false;
-          this.spinner.hide();
-          this.toastr.error('Error al procesar la venta', 'Error');
+          console.error('Error processing sale:', error);
+          this.toastr.error('Error al procesar la venta');
         }
       });
+  }
+
+  private generateInvoiceNumber(): string {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+    
+    return `CF-${year}${month}${day}-${random}`;
+  }
+
+  getStockClass(stock: number, minStock: number): string {
+    if (stock <= minStock) {
+      return 'stock-low';
+    } else if (stock <= minStock * 2) {
+      return 'stock-normal';
+    } else {
+      return 'stock-high';
+    }
   }
 }

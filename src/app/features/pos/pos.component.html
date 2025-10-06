@@ -1,0 +1,129 @@
+<div class="pos-container">
+  <div class="pos-header">
+    <h1>Punto de Venta</h1>
+    <div class="user-info">
+      <span>Cajero: {{ currentUser?.name }}</span>
+    </div>
+  </div>
+
+  <div class="pos-content">
+    <!-- Productos -->
+    <div class="products-section">
+      <div class="products-header">
+        <h2>Productos</h2>
+        <div class="search-bar">
+          <input 
+            type="text" 
+            placeholder="Buscar por código, nombre o código de barras..."
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="searchProducts()"
+            class="search-input">
+          <button mat-raised-button color="primary" (click)="searchProducts()">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <div class="products-grid" *ngIf="!isLoadingProducts; else loadingProducts">
+        <div 
+          class="product-card" 
+          *ngFor="let product of filteredProducts"
+          (click)="addToCart(product)">
+          <div class="product-image">
+            <mat-icon>inventory</mat-icon>
+          </div>
+          <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <p class="product-code">{{ product.code }}</p>
+            <p class="product-price">${{ product.price | number:'1.2-2' }}</p>
+            <p class="product-stock" [class]="getStockClass(product.stock, product.minStock)">
+              Stock: {{ product.stock }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #loadingProducts>
+        <div class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Cargando productos...</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Carrito -->
+    <div class="cart-section">
+      <div class="cart-header">
+        <h2>Carrito de Compras</h2>
+        <button 
+          mat-raised-button 
+          color="warn" 
+          (click)="clearCart()"
+          [disabled]="cartItems.length === 0">
+          <mat-icon>clear_all</mat-icon>
+          Limpiar
+        </button>
+      </div>
+
+      <div class="cart-items" *ngIf="cartItems.length > 0; else emptyCart">
+        <div class="cart-item" *ngFor="let item of cartItems; let i = index">
+          <div class="item-info">
+            <h4>{{ item.productName }}</h4>
+            <p>${{ item.unitPrice | number:'1.2-2' }} x {{ item.quantity }}</p>
+          </div>
+          <div class="item-actions">
+            <button mat-icon-button (click)="decreaseQuantity(i)">
+              <mat-icon>remove</mat-icon>
+            </button>
+            <span class="quantity">{{ item.quantity }}</span>
+            <button mat-icon-button (click)="increaseQuantity(i)">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button mat-icon-button (click)="removeFromCart(i)" color="warn">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <div class="item-total">
+            ${{ item.total | number:'1.2-2' }}
+          </div>
+        </div>
+      </div>
+
+      <ng-template #emptyCart>
+        <div class="empty-cart">
+          <mat-icon>shopping_cart</mat-icon>
+          <p>El carrito está vacío</p>
+        </div>
+      </ng-template>
+
+      <!-- Totales -->
+      <div class="cart-totals" *ngIf="cartItems.length > 0">
+        <div class="total-row">
+          <span>Subtotal:</span>
+          <span>${{ cartTotals.subtotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row">
+          <span>Impuestos:</span>
+          <span>${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row total-final">
+          <span>Total:</span>
+          <span>${{ cartTotals.total | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="cart-actions" *ngIf="cartItems.length > 0">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="openPaymentDialog()"
+          class="checkout-button">
+          <mat-icon>payment</mat-icon>
+          Proceder al Pago
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

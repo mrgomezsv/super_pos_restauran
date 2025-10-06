@@ -1,0 +1,139 @@
+.payment-dialog {
+  min-width: 500px;
+  max-width: 600px;
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+
+  mat-icon {
+    color: #1976d2;
+  }
+}
+
+.sale-summary {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+
+    &.total-row {
+      font-weight: 600;
+      font-size: 16px;
+      color: #1976d2;
+      border-top: 1px solid #ddd;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+  }
+}
+
+.customer-info,
+.payment-method {
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+}
+
+.change-display {
+  margin-bottom: 16px;
+}
+
+.change-card,
+.error-card {
+  margin-bottom: 16px;
+}
+
+.change-info,
+.error-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .change-icon {
+    color: #4caf50;
+    font-size: 32px;
+  }
+
+  .error-icon {
+    color: #f44336;
+    font-size: 32px;
+  }
+
+  h4 {
+    margin: 0 0 4px 0;
+    color: #333;
+    font-size: 16px;
+  }
+
+  h3 {
+    margin: 0 0 4px 0;
+    color: #f44336;
+    font-size: 16px;
+  }
+
+  p {
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+.change-amount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #4caf50;
+}
+
+.error-info h3 {
+  color: #f44336;
+}
+
+.error-info p {
+  color: #f44336;
+  font-weight: 500;
+}
+
+mat-dialog-actions {
+  padding: 16px 0 0 0;
+  margin: 0;
+
+  button {
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .payment-dialog {
+    min-width: auto;
+    max-width: 90vw;
+  }
+}

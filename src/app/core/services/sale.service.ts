@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Sale, SaleSummary, CartItem } from '../models/sale.model';
+import { Sale, SaleSummary } from '../models/sale.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,33 +11,29 @@ export class SaleService {
 
   constructor(private http: HttpClient) {}
 
-  createSale(sale: Omit<Sale, 'id' | 'invoiceNumber' | 'createdAt'>): Observable<Sale> {
-    return this.http.post<Sale>(`${this.API_URL}/sales`, sale);
-  }
-
-  getSales(filters?: {
-    startDate?: string;
-    endDate?: string;
-    cashierId?: number;
-    invoiceType?: string;
-    status?: string;
-  }): Observable<Sale[]> {
+  getSales(
+    startDate?: string,
+    endDate?: string,
+    cashierId?: number,
+    paymentMethod?: string,
+    status?: string
+  ): Observable<Sale[]> {
     let params = new HttpParams();
     
-    if (filters?.startDate) {
-      params = params.set('startDate', filters.startDate);
+    if (startDate) {
+      params = params.set('startDate', startDate);
     }
-    if (filters?.endDate) {
-      params = params.set('endDate', filters.endDate);
+    if (endDate) {
+      params = params.set('endDate', endDate);
     }
-    if (filters?.cashierId) {
-      params = params.set('cashierId', filters.cashierId.toString());
+    if (cashierId) {
+      params = params.set('cashierId', cashierId.toString());
     }
-    if (filters?.invoiceType) {
-      params = params.set('invoiceType', filters.invoiceType);
+    if (paymentMethod) {
+      params = params.set('paymentMethod', paymentMethod);
     }
-    if (filters?.status) {
-      params = params.set('status', filters.status);
+    if (status) {
+      params = params.set('status', status);
     }
 
     return this.http.get<Sale[]>(`${this.API_URL}/sales`, { params });
@@ -47,65 +43,35 @@ export class SaleService {
     return this.http.get<Sale>(`${this.API_URL}/sales/${id}`);
   }
 
-  getSaleByInvoiceNumber(invoiceNumber: string): Observable<Sale> {
-    return this.http.get<Sale>(`${this.API_URL}/sales/invoice/${invoiceNumber}`);
+  createSale(sale: Omit<Sale, 'id' | 'createdAt'>): Observable<Sale> {
+    return this.http.post<Sale>(`${this.API_URL}/sales`, sale);
   }
 
-  cancelSale(id: number, reason: string): Observable<Sale> {
-    return this.http.put<Sale>(`${this.API_URL}/sales/${id}/cancel`, { reason });
+  updateSale(id: number, sale: Partial<Sale>): Observable<Sale> {
+    return this.http.put<Sale>(`${this.API_URL}/sales/${id}`, sale);
   }
 
-  refundSale(id: number, reason: string): Observable<Sale> {
-    return this.http.put<Sale>(`${this.API_URL}/sales/${id}/refund`, { reason });
+  deleteSale(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/sales/${id}`);
   }
 
-  getSalesSummary(filters?: {
-    startDate?: string;
-    endDate?: string;
-    cashierId?: number;
-  }): Observable<SaleSummary> {
+  getSalesSummary(
+    startDate?: string,
+    endDate?: string,
+    cashierId?: number
+  ): Observable<SaleSummary> {
     let params = new HttpParams();
     
-    if (filters?.startDate) {
-      params = params.set('startDate', filters.startDate);
+    if (startDate) {
+      params = params.set('startDate', startDate);
     }
-    if (filters?.endDate) {
-      params = params.set('endDate', filters.endDate);
+    if (endDate) {
+      params = params.set('endDate', endDate);
     }
-    if (filters?.cashierId) {
-      params = params.set('cashierId', filters.cashierId.toString());
+    if (cashierId) {
+      params = params.set('cashierId', cashierId.toString());
     }
 
     return this.http.get<SaleSummary>(`${this.API_URL}/sales/summary`, { params });
-  }
-
-  generateInvoiceNumber(invoiceType: 'consumidor_final' | 'credito_fiscal'): Observable<{ invoiceNumber: string }> {
-    return this.http.get<{ invoiceNumber: string }>(`${this.API_URL}/sales/invoice-number/${invoiceType}`);
-  }
-
-  printReceipt(saleId: number): Observable<{ success: boolean; message: string }> {
-    return this.http.post<{ success: boolean; message: string }>(`${this.API_URL}/sales/${saleId}/print`, {});
-  }
-
-  // Métodos para cálculos del carrito
-  calculateItemTotal(item: CartItem): number {
-    const subtotal = item.unitPrice * item.quantity;
-    const tax = subtotal * (item.tax / 100);
-    return subtotal + tax;
-  }
-
-  calculateCartTotals(items: CartItem[]): {
-    subtotal: number;
-    taxAmount: number;
-    total: number;
-  } {
-    const subtotal = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
-    const taxAmount = items.reduce((sum, item) => {
-      const itemSubtotal = item.unitPrice * item.quantity;
-      return sum + (itemSubtotal * (item.tax / 100));
-    }, 0);
-    const total = subtotal + taxAmount;
-
-    return { subtotal, taxAmount, total };
   }
 }

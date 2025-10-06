@@ -109,7 +109,8 @@ class ProductCategoryUpdate(BaseModel):
 
 # Esquemas de venta
 class CartItem(BaseModel):
-    product: ProductResponse
+    productId: int
+    productName: str
     quantity: int
     unitPrice: float
     subtotal: float
@@ -117,7 +118,8 @@ class CartItem(BaseModel):
     total: float
 
 class CartItemCreate(BaseModel):
-    product: ProductResponse
+    productId: int = Field(..., gt=0)
+    productName: str = Field(..., min_length=1)
     quantity: int = Field(..., gt=0)
     unitPrice: float = Field(..., gt=0)
     subtotal: float = Field(..., ge=0)
@@ -148,7 +150,7 @@ class SaleResponse(BaseModel):
     customerDocument: Optional[str] = None
     customerEmail: Optional[str] = None
     invoiceType: str
-    items: List[CartItemCreate]
+    items: List[CartItem]
     subtotal: float
     taxAmount: float
     discountAmount: float

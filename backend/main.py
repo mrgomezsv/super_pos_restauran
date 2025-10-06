@@ -16,7 +16,7 @@ from schemas import (
     UserLogin, UserResponse, UserCreate, UserUpdate,
     ProductResponse, ProductCreate, ProductUpdate,
     SaleCreate, SaleResponse, SaleSummary,
-    LoginResponse
+    LoginResponse, CartItem as CartItemSchema
 )
 
 # Crear aplicación FastAPI
@@ -146,7 +146,7 @@ def generate_invoice_number(invoice_type: str) -> str:
     
     return f"{prefix}-{year:02d}{month:02d}{day:02d}-{random}"
 
-def calculate_totals(items: List[CartItem]) -> dict:
+def calculate_totals(items: List[CartItemSchema]) -> dict:
     """Calcular totales del carrito"""
     subtotal = sum(item.unitPrice * item.quantity for item in items)
     tax_amount = sum(item.unitPrice * item.quantity * (item.tax / 100) for item in items)
@@ -178,16 +178,7 @@ async def login(user_data: UserLogin):
     
     return LoginResponse(
         token=token,
-        user=UserResponse(
-            id=user.id,
-            username=user.username,
-            name=user.name,
-            email=user.email,
-            role=user.role,
-            isActive=user.isActive,
-            createdAt=user.createdAt,
-            lastLogin=user.lastLogin
-        ),
+        user=UserResponse.model_validate(user.model_dump()),
         expiresIn=3600
     )
 
@@ -220,7 +211,7 @@ async def get_products(
     if isActive is not None:
         filtered_products = [p for p in filtered_products if p.isActive == isActive]
     
-    return [ProductResponse.from_orm(p) for p in filtered_products]
+    return [ProductResponse.model_validate(p.model_dump()) for p in filtered_products]
 
 @app.get("/api/products/{product_id}", response_model=ProductResponse)
 async def get_product(product_id: int):
@@ -228,7 +219,7 @@ async def get_product(product_id: int):
     product = next((p for p in products_db if p.id == product_id), None)
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return ProductResponse.from_orm(product)
+    return ProductResponse.model_validate(product.model_dump())
 
 @app.get("/api/products/code/{code}", response_model=ProductResponse)
 async def get_product_by_code(code: str):
@@ -236,7 +227,7 @@ async def get_product_by_code(code: str):
     product = next((p for p in products_db if p.code == code), None)
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return ProductResponse.from_orm(product)
+    return ProductResponse.model_validate(product.model_dump())
 
 @app.get("/api/products/barcode/{barcode}", response_model=ProductResponse)
 async def get_product_by_barcode(barcode: str):
@@ -244,7 +235,7 @@ async def get_product_by_barcode(barcode: str):
     product = next((p for p in products_db if p.barcode == barcode), None)
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return ProductResponse.from_orm(product)
+    return ProductResponse.model_validate(product.model_dump())
 
 @app.post("/api/products", response_model=ProductResponse)
 async def create_product(product_data: ProductCreate):
@@ -255,12 +246,12 @@ async def create_product(product_data: ProductCreate):
     
     new_product = Product(
         id=len(products_db) + 1,
-        **product_data.dict(),
+        **product_data.model_dump(),
         createdAt=datetime.now(),
         updatedAt=datetime.now()
     )
     products_db.append(new_product)
-    return ProductResponse.from_orm(new_product)
+    return ProductResponse.model_validate(new_product.model_dump())
 
 @app.put("/api/products/{product_id}", response_model=ProductResponse)
 async def update_product(product_id: int, product_data: ProductUpdate):
@@ -270,11 +261,11 @@ async def update_product(product_id: int, product_data: ProductUpdate):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
     # Actualizar campos
-    for field, value in product_data.dict(exclude_unset=True).items():
+    for field, value in product_data.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
     
     product.updatedAt = datetime.now()
-    return ProductResponse.from_orm(product)
+    return ProductResponse.model_validate(product.model_dump())
 
 @app.delete("/api/products/{product_id}")
 async def delete_product(product_id: int):
@@ -303,7 +294,7 @@ async def create_sale(sale_data: SaleCreate):
     new_sale = Sale(
         id=next_sale_id,
         invoiceNumber=generate_invoice_number(sale_data.invoiceType),
-        **sale_data.dict(),
+        **sale_data.model_dump(),
         subtotal=totals["subtotal"],
         taxAmount=totals["taxAmount"],
         total=totals["total"],
@@ -313,7 +304,7 @@ async def create_sale(sale_data: SaleCreate):
     sales_db.append(new_sale)
     next_sale_id += 1
     
-    return SaleResponse.from_orm(new_sale)
+    return SaleResponse.model_validate(new_sale.model_dump())
 
 @app.get("/api/sales", response_model=List[SaleResponse])
 async def get_sales(
@@ -343,7 +334,7 @@ async def get_sales(
     if status:
         filtered_sales = [s for s in filtered_sales if s.status == status]
     
-    return [SaleResponse.from_orm(s) for s in filtered_sales]
+    return [SaleResponse.model_validate(s.model_dump()) for s in filtered_sales]
 
 @app.get("/api/sales/summary", response_model=SaleSummary)
 async def get_sales_summary(
@@ -392,7 +383,7 @@ async def get_sales_summary(
 @app.get("/api/users", response_model=List[UserResponse])
 async def get_users():
     """Obtener lista de usuarios"""
-    return [UserResponse.from_orm(u) for u in users_db]
+    return [UserResponse.model_validate(u.model_dump()) for u in users_db]
 
 @app.post("/api/users", response_model=UserResponse)
 async def create_user(user_data: UserCreate):
@@ -403,12 +394,12 @@ async def create_user(user_data: UserCreate):
     
     new_user = User(
         id=len(users_db) + 1,
-        **user_data.dict(),
+        **user_data.model_dump(),
         createdAt=datetime.now(),
         lastLogin=None
     )
     users_db.append(new_user)
-    return UserResponse.from_orm(new_user)
+    return UserResponse.model_validate(new_user.model_dump())
 
 @app.put("/api/users/{user_id}", response_model=UserResponse)
 async def update_user(user_id: int, user_data: UserUpdate):
@@ -418,10 +409,10 @@ async def update_user(user_id: int, user_data: UserUpdate):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
     # Actualizar campos
-    for field, value in user_data.dict(exclude_unset=True).items():
+    for field, value in user_data.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
     
-    return UserResponse.from_orm(user)
+    return UserResponse.model_validate(user.model_dump())
 
 @app.delete("/api/users/{user_id}")
 async def delete_user(user_id: int):

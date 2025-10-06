@@ -21,6 +21,8 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/super-pos",
+            "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
@@ -93,7 +95,9 @@
             ],
             "styles": [
               "src/styles.scss"
-            ]
+            ],
+            "outputPath": "dist/super-pos",
+            "index": "src/index.html"
           }
         }
       }

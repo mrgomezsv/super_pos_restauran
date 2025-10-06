@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideToastr } from 'ngx-toastr';
-import { provideNgxSpinner } from 'ngx-spinner';
+// import { provideNgxSpinner } from 'ngx-spinner';
 
 import { routes } from './app.routes';
 
@@ -17,8 +17,8 @@ export const appConfig: ApplicationConfig = {
       positionClass: 'toast-top-right',
       preventDuplicates: true,
     }),
-    provideNgxSpinner({
-      type: 'ball-scale-multiple'
-    })
+    // provideNgxSpinner({
+    //   type: 'ball-scale-multiple'
+    // })
   ]
 };

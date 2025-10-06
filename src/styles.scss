@@ -1,25 +1,4 @@
 /* You can add global styles to this file, and also import other style files */
-@import '~@angular/material/theming';
-
-// Incluir el tema común de Angular Material
-@include mat-core();
-
-// Definir paleta de colores personalizada
-$primary: mat-palette($mat-blue, 600);
-$accent: mat-palette($mat-green, 600);
-$warn: mat-palette($mat-red, 600);
-
-// Crear el tema
-$theme: mat-light-theme((
-  color: (
-    primary: $primary,
-    accent: $accent,
-    warn: $warn,
-  )
-));
-
-// Aplicar el tema
-@include angular-material-theme($theme);
 
 // Estilos globales
 * {
@@ -32,14 +11,6 @@ html, body {
   padding: 0;
   font-family: 'Roboto', sans-serif;
   background-color: #f5f5f5;
-}
-
-.mat-mdc-raised-button {
-  text-transform: none !important;
-}
-
-.mat-mdc-button {
-  text-transform: none !important;
 }
 
 // Estilos para scrollbars
@@ -81,71 +52,9 @@ html, body {
   to { transform: translateX(0); }
 }
 
-// Estilos para cards
-.mat-mdc-card {
-  border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-// Estilos para botones
-.mat-mdc-raised-button {
-  border-radius: 6px !important;
-}
-
-.mat-mdc-button {
-  border-radius: 6px !important;
-}
-
-// Estilos para inputs
-.mat-mdc-form-field {
-  .mat-mdc-text-field-wrapper {
-    border-radius: 6px !important;
-  }
-}
-
-// Estilos para tabs
-.mat-mdc-tab-group {
-  .mat-mdc-tab-header {
-    border-bottom: 1px solid #e0e0e0;
-  }
-}
-
-// Estilos para tables
-.mat-mdc-table {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.mat-mdc-header-row {
-  background-color: #f5f5f5;
-}
-
-.mat-mdc-row:hover {
-  background-color: #f9f9f9;
-}
-
-// Estilos para diálogos
-.mat-mdc-dialog-container {
-  border-radius: 12px !important;
-}
-
-// Estilos para snackbar/toast
-.mat-mdc-snack-bar-container {
-  border-radius: 8px !important;
-}
-
-// Estilos para spinner
-.mat-mdc-progress-spinner {
-  margin: 0 auto;
-}
-
 // Estilos responsivos
 @media (max-width: 768px) {
-  .mat-mdc-card {
-    margin: 8px !important;
-  }
-  
-  .mat-mdc-table {
+  body {
     font-size: 14px;
   }
 }
@@ -162,10 +71,5 @@ html, body {
   
   body {
     background: white !important;
-  }
-  
-  .mat-mdc-card {
-    box-shadow: none !important;
-    border: 1px solid #ddd !important;
   }
 }

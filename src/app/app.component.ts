@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { AuthService } from './core/services/auth.service';
 import { User } from './core/models/user.model';
@@ -15,6 +15,7 @@ import { User } from './core/models/user.model';
   standalone: true,
   imports: [
     CommonModule,
+    RouterOutlet,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -135,6 +136,7 @@ import { User } from './core/models/user.model';
   `]
 })
 export class AppComponent implements OnInit {
+  @ViewChild('sidenav') sidenav!: MatSidenav;
   isLoggedIn = false;
   currentUser: User | null = null;
 

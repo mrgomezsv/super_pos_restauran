@@ -43,7 +43,8 @@ class ProductCategory(BaseModel):
     isActive: bool
 
 class CartItem(BaseModel):
-    product: Product
+    productId: int
+    productName: str
     quantity: int
     unitPrice: float
     subtotal: float
@@ -70,58 +71,4 @@ class Sale(BaseModel):
     createdAt: datetime
     status: str  # completed, cancelled, refunded
 
-# Esquemas de respuesta (sin datos sensibles)
-class UserResponse(BaseModel):
-    id: int
-    username: str
-    name: str
-    email: str
-    role: str
-    isActive: bool
-    createdAt: datetime
-    lastLogin: Optional[datetime] = None
-
-class ProductResponse(BaseModel):
-    id: int
-    code: str
-    name: str
-    description: Optional[str] = None
-    price: float
-    cost: float
-    category: str
-    brand: Optional[str] = None
-    stock: int
-    minStock: int
-    maxStock: int
-    barcode: Optional[str] = None
-    taxRate: float
-    isActive: bool
-    createdAt: datetime
-    updatedAt: datetime
-
-class SaleResponse(BaseModel):
-    id: int
-    invoiceNumber: str
-    customerName: Optional[str] = None
-    customerDocument: Optional[str] = None
-    customerEmail: Optional[str] = None
-    invoiceType: str
-    items: List[CartItem]
-    subtotal: float
-    taxAmount: float
-    discountAmount: float
-    total: float
-    paymentMethod: str
-    paymentAmount: float
-    change: float
-    cashierId: int
-    cashierName: str
-    createdAt: datetime
-    status: str
-
-class SaleSummary(BaseModel):
-    totalSales: float
-    totalTransactions: int
-    averageTicket: float
-    salesByPaymentMethod: dict
-    salesByInvoiceType: dict
+# Los esquemas de respuesta están definidos en schemas.py

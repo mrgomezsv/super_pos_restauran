@@ -1,0 +1,112 @@
+<div class="payment-dialog">
+  <div class="dialog-title">
+    <mat-icon>payment</mat-icon>
+    Procesar Pago
+  </div>
+
+  <mat-dialog-content>
+    <!-- Resumen de la venta -->
+    <div class="sale-summary">
+      <h3>Resumen de la Venta</h3>
+      <div class="summary-row">
+        <span>Subtotal:</span>
+        <span>${{ data.cartTotals.subtotal | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-row">
+        <span>Impuestos:</span>
+        <span>${{ data.cartTotals.taxAmount | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-row total-row">
+        <span>Total:</span>
+        <span>${{ data.cartTotals.total | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <!-- Información del cliente -->
+    <div class="customer-info">
+      <h3>Información del Cliente</h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre del Cliente</mat-label>
+        <input matInput [(ngModel)]="customerName" placeholder="Opcional">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Documento</mat-label>
+        <input matInput [(ngModel)]="customerDocument" placeholder="Opcional">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" [(ngModel)]="customerEmail" placeholder="Opcional">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tipo de Factura</mat-label>
+        <mat-select [(ngModel)]="invoiceType">
+          <mat-option value="consumidor_final">Consumidor Final</mat-option>
+          <mat-option value="credito_fiscal">Crédito Fiscal</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Método de pago -->
+    <div class="payment-method">
+      <h3>Método de Pago</h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Método de Pago</mat-label>
+        <mat-select [(ngModel)]="paymentMethod" (selectionChange)="onPaymentMethodChange()">
+          <mat-option value="cash">Efectivo</mat-option>
+          <mat-option value="card">Tarjeta</mat-option>
+          <mat-option value="transfer">Transferencia</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Monto Recibido</mat-label>
+        <input matInput type="number" step="0.01" [(ngModel)]="paymentAmount" (input)="calculateChange()">
+      </mat-form-field>
+    </div>
+
+    <!-- Cambio -->
+    <div class="change-display" *ngIf="paymentMethod === 'cash' && paymentAmount > 0">
+      <mat-card class="change-card">
+        <mat-card-content>
+          <div class="change-info">
+            <mat-icon class="change-icon">monetization_on</mat-icon>
+            <div>
+              <h4>Cambio</h4>
+              <p class="change-amount">${{ change | number:'1.2-2' }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Fondos insuficientes -->
+    <div class="insufficient-funds" *ngIf="change < 0">
+      <mat-card class="error-card">
+        <mat-card-content>
+          <div class="error-info">
+            <mat-icon class="error-icon">warning</mat-icon>
+            <div>
+              <h3>Fondos Insuficientes</h3>
+              <p>Faltan ${{ getAbsChange() | number:'1.2-2' }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancelar</button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="onConfirm()"
+      [disabled]="!canConfirm()">
+      <mat-icon>check_circle</mat-icon>
+      Confirmar Pago
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -1,0 +1,85 @@
+<div class="dashboard-container">
+  <h1>Dashboard</h1>
+  
+  <div class="welcome-section">
+    <h2>Bienvenido, {{ currentUser?.name }}</h2>
+    <p>Resumen de ventas del día</p>
+  </div>
+
+  <div class="stats-grid" *ngIf="!isLoading; else loadingTemplate">
+    <mat-card class="stat-card revenue-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon">attach_money</mat-icon>
+          <div class="stat-info">
+            <h3>Ingresos Totales</h3>
+            <p class="stat-value">${{ salesSummary?.totalSales | number:'1.2-2' }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card transactions-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon">receipt</mat-icon>
+          <div class="stat-info">
+            <h3>Transacciones</h3>
+            <p class="stat-value">{{ salesSummary?.totalTransactions }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card average-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon class="stat-icon">trending_up</mat-icon>
+          <div class="stat-info">
+            <h3>Ticket Promedio</h3>
+            <p class="stat-value">${{ salesSummary?.averageTicket | number:'1.2-2' }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="payment-methods" *ngIf="!isLoading">
+    <h3>Ventas por Método de Pago</h3>
+    <div class="payment-method">
+      <span>Efectivo:</span>
+      <span>${{ salesSummary?.salesByPaymentMethod?.cash | number:'1.2-2' }}</span>
+    </div>
+    <div class="payment-method">
+      <span>Tarjeta:</span>
+      <span>${{ salesSummary?.salesByPaymentMethod?.card | number:'1.2-2' }}</span>
+    </div>
+    <div class="payment-method">
+      <span>Transferencia:</span>
+      <span>${{ salesSummary?.salesByPaymentMethod?.transfer | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="quick-actions" *ngIf="!isLoading">
+    <h3>Acciones Rápidas</h3>
+    <button mat-raised-button color="primary" (click)="goToPOS()">
+      <mat-icon>point_of_sale</mat-icon>
+      Nueva Venta
+    </button>
+    <button mat-raised-button color="accent" (click)="goToProducts()">
+      <mat-icon>inventory</mat-icon>
+      Gestionar Productos
+    </button>
+    <button mat-raised-button color="warn" (click)="goToReports()">
+      <mat-icon>assessment</mat-icon>
+      Ver Reportes
+    </button>
+  </div>
+
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando datos del dashboard...</p>
+    </div>
+  </ng-template>
+</div>
