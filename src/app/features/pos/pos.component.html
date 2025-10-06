@@ -1,101 +1,181 @@
 <div class="pos-container">
-  <div class="pos-header">
-    <h1>Punto de Venta</h1>
-    <div class="user-info">
-      <span>Cajero: {{ currentUser?.name }}</span>
+  <!-- Header del POS -->
+  <header class="pos-header">
+    <div class="header-left">
+      <div class="pos-logo">
+        <mat-icon>point_of_sale</mat-icon>
+        <span>Super POS</span>
+      </div>
+      <div class="session-info">
+        <span class="cashier-name">{{ currentUser?.name }}</span>
+        <span class="session-time">{{ currentTime | date:'short' }}</span>
+      </div>
     </div>
-  </div>
-
-  <div class="pos-content">
-    <!-- Productos -->
-    <div class="products-section">
-      <div class="products-header">
-        <h2>Productos</h2>
-        <div class="search-bar">
+    
+    <div class="header-center">
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <mat-icon class="search-icon">search</mat-icon>
           <input 
             type="text" 
-            placeholder="Buscar por código, nombre o código de barras..."
+            placeholder="Buscar producto o escanear código de barras..."
             [(ngModel)]="searchTerm"
             (keyup.enter)="searchProducts()"
-            class="search-input">
-          <button mat-raised-button color="primary" (click)="searchProducts()">
-            <mat-icon>search</mat-icon>
-            Buscar
+            (input)="onSearchInput()"
+            class="search-input"
+            #searchInput>
+          <button 
+            class="clear-search" 
+            *ngIf="searchTerm"
+            (click)="clearSearch()"
+            mat-icon-button>
+            <mat-icon>clear</mat-icon>
+          </button>
+        </div>
+        <div class="search-shortcuts">
+          <button class="shortcut-btn" (click)="focusSearch()" matTooltip="F1 - Buscar">
+            <span>F1</span>
+          </button>
+          <button class="shortcut-btn" (click)="openPaymentDialog()" matTooltip="F2 - Pago" [disabled]="cartItems.length === 0">
+            <span>F2</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <div class="cart-summary">
+        <div class="items-count">
+          <mat-icon>shopping_cart</mat-icon>
+          <span>{{ cartItems.length }} items</span>
+        </div>
+        <div class="total-amount">
+          ${{ cartTotals.total | number:'1.2-2' }}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido principal del POS -->
+  <div class="pos-main">
+    <!-- Columna izquierda: Categorías y Productos -->
+    <div class="products-panel">
+      <!-- Categorías -->
+      <div class="categories-section">
+        <div class="section-header">
+          <h3>Categorías</h3>
+        </div>
+        <div class="categories-grid">
+          <button 
+            class="category-btn"
+            [class.active]="selectedCategory === ''"
+            (click)="selectCategory('')">
+            <mat-icon>apps</mat-icon>
+            <span>Todas</span>
+          </button>
+          <button 
+            *ngFor="let category of categories"
+            class="category-btn"
+            [class.active]="selectedCategory === category"
+            (click)="selectCategory(category)">
+            <mat-icon>inventory_2</mat-icon>
+            <span>{{ category }}</span>
           </button>
         </div>
       </div>
 
-      <div class="products-grid" *ngIf="!isLoadingProducts; else loadingProducts">
-        <div 
-          class="product-card" 
-          *ngFor="let product of filteredProducts"
-          (click)="addToCart(product)">
-          <div class="product-image">
-            <mat-icon>inventory</mat-icon>
-          </div>
-          <div class="product-info">
-            <h3>{{ product.name }}</h3>
-            <p class="product-code">{{ product.code }}</p>
-            <p class="product-price">${{ product.price | number:'1.2-2' }}</p>
-            <p class="product-stock" [class]="getStockClass(product.stock, product.minStock)">
-              Stock: {{ product.stock }}
-            </p>
+      <!-- Productos -->
+      <div class="products-section">
+        <div class="section-header">
+          <h3>Productos</h3>
+          <span class="products-count">{{ filteredProducts.length }} productos</span>
+        </div>
+        
+        <div class="products-grid" *ngIf="!isLoadingProducts; else loadingProducts">
+          <div 
+            class="product-card" 
+            *ngFor="let product of filteredProducts"
+            (click)="addToCart(product)"
+            [class.out-of-stock]="product.stock <= 0">
+            <div class="product-image">
+              <mat-icon>{{ getProductIcon(product.category) }}</mat-icon>
+            </div>
+            <div class="product-info">
+              <h4 class="product-name">{{ product.name }}</h4>
+              <p class="product-code">{{ product.code }}</p>
+              <div class="product-price">${{ product.price | number:'1.2-2' }}</div>
+              <div class="product-stock" [class]="getStockClass(product.stock, product.minStock)">
+                <mat-icon>{{ getStockIcon(product.stock, product.minStock) }}</mat-icon>
+                <span>{{ product.stock }} unidades</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <ng-template #loadingProducts>
-        <div class="loading-container">
-          <mat-spinner diameter="50"></mat-spinner>
-          <p>Cargando productos...</p>
-        </div>
-      </ng-template>
+        <ng-template #loadingProducts>
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando productos...</p>
+          </div>
+        </ng-template>
+      </div>
     </div>
 
-    <!-- Carrito -->
-    <div class="cart-section">
+    <!-- Columna central: Carrito de compras -->
+    <div class="cart-panel">
       <div class="cart-header">
-        <h2>Carrito de Compras</h2>
+        <h3>Carrito de Compras</h3>
         <button 
-          mat-raised-button 
-          color="warn" 
+          class="clear-cart-btn"
+          mat-icon-button 
           (click)="clearCart()"
-          [disabled]="cartItems.length === 0">
+          [disabled]="cartItems.length === 0"
+          matTooltip="Limpiar carrito">
           <mat-icon>clear_all</mat-icon>
-          Limpiar
         </button>
       </div>
 
-      <div class="cart-items" *ngIf="cartItems.length > 0; else emptyCart">
-        <div class="cart-item" *ngFor="let item of cartItems; let i = index">
-          <div class="item-info">
-            <h4>{{ item.productName }}</h4>
-            <p>${{ item.unitPrice | number:'1.2-2' }} x {{ item.quantity }}</p>
-          </div>
-          <div class="item-actions">
-            <button mat-icon-button (click)="decreaseQuantity(i)">
-              <mat-icon>remove</mat-icon>
+      <div class="cart-content">
+        <div class="cart-items" *ngIf="cartItems.length > 0; else emptyCart">
+          <div class="cart-item" *ngFor="let item of cartItems; let i = index">
+            <div class="item-image">
+              <mat-icon>{{ getProductIcon(getProductCategory(item.productId)) }}</mat-icon>
+            </div>
+            <div class="item-details">
+              <h4 class="item-name">{{ item.productName }}</h4>
+              <div class="item-price">${{ item.unitPrice | number:'1.2-2' }}</div>
+            </div>
+            <div class="item-quantity">
+              <button class="qty-btn decrease" (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
+                <mat-icon>remove</mat-icon>
+              </button>
+              <input 
+                type="number" 
+                [(ngModel)]="item.quantity"
+                (change)="updateItemQuantity(i, item.quantity)"
+                class="quantity-input"
+                min="1">
+              <button class="qty-btn increase" (click)="increaseQuantity(i)">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+            <div class="item-total">
+              ${{ item.total | number:'1.2-2' }}
+            </div>
+            <button class="remove-item" (click)="removeFromCart(i)" mat-icon-button>
+              <mat-icon>delete_outline</mat-icon>
             </button>
-            <span class="quantity">{{ item.quantity }}</span>
-            <button mat-icon-button (click)="increaseQuantity(i)">
-              <mat-icon>add</mat-icon>
-            </button>
-            <button mat-icon-button (click)="removeFromCart(i)" color="warn">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-          <div class="item-total">
-            ${{ item.total | number:'1.2-2' }}
           </div>
         </div>
-      </div>
 
-      <ng-template #emptyCart>
-        <div class="empty-cart">
-          <mat-icon>shopping_cart</mat-icon>
-          <p>El carrito está vacío</p>
-        </div>
-      </ng-template>
+        <ng-template #emptyCart>
+          <div class="empty-cart">
+            <mat-icon>shopping_cart_outlined</mat-icon>
+            <h3>Carrito Vacío</h3>
+            <p>Agrega productos para comenzar la venta</p>
+          </div>
+        </ng-template>
+      </div>
 
       <!-- Totales -->
       <div class="cart-totals" *ngIf="cartItems.length > 0">
@@ -104,25 +184,121 @@
           <span>${{ cartTotals.subtotal | number:'1.2-2' }}</span>
         </div>
         <div class="total-row">
-          <span>Impuestos:</span>
+          <span>Impuestos (13%):</span>
           <span>${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
         </div>
-        <div class="total-row total-final">
+        <div class="total-row final">
           <span>Total:</span>
           <span>${{ cartTotals.total | number:'1.2-2' }}</span>
         </div>
       </div>
+    </div>
 
-      <!-- Acciones -->
-      <div class="cart-actions" *ngIf="cartItems.length > 0">
-        <button 
-          mat-raised-button 
-          color="primary" 
-          (click)="openPaymentDialog()"
-          class="checkout-button">
-          <mat-icon>payment</mat-icon>
-          Proceder al Pago
-        </button>
+    <!-- Columna derecha: Panel de pago -->
+    <div class="payment-panel">
+      <div class="payment-header">
+        <h3>Pago</h3>
+      </div>
+
+      <div class="payment-content">
+        <!-- Teclado numérico -->
+        <div class="numeric-keypad">
+          <div class="keypad-row">
+            <button class="keypad-btn" (click)="addToPayment('1')">1</button>
+            <button class="keypad-btn" (click)="addToPayment('2')">2</button>
+            <button class="keypad-btn" (click)="addToPayment('3')">3</button>
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" (click)="addToPayment('4')">4</button>
+            <button class="keypad-btn" (click)="addToPayment('5')">5</button>
+            <button class="keypad-btn" (click)="addToPayment('6')">6</button>
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" (click)="addToPayment('7')">7</button>
+            <button class="keypad-btn" (click)="addToPayment('8')">8</button>
+            <button class="keypad-btn" (click)="addToPayment('9')">9</button>
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-btn" (click)="addToPayment('.')">.</button>
+            <button class="keypad-btn" (click)="addToPayment('0')">0</button>
+            <button class="keypad-btn clear" (click)="clearPayment()">
+              <mat-icon>backspace</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <div class="payment-methods">
+          <h4>Métodos de Pago</h4>
+          <div class="payment-buttons">
+            <button 
+              class="payment-btn cash"
+              (click)="selectPaymentMethod('cash')"
+              [class.active]="selectedPaymentMethod === 'cash'">
+              <mat-icon>money</mat-icon>
+              <span>Efectivo</span>
+            </button>
+            <button 
+              class="payment-btn card"
+              (click)="selectPaymentMethod('card')"
+              [class.active]="selectedPaymentMethod === 'card'">
+              <mat-icon>credit_card</mat-icon>
+              <span>Tarjeta</span>
+            </button>
+            <button 
+              class="payment-btn transfer"
+              (click)="selectPaymentMethod('transfer')"
+              [class.active]="selectedPaymentMethod === 'transfer'">
+              <mat-icon>account_balance</mat-icon>
+              <span>Transferencia</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Monto a pagar -->
+        <div class="payment-amount" *ngIf="selectedPaymentMethod">
+          <div class="amount-input">
+            <label>Monto a Pagar</label>
+            <div class="input-wrapper">
+              <span class="currency">$</span>
+              <input 
+                type="text" 
+                [(ngModel)]="paymentAmount"
+                placeholder="0.00"
+                class="amount-field"
+                readonly>
+            </div>
+          </div>
+          
+          <div class="payment-actions">
+            <button 
+              class="pay-btn"
+              (click)="processPayment()"
+              [disabled]="!paymentAmount || getPaymentAmount() < cartTotals.total">
+              <mat-icon>payment</mat-icon>
+              <span>Procesar Pago</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="quick-actions">
+          <h4>Acciones Rápidas</h4>
+          <div class="action-buttons">
+            <button class="action-btn" (click)="setExactAmount()" [disabled]="cartItems.length === 0">
+              <mat-icon>receipt</mat-icon>
+              <span>Monto Exacto</span>
+            </button>
+            <button class="action-btn" (click)="addDiscount()" [disabled]="cartItems.length === 0">
+              <mat-icon>local_offer</mat-icon>
+              <span>Descuento</span>
+            </button>
+            <button class="action-btn" (click)="printReceipt()" [disabled]="cartItems.length === 0">
+              <mat-icon>print</mat-icon>
+              <span>Imprimir</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

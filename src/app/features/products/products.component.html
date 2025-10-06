@@ -1,52 +1,111 @@
 <div class="products-container">
   <div class="products-header">
-    <h1>Gestión de Productos</h1>
-    <button mat-raised-button color="primary" (click)="openProductDialog()">
-      <mat-icon>add</mat-icon>
-      Nuevo Producto
-    </button>
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">Gestión de Productos</h1>
+        <p class="page-subtitle">Administra el inventario de productos y sus categorías</p>
+      </div>
+      <button class="add-product-btn" mat-raised-button color="primary" (click)="openProductDialog()">
+        <mat-icon>add</mat-icon>
+        <span>Agregar Producto</span>
+      </button>
+    </div>
   </div>
 
-  <mat-card class="filters-card">
-    <mat-card-content>
+  <div class="filters-section">
+    <div class="filters-header">
+      <h3 class="filters-title">
+        <mat-icon>tune</mat-icon>
+        Filtros de Búsqueda
+      </h3>
+      <p class="filters-subtitle">Encuentra productos específicos usando los filtros</p>
+    </div>
+    
+    <div class="filters-card">
       <form [formGroup]="filtersForm" class="filters-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Buscar</mat-label>
-          <input matInput formControlName="search" placeholder="Código, nombre o descripción">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>search</mat-icon>
+              Buscar Productos
+            </label>
+            <div class="input-container">
+              <input 
+                matInput 
+                formControlName="search" 
+                placeholder="Ingresa código, nombre o descripción del producto"
+                class="search-input">
+              <mat-icon class="input-icon">search</mat-icon>
+            </div>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Categoría</mat-label>
-          <mat-select formControlName="category">
-            <mat-option value="">Todas las categorías</mat-option>
-            <mat-option *ngFor="let category of categories" [value]="category.name">
-              {{ category.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>category</mat-icon>
+              Categoría
+            </label>
+            <div class="select-container">
+              <mat-select formControlName="category" class="category-select">
+                <mat-option value="">
+                  <div class="option-content">
+                    <mat-icon>apps</mat-icon>
+                    <span>Todas las categorías</span>
+                  </div>
+                </mat-option>
+                <mat-option *ngFor="let category of categories" [value]="category.name">
+                  <div class="option-content">
+                    <mat-icon>inventory_2</mat-icon>
+                    <span>{{ category.name }}</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </div>
+          </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Estado</mat-label>
-          <mat-select formControlName="isActive">
-            <mat-option value="">Todos</mat-option>
-            <mat-option [value]="true">Activos</mat-option>
-            <mat-option [value]="false">Inactivos</mat-option>
-          </mat-select>
-        </mat-form-field>
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>toggle_on</mat-icon>
+              Estado del Producto
+            </label>
+            <div class="select-container">
+              <mat-select formControlName="isActive" class="status-select">
+                <mat-option value="">
+                  <div class="option-content">
+                    <mat-icon>help_outline</mat-icon>
+                    <span>Todos los estados</span>
+                  </div>
+                </mat-option>
+                <mat-option [value]="true">
+                  <div class="option-content">
+                    <mat-icon class="status-active">check_circle</mat-icon>
+                    <span>Productos Activos</span>
+                  </div>
+                </mat-option>
+                <mat-option [value]="false">
+                  <div class="option-content">
+                    <mat-icon class="status-inactive">cancel</mat-icon>
+                    <span>Productos Inactivos</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+            </div>
+          </div>
+        </div>
 
-        <button mat-raised-button color="accent" (click)="applyFilters()">
-          <mat-icon>filter_list</mat-icon>
-          Filtrar
-        </button>
+        <div class="filters-actions">
+          <button type="button" class="filter-btn primary" (click)="applyFilters()">
+            <mat-icon>filter_list</mat-icon>
+            <span>Aplicar Filtros</span>
+          </button>
 
-        <button mat-button (click)="clearFilters()">
-          <mat-icon>clear</mat-icon>
-          Limpiar
-        </button>
+          <button type="button" class="filter-btn secondary" (click)="clearFilters()">
+            <mat-icon>clear_all</mat-icon>
+            <span>Limpiar Filtros</span>
+          </button>
+        </div>
       </form>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
   <mat-card class="products-table-card">
     <mat-card-content>

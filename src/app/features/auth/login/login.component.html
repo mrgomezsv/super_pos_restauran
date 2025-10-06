@@ -1,65 +1,125 @@
 <div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title class="login-title">
-        <mat-icon class="title-icon">point_of_sale</mat-icon>
-        Super POS
-      </mat-card-title>
-      <mat-card-subtitle>Iniciar Sesión</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Usuario</mat-label>
-          <input matInput formControlName="username" placeholder="Ingrese su usuario">
-          <mat-icon matSuffix>person</mat-icon>
-          <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
-            El usuario es requerido
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Contraseña</mat-label>
-          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Ingrese su contraseña">
-          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
-            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-            La contraseña es requerida
-          </mat-error>
-        </mat-form-field>
-
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="submit" 
-          class="login-button"
-          [disabled]="loginForm.invalid || isLoading">
-          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
-          <span *ngIf="!isLoading">Iniciar Sesión</span>
-        </button>
-      </form>
-    </mat-card-content>
-
-    <mat-card-footer class="login-footer">
-      <div class="demo-accounts">
-        <h4>Cuentas de Demostración</h4>
-        <div class="account-item" (click)="fillDemoAccount('admin', 'admin123')">
-          <mat-icon>admin_panel_settings</mat-icon>
-          <div>
-            <strong>Administrador</strong>
-            <span>admin / admin123</span>
+  <div class="login-background">
+    <div class="background-pattern"></div>
+    <div class="floating-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+  </div>
+  
+  <div class="login-content">
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <div class="logo-container">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
+              <path d="M9 8H11V16H9V8ZM13 8H15V16H13V8Z"/>
+            </svg>
           </div>
+          <h1 class="app-title">Super POS</h1>
+          <p class="app-subtitle">Sistema de Punto de Ventas</p>
         </div>
-        <div class="account-item" (click)="fillDemoAccount('cajero1', 'cajero123')">
-          <mat-icon>person</mat-icon>
-          <div>
-            <strong>Cajero</strong>
-            <span>cajero1 / cajero123</span>
+      </div>
+
+      <!-- Form -->
+      <div class="login-form-container">
+        <h2 class="form-title">Iniciar Sesión</h2>
+        <p class="form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+        
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <div class="form-group">
+            <label for="username" class="form-label">
+              <mat-icon>person_outline</mat-icon>
+              Nombre de Usuario
+            </label>
+            <div class="input-container">
+              <input 
+                id="username"
+                type="text" 
+                formControlName="username" 
+                placeholder="Ingresa tu nombre de usuario"
+                class="form-input"
+                [class.error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+              <mat-icon class="input-icon">person</mat-icon>
+            </div>
+            <div class="error-message" *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
+              El nombre de usuario es requerido
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">
+              <mat-icon>lock_outline</mat-icon>
+              Contraseña
+            </label>
+            <div class="input-container">
+              <input 
+                id="password"
+                [type]="hidePassword ? 'password' : 'text'" 
+                formControlName="password" 
+                placeholder="Ingresa tu contraseña"
+                class="form-input"
+                [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              <button 
+                type="button"
+                class="password-toggle" 
+                (click)="hidePassword = !hidePassword">
+                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </div>
+            <div class="error-message" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+              La contraseña es requerida
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            class="login-button"
+            [disabled]="loginForm.invalid || isLoading">
+            <div class="button-content">
+              <mat-spinner diameter="20" *ngIf="isLoading" class="button-spinner"></mat-spinner>
+              <mat-icon *ngIf="!isLoading">login</mat-icon>
+              <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+            </div>
+          </button>
+        </form>
+      </div>
+
+      <!-- Demo Accounts -->
+      <div class="demo-section">
+        <div class="demo-header">
+          <mat-icon>info_outline</mat-icon>
+          <h3>Cuentas de Demostración</h3>
+        </div>
+        <div class="demo-accounts">
+          <div class="demo-account" (click)="fillDemoAccount('admin', 'admin123')">
+            <div class="account-icon admin">
+              <mat-icon>admin_panel_settings</mat-icon>
+            </div>
+            <div class="account-info">
+              <h4>Administrador</h4>
+              <p>Acceso completo al sistema</p>
+              <code>admin / admin123</code>
+            </div>
+            <mat-icon class="account-arrow">arrow_forward_ios</mat-icon>
+          </div>
+          
+          <div class="demo-account" (click)="fillDemoAccount('cajero1', 'cajero123')">
+            <div class="account-icon cashier">
+              <mat-icon>point_of_sale</mat-icon>
+            </div>
+            <div class="account-info">
+              <h4>Cajero</h4>
+              <p>Punto de venta y reportes</p>
+              <code>cajero1 / cajero123</code>
+            </div>
+            <mat-icon class="account-arrow">arrow_forward_ios</mat-icon>
           </div>
         </div>
       </div>
-    </mat-card-footer>
-  </mat-card>
+    </div>
+  </div>
 </div>
