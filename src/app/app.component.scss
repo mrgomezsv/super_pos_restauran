@@ -332,6 +332,7 @@
             background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
             opacity: 0;
             transition: opacity var(--transition-fast);
+            pointer-events: none;
           }
           
           .nav-icon {

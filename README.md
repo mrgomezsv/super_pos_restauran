@@ -245,8 +245,8 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 ## 📞 Soporte
 
 Para soporte técnico o preguntas:
-- 📧 Email: soporte@superpos.com
-- 📱 WhatsApp: +1234567890
+- 📧 Email: mrgomez.dev@gmail.com
+- 📱 WhatsApp: +503 7756-3510
 - 🌐 Website: https://superpos.com
 
 ---

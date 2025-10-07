@@ -81,9 +81,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
   generateReport(): void {
     this.isLoading = true;
     const filters = this.filterForm.value;
+    
+    // Convertir fechas a formato ISO
+    const startDate = filters.startDate ? new Date(filters.startDate).toISOString().split('T')[0] : undefined;
+    const endDate = filters.endDate ? new Date(filters.endDate).toISOString().split('T')[0] : undefined;
 
     // Generar resumen
-    this.saleService.getSalesSummary(filters.startDate, filters.endDate)
+    this.saleService.getSalesSummary(startDate, endDate)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (summary) => {
@@ -96,7 +100,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       });
 
     // Generar lista de ventas
-    this.saleService.getSales(filters.startDate, filters.endDate, undefined, filters.paymentMethod)
+    this.saleService.getSales(startDate, endDate, undefined, filters.paymentMethod)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (sales) => {
