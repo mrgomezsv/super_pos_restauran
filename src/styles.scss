@@ -646,6 +646,7 @@ a {
       transparent
     );
     animation: loading 1.5s infinite;
+    pointer-events: none;
   }
 }
 

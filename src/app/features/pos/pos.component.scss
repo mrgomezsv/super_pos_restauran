@@ -196,6 +196,7 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(1, 126, 132, 0.2), transparent);
             transition: left 0.3s ease;
+            pointer-events: none;
           }
           
           &:hover:not(:disabled) {
@@ -340,6 +341,7 @@
           height: 100%;
           background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
           transition: left 0.5s ease;
+          pointer-events: none;
         }
         
         &:hover {
@@ -439,6 +441,7 @@
           background: linear-gradient(90deg, var(--pos-primary), var(--odoo-accent));
           transform: scaleX(0);
           transition: transform 0.3s ease;
+          pointer-events: none;
         }
         
         &:hover {
@@ -939,6 +942,7 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             transition: left 0.5s ease;
+            pointer-events: none;
           }
           
           &:hover {
