@@ -22,7 +22,7 @@
       </div>
       
       <div class="header-right">
-        <div class="user-info">
+        <div class="user-info" [matMenuTriggerFor]="userMenu">
           <div class="user-avatar">
             <mat-icon>account_circle</mat-icon>
           </div>
@@ -30,13 +30,24 @@
             <span class="user-name">{{ currentUser?.name }}</span>
             <span class="user-role">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cajero' }}</span>
           </div>
+          <div class="user-menu-arrow">
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </div>
         </div>
         
-        <button class="user-menu-trigger" [matMenuTriggerFor]="userMenu" mat-icon-button>
-          <mat-icon>more_vert</mat-icon>
-        </button>
-        
-        <mat-menu #userMenu="matMenu" class="user-menu">
+        <mat-menu #userMenu="matMenu" class="user-menu" xPosition="before" yPosition="below">
+          <div class="menu-header">
+            <div class="menu-user-info">
+              <div class="menu-user-avatar">
+                <mat-icon>account_circle</mat-icon>
+              </div>
+              <div class="menu-user-details">
+                <span class="menu-user-name">{{ currentUser?.name }}</span>
+                <span class="menu-user-role">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cajero' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="menu-divider"></div>
           <button mat-menu-item (click)="goToDashboard()" class="menu-item">
             <mat-icon>dashboard</mat-icon>
             <span>Dashboard</span>

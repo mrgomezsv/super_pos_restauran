@@ -95,77 +95,154 @@
         background: var(--input-bg);
         border-radius: var(--border-radius-lg);
         border: 1px solid var(--border);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        position: relative;
+        
+        &:hover {
+          background: var(--btn-bg);
+          border-color: var(--text-gray);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
+        }
+        
+        .user-avatar {
+          width: 36px;
+          height: 36px;
+          background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+          border-radius: var(--border-radius-full);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          
+          mat-icon {
+            color: white;
+            font-size: 20px;
+          }
+        }
+        
+        .user-details {
+          display: flex;
+          flex-direction: column;
+          
+          .user-name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--text);
+            line-height: 1.2;
+          }
+          
+          .user-role {
+            font-size: var(--text-xs);
+            color: var(--text-gray);
+            line-height: 1.2;
+          }
+        }
+        
+        .user-menu-arrow {
+          color: var(--text-gray);
+          transition: all var(--transition-fast);
+          
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+        
+        &:hover .user-menu-arrow {
+          color: var(--text);
+          transform: rotate(180deg);
+        }
+      }
+  }
+}
+
+// User Menu Styles
+.user-menu {
+  min-width: 280px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  
+  .menu-header {
+    padding: var(--spacing-lg);
+    background: var(--input-bg);
+    border-bottom: 1px solid var(--border);
+    
+    .menu-user-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
       
-      .user-avatar {
-        width: 36px;
-        height: 36px;
+      .menu-user-avatar {
+        width: 48px;
+        height: 48px;
         background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
-        border-radius: var(--border-radius-full);
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         
         mat-icon {
           color: white;
-          font-size: 20px;
+          font-size: 24px;
         }
       }
       
-      .user-details {
+      .menu-user-details {
         display: flex;
         flex-direction: column;
         
-        .user-name {
-          font-size: var(--text-sm);
+        .menu-user-name {
+          font-size: var(--text-base);
           font-weight: var(--font-weight-semibold);
           color: var(--text);
           line-height: 1.2;
         }
         
-        .user-role {
-          font-size: var(--text-xs);
+        .menu-user-role {
+          font-size: var(--text-sm);
           color: var(--text-gray);
           line-height: 1.2;
         }
       }
     }
-    
-    .user-menu-trigger {
-      color: var(--text-gray);
-      transition: all var(--transition-fast);
-      
-      &:hover {
-        color: var(--primary);
-        background: var(--btn-bg);
-      }
-    }
   }
-}
-
-// User Menu Styles
-.user-menu {
+  
+  .menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0;
+  }
+  
   .menu-item {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     transition: all var(--transition-fast);
+    min-height: 48px;
     
     mat-icon {
-      font-size: 18px;
+      font-size: 20px;
       color: var(--text-gray);
+      width: 20px;
+      height: 20px;
     }
     
     span {
       font-size: var(--text-sm);
       color: var(--text);
+      font-weight: 500;
     }
     
     &:hover {
       background: var(--btn-bg);
       
       mat-icon {
-        color: var(--primary);
+        color: var(--text);
       }
     }
     
