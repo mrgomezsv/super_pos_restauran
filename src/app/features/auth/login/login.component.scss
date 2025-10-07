@@ -245,8 +245,8 @@
     right: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 0.25rem;
@@ -254,22 +254,31 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    color: var(--text-placeholder);
+    color: var(--text-gray);
+    min-width: 2.5rem;
+    min-height: 2.5rem;
     
     &:hover {
         background: var(--btn-bg);
         color: var(--text);
+        border-color: var(--text);
         transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     &:active {
         transform: translateY(-50%) scale(0.95);
     }
     
-    mat-icon {
+    &:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+    
+    .eye-icon {
         font-size: 1.25rem;
-        width: 1.25rem;
-        height: 1.25rem;
+        display: block;
+        line-height: 1;
     }
 }
 

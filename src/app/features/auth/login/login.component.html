@@ -80,8 +80,9 @@
             (click)="togglePasswordVisibility()"
             [attr.aria-label]="hidePassword ? 'Mostrar contraseña' : 'Ocultar contraseña'"
             tabindex="-1"
+            title="{{ hidePassword ? 'Mostrar contraseña' : 'Ocultar contraseña' }}"
           >
-            <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            <span class="eye-icon">{{ hidePassword ? '👁️' : '🙈' }}</span>
           </button>
         </div>
         <div class="error-message" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
