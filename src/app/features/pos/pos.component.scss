@@ -1,98 +1,77 @@
-// Variables específicas de Odoo POS
-:root {
-  // Colores principales de Odoo
-  --odoo-primary: #017e84;
-  --odoo-primary-dark: #015d62;
-  --odoo-primary-light: #4a9b9f;
-  --odoo-secondary: #875a7b;
-  --odoo-accent: #00a09d;
-  --odoo-success: #28a745;
-  --odoo-warning: #ffc107;
-  --odoo-danger: #dc3545;
-  --odoo-info: #17a2b8;
+// Variables del Sistema de Diseño Unificado
+:host {
+  // Usar las variables globales del sistema de diseño
+  --pos-primary: var(--primary);
+  --pos-primary-light: var(--primary-light);
+  --pos-secondary: var(--secondary);
+  --pos-text: var(--text);
+  --pos-text-gray: var(--text-gray);
+  --pos-border: var(--border);
+  --pos-bg: var(--background);
+  --pos-surface: var(--surface-color);
+  --pos-input-bg: var(--input-bg);
+  --pos-btn-bg: var(--btn-bg);
+  --pos-error: var(--error);
   
-  // Colores de fondo
-  --odoo-bg-primary: #f8f9fa;
-  --odoo-bg-secondary: #ffffff;
-  --odoo-bg-tertiary: #e9ecef;
-  --odoo-bg-hover: #f1f3f4;
-  --odoo-bg-active: #e8f0fe;
+  // Sombras y transiciones
+  --pos-shadow-sm: var(--shadow-sm);
+  --pos-shadow: var(--shadow-md);
+  --pos-shadow-lg: var(--shadow-lg);
+  --pos-transition: var(--transition-normal);
+  --pos-transition-fast: var(--transition-fast);
   
-  // Colores de texto
-  --odoo-text-primary: #212529;
-  --odoo-text-secondary: #6c757d;
-  --odoo-text-muted: #adb5bd;
-  --odoo-text-white: #ffffff;
-  
-  // Bordes y sombras
-  --odoo-border: #dee2e6;
-  --odoo-border-light: #f1f3f4;
-  --odoo-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  --odoo-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  --odoo-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-  
-  // Transiciones
-  --odoo-transition: all 0.15s ease-in-out;
-  --odoo-transition-fast: all 0.1s ease-in-out;
-  --odoo-transition-slow: all 0.3s ease-in-out;
-  
-  // Radios
-  --odoo-radius-sm: 0.25rem;
-  --odoo-radius: 0.375rem;
-  --odoo-radius-lg: 0.5rem;
-  --odoo-radius-xl: 0.75rem;
-  
-  // Espaciado
-  --odoo-spacing-xs: 0.25rem;
-  --odoo-spacing-sm: 0.5rem;
-  --odoo-spacing: 1rem;
-  --odoo-spacing-lg: 1.5rem;
-  --odoo-spacing-xl: 2rem;
+  // Radios y espaciado
+  --pos-radius: var(--border-radius-md);
+  --pos-radius-lg: var(--border-radius-lg);
+  --pos-spacing: var(--spacing-md);
+  --pos-spacing-sm: var(--spacing-sm);
+  --pos-spacing-lg: var(--spacing-lg);
+  --pos-spacing-xl: var(--spacing-xl);
 }
 
 .pos-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--odoo-bg-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--pos-bg);
+  font-family: 'Poppins', sans-serif;
   overflow: hidden;
 }
 
-// Header del POS - Estilo Odoo
+// Header del POS - Estilo Unificado
 .pos-header {
-  background: var(--odoo-bg-secondary);
-  border-bottom: 1px solid var(--odoo-border);
-  padding: var(--odoo-spacing) var(--odoo-spacing-lg);
+  background: var(--pos-surface);
+  border-bottom: 1px solid var(--pos-border);
+  padding: var(--pos-spacing) var(--pos-spacing-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--odoo-shadow-sm);
+  box-shadow: var(--pos-shadow-sm);
   z-index: 1000;
   min-height: 70px;
   
   .header-left {
     display: flex;
     align-items: center;
-    gap: var(--odoo-spacing-lg);
+    gap: var(--pos-spacing-lg);
     
     .pos-logo {
       display: flex;
       align-items: center;
-      gap: var(--odoo-spacing-sm);
+      gap: var(--pos-spacing-sm);
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--odoo-primary);
+      color: var(--pos-primary);
       text-decoration: none;
       
       mat-icon {
         font-size: 32px;
-        color: var(--odoo-primary);
+        color: var(--pos-primary);
         filter: drop-shadow(0 2px 4px rgba(1, 126, 132, 0.2));
       }
       
       span {
-        background: linear-gradient(135deg, var(--odoo-primary), var(--odoo-accent));
+        background: linear-gradient(135deg, var(--pos-primary), var(--odoo-accent));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -102,21 +81,21 @@
     .session-info {
       display: flex;
       flex-direction: column;
-      gap: var(--odoo-spacing-xs);
+      gap: var(--pos-spacing-xs);
       
       .cashier-name {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--odoo-text-primary);
-        background: var(--odoo-bg-hover);
-        padding: var(--odoo-spacing-xs) var(--odoo-spacing-sm);
-        border-radius: var(--odoo-radius);
-        border: 1px solid var(--odoo-border-light);
+        color: var(--pos-text);
+        background: var(--pos-btn-bg);
+        padding: var(--pos-spacing-xs) var(--pos-spacing-sm);
+        border-radius: var(--pos-radius);
+        border: 1px solid var(--pos-border-light);
       }
       
       .session-time {
         font-size: 0.75rem;
-        color: var(--odoo-text-secondary);
+        color: var(--pos-text-gray);
         font-weight: 500;
       }
     }
@@ -125,12 +104,12 @@
   .header-center {
     flex: 1;
     max-width: 600px;
-    margin: 0 var(--odoo-spacing-xl);
+    margin: 0 var(--pos-spacing-xl);
     
     .search-container {
       display: flex;
       align-items: center;
-      gap: var(--odoo-spacing);
+      gap: var(--pos-spacing);
       
       .search-input-wrapper {
         position: relative;
@@ -138,45 +117,45 @@
         
         .search-input {
           width: 100%;
-          padding: var(--odoo-spacing) var(--odoo-spacing-lg) var(--odoo-spacing) 3.5rem;
-          border: 2px solid var(--odoo-border);
-          border-radius: var(--odoo-radius-lg);
+          padding: var(--pos-spacing) var(--pos-spacing-lg) var(--pos-spacing) 3.5rem;
+          border: 2px solid var(--pos-border);
+          border-radius: var(--pos-radius-lg);
           font-size: 1rem;
           font-weight: 500;
-          background: var(--odoo-bg-secondary);
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow-sm);
+          background: var(--pos-surface);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow-sm);
           
           &:focus {
             outline: none;
-            border-color: var(--odoo-primary);
+            border-color: var(--pos-primary);
             box-shadow: 0 0 0 0.2rem rgba(1, 126, 132, 0.25);
             transform: translateY(-1px);
           }
           
           &::placeholder {
-            color: var(--odoo-text-muted);
+            color: var(--pos-text-gray);
             font-weight: 400;
           }
         }
         
         .search-icon {
           position: absolute;
-          left: var(--odoo-spacing);
+          left: var(--pos-spacing);
           top: 50%;
           transform: translateY(-50%);
-          color: var(--odoo-text-secondary);
+          color: var(--pos-text-gray);
           font-size: 22px;
-          transition: var(--odoo-transition-fast);
+          transition: var(--pos-transition-fast);
         }
         
         .clear-search {
           position: absolute;
-          right: var(--odoo-spacing-sm);
+          right: var(--pos-spacing-sm);
           top: 50%;
           transform: translateY(-50%);
-          color: var(--odoo-text-muted);
-          transition: var(--odoo-transition-fast);
+          color: var(--pos-text-gray);
+          transition: var(--pos-transition-fast);
           
           &:hover {
             color: var(--odoo-danger);
@@ -186,25 +165,25 @@
         }
         
         .search-input:focus + .search-icon {
-          color: var(--odoo-primary);
+          color: var(--pos-primary);
         }
       }
       
       .search-shortcuts {
         display: flex;
-        gap: var(--odoo-spacing-sm);
+        gap: var(--pos-spacing-sm);
         
         .shortcut-btn {
-          padding: var(--odoo-spacing-sm) var(--odoo-spacing);
-          border: 1px solid var(--odoo-border);
-          border-radius: var(--odoo-radius);
-          background: var(--odoo-bg-secondary);
-          color: var(--odoo-text-secondary);
+          padding: var(--pos-spacing-sm) var(--pos-spacing);
+          border: 1px solid var(--pos-border);
+          border-radius: var(--pos-radius);
+          background: var(--pos-surface);
+          color: var(--pos-text-gray);
           font-size: 0.75rem;
           font-weight: 600;
           cursor: pointer;
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow-sm);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow-sm);
           position: relative;
           overflow: hidden;
           
@@ -220,11 +199,11 @@
           }
           
           &:hover:not(:disabled) {
-            background: var(--odoo-bg-hover);
-            border-color: var(--odoo-primary);
-            color: var(--odoo-primary);
+            background: var(--pos-btn-bg);
+            border-color: var(--pos-primary);
+            color: var(--pos-primary);
             transform: translateY(-1px);
-            box-shadow: var(--odoo-shadow);
+            box-shadow: var(--pos-shadow);
             
             &::before {
               left: 100%;
@@ -258,24 +237,24 @@
     .cart-summary {
       display: flex;
       align-items: center;
-      gap: var(--odoo-spacing);
+      gap: var(--pos-spacing);
       
       .items-count {
         display: flex;
         align-items: center;
-        gap: var(--odoo-spacing-sm);
-        padding: var(--odoo-spacing-sm) var(--odoo-spacing);
-        background: linear-gradient(135deg, var(--odoo-primary), var(--odoo-accent));
-        border-radius: var(--odoo-radius-lg);
-        color: var(--odoo-text-white);
+        gap: var(--pos-spacing-sm);
+        padding: var(--pos-spacing-sm) var(--pos-spacing);
+        background: linear-gradient(135deg, var(--pos-primary), var(--odoo-accent));
+        border-radius: var(--pos-radius-lg);
+        color: var(white);
         font-size: 0.875rem;
         font-weight: 600;
-        box-shadow: var(--odoo-shadow-sm);
-        transition: var(--odoo-transition);
+        box-shadow: var(--pos-shadow-sm);
+        transition: var(--pos-transition);
         
         &:hover {
           transform: translateY(-1px);
-          box-shadow: var(--odoo-shadow);
+          box-shadow: var(--pos-shadow);
         }
         
         mat-icon {
@@ -286,7 +265,7 @@
       .total-amount {
         font-size: 1.75rem;
         font-weight: 800;
-        color: var(--odoo-text-primary);
+        color: var(--pos-text);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         background: linear-gradient(135deg, var(--odoo-success), #20c997);
         -webkit-background-clip: text;
@@ -303,7 +282,7 @@
   display: flex;
   overflow: hidden;
   gap: 1px;
-  background: var(--odoo-border);
+  background: var(--pos-border);
 }
 
 // Panel de productos (izquierda) - Estilo Odoo
@@ -311,20 +290,20 @@
   width: 40%;
   display: flex;
   flex-direction: column;
-  background: var(--odoo-bg-secondary);
+  background: var(--pos-surface);
   
   .categories-section {
-    padding: var(--odoo-spacing);
-    border-bottom: 1px solid var(--odoo-border);
-    background: var(--odoo-bg-tertiary);
+    padding: var(--pos-spacing);
+    border-bottom: 1px solid var(--pos-border);
+    background: var(--pos-input-bg);
     
     .section-header {
-      margin-bottom: var(--odoo-spacing);
+      margin-bottom: var(--pos-spacing);
       
       h3 {
         font-size: 1rem;
         font-weight: 700;
-        color: var(--odoo-text-primary);
+        color: var(--pos-text);
         margin: 0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -334,21 +313,21 @@
     .categories-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: var(--odoo-spacing-sm);
+      gap: var(--pos-spacing-sm);
       
       .category-btn {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--odoo-spacing-sm);
-        padding: var(--odoo-spacing) var(--odoo-spacing-sm);
-        border: 1px solid var(--odoo-border);
-        border-radius: var(--odoo-radius-lg);
-        background: var(--odoo-bg-secondary);
-        color: var(--odoo-text-secondary);
+        gap: var(--pos-spacing-sm);
+        padding: var(--pos-spacing) var(--pos-spacing-sm);
+        border: 1px solid var(--pos-border);
+        border-radius: var(--pos-radius-lg);
+        background: var(--pos-surface);
+        color: var(--pos-text-gray);
         cursor: pointer;
-        transition: var(--odoo-transition);
-        box-shadow: var(--odoo-shadow-sm);
+        transition: var(--pos-transition);
+        box-shadow: var(--pos-shadow-sm);
         position: relative;
         overflow: hidden;
         
@@ -364,11 +343,11 @@
         }
         
         &:hover {
-          background: var(--odoo-bg-hover);
-          border-color: var(--odoo-primary);
-          color: var(--odoo-primary);
+          background: var(--pos-btn-bg);
+          border-color: var(--pos-primary);
+          color: var(--pos-primary);
           transform: translateY(-2px);
-          box-shadow: var(--odoo-shadow);
+          box-shadow: var(--pos-shadow);
           
           &::before {
             left: 100%;
@@ -376,19 +355,19 @@
         }
         
         &.active {
-          background: linear-gradient(135deg, var(--odoo-primary), var(--odoo-accent));
-          border-color: var(--odoo-primary);
-          color: var(--odoo-text-white);
-          box-shadow: var(--odoo-shadow);
+          background: linear-gradient(135deg, var(--pos-primary), var(--odoo-accent));
+          border-color: var(--pos-primary);
+          color: var(white);
+          box-shadow: var(--pos-shadow);
           
           mat-icon {
-            color: var(--odoo-text-white);
+            color: var(white);
           }
         }
         
         mat-icon {
           font-size: 28px;
-          transition: var(--odoo-transition-fast);
+          transition: var(--pos-transition-fast);
         }
         
         span {
@@ -403,22 +382,22 @@
   
   .products-section {
     flex: 1;
-    padding: var(--odoo-spacing);
+    padding: var(--pos-spacing);
     overflow-y: auto;
-    background: var(--odoo-bg-secondary);
+    background: var(--pos-surface);
     
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: var(--odoo-spacing);
-      padding-bottom: var(--odoo-spacing-sm);
-      border-bottom: 2px solid var(--odoo-border-light);
+      margin-bottom: var(--pos-spacing);
+      padding-bottom: var(--pos-spacing-sm);
+      border-bottom: 2px solid var(--pos-border-light);
       
       h3 {
         font-size: 1rem;
         font-weight: 700;
-        color: var(--odoo-text-primary);
+        color: var(--pos-text);
         margin: 0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -426,10 +405,10 @@
       
       .products-count {
         font-size: 0.875rem;
-        color: var(--odoo-text-secondary);
-        background: var(--odoo-bg-hover);
-        padding: var(--odoo-spacing-xs) var(--odoo-spacing-sm);
-        border-radius: var(--odoo-radius);
+        color: var(--pos-text-gray);
+        background: var(--pos-btn-bg);
+        padding: var(--pos-spacing-xs) var(--pos-spacing-sm);
+        border-radius: var(--pos-radius);
         font-weight: 600;
       }
     }
@@ -437,16 +416,16 @@
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: var(--odoo-spacing);
+      gap: var(--pos-spacing);
       
       .product-card {
-        background: var(--odoo-bg-secondary);
-        border: 1px solid var(--odoo-border);
-        border-radius: var(--odoo-radius-lg);
-        padding: var(--odoo-spacing);
+        background: var(--pos-surface);
+        border: 1px solid var(--pos-border);
+        border-radius: var(--pos-radius-lg);
+        padding: var(--pos-spacing);
         cursor: pointer;
-        transition: var(--odoo-transition);
-        box-shadow: var(--odoo-shadow-sm);
+        transition: var(--pos-transition);
+        box-shadow: var(--pos-shadow-sm);
         position: relative;
         overflow: hidden;
         
@@ -457,14 +436,14 @@
           left: 0;
           right: 0;
           height: 3px;
-          background: linear-gradient(90deg, var(--odoo-primary), var(--odoo-accent));
+          background: linear-gradient(90deg, var(--pos-primary), var(--odoo-accent));
           transform: scaleX(0);
           transition: transform 0.3s ease;
         }
         
         &:hover {
-          border-color: var(--odoo-primary);
-          box-shadow: var(--odoo-shadow);
+          border-color: var(--pos-primary);
+          box-shadow: var(--pos-shadow);
           transform: translateY(-3px);
           
           &::before {
@@ -473,7 +452,7 @@
           
           .product-image {
             transform: scale(1.05);
-            box-shadow: var(--odoo-shadow);
+            box-shadow: var(--pos-shadow);
           }
         }
         
@@ -495,18 +474,18 @@
         .product-image {
           width: 70px;
           height: 70px;
-          background: linear-gradient(135deg, var(--odoo-primary), var(--odoo-accent));
-          border-radius: var(--odoo-radius-lg);
+          background: linear-gradient(135deg, var(--pos-primary), var(--odoo-accent));
+          border-radius: var(--pos-radius-lg);
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto var(--odoo-spacing);
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow-sm);
+          margin: 0 auto var(--pos-spacing);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow-sm);
           
           mat-icon {
             font-size: 36px;
-            color: var(--odoo-text-white);
+            color: var(white);
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
           }
         }
@@ -517,8 +496,8 @@
           .product-name {
             font-size: 0.875rem;
             font-weight: 700;
-            color: var(--odoo-text-primary);
-            margin: 0 0 var(--odoo-spacing-xs) 0;
+            color: var(--pos-text);
+            margin: 0 0 var(--pos-spacing-xs) 0;
             line-height: 1.3;
             min-height: 2.6rem;
             display: flex;
@@ -528,12 +507,12 @@
           
           .product-code {
             font-size: 0.75rem;
-            color: var(--odoo-text-secondary);
-            margin: 0 0 var(--odoo-spacing-sm) 0;
+            color: var(--pos-text-gray);
+            margin: 0 0 var(--pos-spacing-sm) 0;
             font-family: 'Monaco', 'Menlo', monospace;
-            background: var(--odoo-bg-hover);
-            padding: var(--odoo-spacing-xs) var(--odoo-spacing-sm);
-            border-radius: var(--odoo-radius);
+            background: var(--pos-btn-bg);
+            padding: var(--pos-spacing-xs) var(--pos-spacing-sm);
+            border-radius: var(--pos-radius);
             display: inline-block;
           }
           
@@ -541,7 +520,7 @@
             font-size: 1.25rem;
             font-weight: 800;
             color: var(--odoo-success);
-            margin-bottom: var(--odoo-spacing-sm);
+            margin-bottom: var(--pos-spacing-sm);
             text-shadow: 0 1px 2px rgba(40, 167, 69, 0.2);
           }
           
@@ -549,11 +528,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--odoo-spacing-xs);
+            gap: var(--pos-spacing-xs);
             font-size: 0.75rem;
             font-weight: 600;
-            padding: var(--odoo-spacing-xs) var(--odoo-spacing-sm);
-            border-radius: var(--odoo-radius);
+            padding: var(--pos-spacing-xs) var(--pos-spacing-sm);
+            border-radius: var(--pos-radius);
             
             &.stock-high {
               background: linear-gradient(135deg, #d4edda, #c3e6cb);
@@ -592,11 +571,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: var(--odoo-spacing-xl);
+      padding: var(--pos-spacing-xl);
       
       p {
-        margin-top: var(--odoo-spacing);
-        color: var(--odoo-text-secondary);
+        margin-top: var(--pos-spacing);
+        color: var(--pos-text-gray);
         font-weight: 500;
       }
     }
@@ -608,20 +587,20 @@
   width: 35%;
   display: flex;
   flex-direction: column;
-  background: var(--odoo-bg-secondary);
+  background: var(--pos-surface);
   
   .cart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--odoo-spacing);
-    border-bottom: 1px solid var(--odoo-border);
-    background: var(--odoo-bg-tertiary);
+    padding: var(--pos-spacing);
+    border-bottom: 1px solid var(--pos-border);
+    background: var(--pos-input-bg);
     
     h3 {
       font-size: 1rem;
       font-weight: 700;
-      color: var(--odoo-text-primary);
+      color: var(--pos-text);
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -629,7 +608,7 @@
     
     .clear-cart-btn {
       color: var(--odoo-danger);
-      transition: var(--odoo-transition);
+      transition: var(--pos-transition);
       
       &:hover {
         background: rgba(220, 53, 69, 0.1);
@@ -641,20 +620,20 @@
   .cart-content {
     flex: 1;
     overflow-y: auto;
-    background: var(--odoo-bg-secondary);
+    background: var(--pos-surface);
     
     .cart-items {
       .cart-item {
         display: flex;
         align-items: center;
-        gap: var(--odoo-spacing);
-        padding: var(--odoo-spacing);
-        border-bottom: 1px solid var(--odoo-border-light);
-        transition: var(--odoo-transition);
+        gap: var(--pos-spacing);
+        padding: var(--pos-spacing);
+        border-bottom: 1px solid var(--pos-border-light);
+        transition: var(--pos-transition);
         position: relative;
         
         &:hover {
-          background: var(--odoo-bg-hover);
+          background: var(--pos-btn-bg);
           
           .remove-item {
             opacity: 1;
@@ -665,16 +644,16 @@
         .item-image {
           width: 60px;
           height: 60px;
-          background: linear-gradient(135deg, var(--odoo-primary), var(--odoo-accent));
-          border-radius: var(--odoo-radius-lg);
+          background: linear-gradient(135deg, var(--pos-primary), var(--odoo-accent));
+          border-radius: var(--pos-radius-lg);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: var(--odoo-shadow-sm);
+          box-shadow: var(--pos-shadow-sm);
           
           mat-icon {
             font-size: 28px;
-            color: var(--odoo-text-white);
+            color: var(white);
           }
         }
         
@@ -684,14 +663,14 @@
           .item-name {
             font-size: 0.875rem;
             font-weight: 700;
-            color: var(--odoo-text-primary);
-            margin: 0 0 var(--odoo-spacing-xs) 0;
+            color: var(--pos-text);
+            margin: 0 0 var(--pos-spacing-xs) 0;
             line-height: 1.3;
           }
           
           .item-price {
             font-size: 0.875rem;
-            color: var(--odoo-text-secondary);
+            color: var(--pos-text-gray);
             font-weight: 600;
           }
         }
@@ -699,25 +678,25 @@
         .item-quantity {
           display: flex;
           align-items: center;
-          gap: var(--odoo-spacing-sm);
+          gap: var(--pos-spacing-sm);
           
           .qty-btn {
             width: 36px;
             height: 36px;
-            border: 1px solid var(--odoo-border);
-            border-radius: var(--odoo-radius);
-            background: var(--odoo-bg-secondary);
-            color: var(--odoo-text-secondary);
+            border: 1px solid var(--pos-border);
+            border-radius: var(--pos-radius);
+            background: var(--pos-surface);
+            color: var(--pos-text-gray);
             cursor: pointer;
-            transition: var(--odoo-transition);
+            transition: var(--pos-transition);
             display: flex;
             align-items: center;
             justify-content: center;
             
             &:hover:not(:disabled) {
-              background: var(--odoo-bg-hover);
-              border-color: var(--odoo-primary);
-              color: var(--odoo-primary);
+              background: var(--pos-btn-bg);
+              border-color: var(--pos-primary);
+              color: var(--pos-primary);
               transform: scale(1.1);
             }
             
@@ -734,18 +713,18 @@
           
           .quantity-input {
             width: 70px;
-            padding: var(--odoo-spacing-sm);
-            border: 1px solid var(--odoo-border);
-            border-radius: var(--odoo-radius);
+            padding: var(--pos-spacing-sm);
+            border: 1px solid var(--pos-border);
+            border-radius: var(--pos-radius);
             text-align: center;
             font-size: 0.875rem;
             font-weight: 600;
-            background: var(--odoo-bg-secondary);
-            transition: var(--odoo-transition);
+            background: var(--pos-surface);
+            transition: var(--pos-transition);
             
             &:focus {
               outline: none;
-              border-color: var(--odoo-primary);
+              border-color: var(--pos-primary);
               box-shadow: 0 0 0 0.2rem rgba(1, 126, 132, 0.25);
             }
           }
@@ -764,7 +743,7 @@
           color: var(--odoo-danger);
           opacity: 0;
           transform: scale(0.8);
-          transition: var(--odoo-transition);
+          transition: var(--pos-transition);
           
           &:hover {
             background: rgba(220, 53, 69, 0.1);
@@ -779,26 +758,26 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: var(--odoo-spacing-xl);
+      padding: var(--pos-spacing-xl);
       text-align: center;
       
       mat-icon {
         font-size: 80px;
-        color: var(--odoo-text-muted);
-        margin-bottom: var(--odoo-spacing);
+        color: var(--pos-text-gray);
+        margin-bottom: var(--pos-spacing);
         opacity: 0.5;
       }
       
       h3 {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--odoo-text-primary);
-        margin: 0 0 var(--odoo-spacing-sm) 0;
+        color: var(--pos-text);
+        margin: 0 0 var(--pos-spacing-sm) 0;
       }
       
       p {
         font-size: 0.875rem;
-        color: var(--odoo-text-secondary);
+        color: var(--pos-text-gray);
         margin: 0;
         max-width: 200px;
       }
@@ -806,25 +785,25 @@
   }
   
   .cart-totals {
-    padding: var(--odoo-spacing);
-    border-top: 1px solid var(--odoo-border);
-    background: var(--odoo-bg-tertiary);
+    padding: var(--pos-spacing);
+    border-top: 1px solid var(--pos-border);
+    background: var(--pos-input-bg);
     
     .total-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: var(--odoo-spacing-sm) 0;
+      padding: var(--pos-spacing-sm) 0;
       font-size: 0.875rem;
       font-weight: 600;
       
       &.final {
-        border-top: 2px solid var(--odoo-border);
-        margin-top: var(--odoo-spacing-sm);
-        padding-top: var(--odoo-spacing);
+        border-top: 2px solid var(--pos-border);
+        margin-top: var(--pos-spacing-sm);
+        padding-top: var(--pos-spacing);
         font-size: 1.25rem;
         font-weight: 800;
-        color: var(--odoo-text-primary);
+        color: var(--pos-text);
         background: linear-gradient(135deg, var(--odoo-success), #20c997);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -839,17 +818,17 @@
   width: 25%;
   display: flex;
   flex-direction: column;
-  background: var(--odoo-bg-secondary);
+  background: var(--pos-surface);
   
   .payment-header {
-    padding: var(--odoo-spacing);
-    border-bottom: 1px solid var(--odoo-border);
-    background: var(--odoo-bg-tertiary);
+    padding: var(--pos-spacing);
+    border-bottom: 1px solid var(--pos-border);
+    background: var(--pos-input-bg);
     
     h3 {
       font-size: 1rem;
       font-weight: 700;
-      color: var(--odoo-text-primary);
+      color: var(--pos-text);
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -858,17 +837,17 @@
   
   .payment-content {
     flex: 1;
-    padding: var(--odoo-spacing);
+    padding: var(--pos-spacing);
     display: flex;
     flex-direction: column;
-    gap: var(--odoo-spacing-lg);
-    background: var(--odoo-bg-secondary);
+    gap: var(--pos-spacing-lg);
+    background: var(--pos-surface);
     
     .numeric-keypad {
       .keypad-row {
         display: flex;
-        gap: var(--odoo-spacing-sm);
-        margin-bottom: var(--odoo-spacing-sm);
+        gap: var(--pos-spacing-sm);
+        margin-bottom: var(--pos-spacing-sm);
         
         &:last-child {
           margin-bottom: 0;
@@ -877,36 +856,36 @@
         .keypad-btn {
           flex: 1;
           height: 70px;
-          border: 1px solid var(--odoo-border);
-          border-radius: var(--odoo-radius-lg);
-          background: var(--odoo-bg-secondary);
-          color: var(--odoo-text-primary);
+          border: 1px solid var(--pos-border);
+          border-radius: var(--pos-radius-lg);
+          background: var(--pos-surface);
+          color: var(--pos-text);
           font-size: 1.5rem;
           font-weight: 700;
           cursor: pointer;
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow-sm);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow-sm);
           display: flex;
           align-items: center;
           justify-content: center;
           
           &:hover {
-            background: var(--odoo-bg-hover);
-            border-color: var(--odoo-primary);
-            color: var(--odoo-primary);
+            background: var(--pos-btn-bg);
+            border-color: var(--pos-primary);
+            color: var(--pos-primary);
             transform: translateY(-2px);
-            box-shadow: var(--odoo-shadow);
+            box-shadow: var(--pos-shadow);
           }
           
           &:active {
             transform: translateY(0);
-            box-shadow: var(--odoo-shadow-sm);
+            box-shadow: var(--pos-shadow-sm);
           }
           
           &.clear {
             background: linear-gradient(135deg, var(--odoo-danger), #c82333);
             border-color: var(--odoo-danger);
-            color: var(--odoo-text-white);
+            color: var(white);
             
             &:hover {
               background: linear-gradient(135deg, #c82333, #a71e2a);
@@ -925,8 +904,8 @@
       h4 {
         font-size: 0.875rem;
         font-weight: 700;
-        color: var(--odoo-text-primary);
-        margin: 0 0 var(--odoo-spacing) 0;
+        color: var(--pos-text);
+        margin: 0 0 var(--pos-spacing) 0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -934,20 +913,20 @@
       .payment-buttons {
         display: flex;
         flex-direction: column;
-        gap: var(--odoo-spacing-sm);
+        gap: var(--pos-spacing-sm);
         
         .payment-btn {
           display: flex;
           align-items: center;
-          gap: var(--odoo-spacing);
-          padding: var(--odoo-spacing) var(--odoo-spacing);
-          border: 1px solid var(--odoo-border);
-          border-radius: var(--odoo-radius-lg);
-          background: var(--odoo-bg-secondary);
-          color: var(--odoo-text-secondary);
+          gap: var(--pos-spacing);
+          padding: var(--pos-spacing) var(--pos-spacing);
+          border: 1px solid var(--pos-border);
+          border-radius: var(--pos-radius-lg);
+          background: var(--pos-surface);
+          color: var(--pos-text-gray);
           cursor: pointer;
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow-sm);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow-sm);
           position: relative;
           overflow: hidden;
           
@@ -963,11 +942,11 @@
           }
           
           &:hover {
-            background: var(--odoo-bg-hover);
-            border-color: var(--odoo-primary);
-            color: var(--odoo-primary);
+            background: var(--pos-btn-bg);
+            border-color: var(--pos-primary);
+            color: var(--pos-primary);
             transform: translateY(-1px);
-            box-shadow: var(--odoo-shadow);
+            box-shadow: var(--pos-shadow);
             
             &::before {
               left: 100%;
@@ -975,19 +954,19 @@
           }
           
           &.active {
-            background: linear-gradient(135deg, var(--odoo-primary), var(--odoo-accent));
-            border-color: var(--odoo-primary);
-            color: var(--odoo-text-white);
-            box-shadow: var(--odoo-shadow);
+            background: linear-gradient(135deg, var(--pos-primary), var(--odoo-accent));
+            border-color: var(--pos-primary);
+            color: var(white);
+            box-shadow: var(--pos-shadow);
             
             mat-icon {
-              color: var(--odoo-text-white);
+              color: var(white);
             }
           }
           
           mat-icon {
             font-size: 24px;
-            transition: var(--odoo-transition-fast);
+            transition: var(--pos-transition-fast);
           }
           
           span {
@@ -1000,14 +979,14 @@
     
     .payment-amount {
       .amount-input {
-        margin-bottom: var(--odoo-spacing);
+        margin-bottom: var(--pos-spacing);
         
         label {
           display: block;
           font-size: 0.875rem;
           font-weight: 700;
-          color: var(--odoo-text-primary);
-          margin-bottom: var(--odoo-spacing-sm);
+          color: var(--pos-text);
+          margin-bottom: var(--pos-spacing-sm);
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
@@ -1017,7 +996,7 @@
           
           .currency {
             position: absolute;
-            left: var(--odoo-spacing);
+            left: var(--pos-spacing);
             top: 50%;
             transform: translateY(-50%);
             font-size: 1.25rem;
@@ -1028,19 +1007,19 @@
           
           .amount-field {
             width: 100%;
-            padding: var(--odoo-spacing) var(--odoo-spacing) var(--odoo-spacing) 3rem;
-            border: 2px solid var(--odoo-border);
-            border-radius: var(--odoo-radius-lg);
+            padding: var(--pos-spacing) var(--pos-spacing) var(--pos-spacing) 3rem;
+            border: 2px solid var(--pos-border);
+            border-radius: var(--pos-radius-lg);
             font-size: 1.25rem;
             font-weight: 800;
             text-align: right;
-            background: var(--odoo-bg-hover);
-            color: var(--odoo-text-primary);
-            transition: var(--odoo-transition);
+            background: var(--pos-btn-bg);
+            color: var(--pos-text);
+            transition: var(--pos-transition);
             
             &:focus {
               outline: none;
-              border-color: var(--odoo-primary);
+              border-color: var(--pos-primary);
               box-shadow: 0 0 0 0.2rem rgba(1, 126, 132, 0.25);
             }
           }
@@ -1053,24 +1032,24 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: var(--odoo-spacing-sm);
-          padding: var(--odoo-spacing-lg) var(--odoo-spacing);
+          gap: var(--pos-spacing-sm);
+          padding: var(--pos-spacing-lg) var(--pos-spacing);
           background: linear-gradient(135deg, var(--odoo-success), #20c997);
           border: none;
-          border-radius: var(--odoo-radius-lg);
-          color: var(--odoo-text-white);
+          border-radius: var(--pos-radius-lg);
+          color: var(white);
           font-size: 1.125rem;
           font-weight: 700;
           cursor: pointer;
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow);
           text-transform: uppercase;
           letter-spacing: 0.5px;
           
           &:hover:not(:disabled) {
             background: linear-gradient(135deg, #218838, #1e7e34);
             transform: translateY(-2px);
-            box-shadow: var(--odoo-shadow-lg);
+            box-shadow: var(--pos-shadow-lg);
           }
           
           &:active:not(:disabled) {
@@ -1078,10 +1057,10 @@
           }
           
           &:disabled {
-            background: var(--odoo-text-muted);
+            background: var(--pos-text-gray);
             cursor: not-allowed;
             transform: none;
-            box-shadow: var(--odoo-shadow-sm);
+            box-shadow: var(--pos-shadow-sm);
           }
           
           mat-icon {
@@ -1095,8 +1074,8 @@
       h4 {
         font-size: 0.875rem;
         font-weight: 700;
-        color: var(--odoo-text-primary);
-        margin: 0 0 var(--odoo-spacing) 0;
+        color: var(--pos-text);
+        margin: 0 0 var(--pos-spacing) 0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -1104,27 +1083,27 @@
       .action-buttons {
         display: flex;
         flex-direction: column;
-        gap: var(--odoo-spacing-sm);
+        gap: var(--pos-spacing-sm);
         
         .action-btn {
           display: flex;
           align-items: center;
-          gap: var(--odoo-spacing);
-          padding: var(--odoo-spacing) var(--odoo-spacing);
-          border: 1px solid var(--odoo-border);
-          border-radius: var(--odoo-radius-lg);
-          background: var(--odoo-bg-secondary);
-          color: var(--odoo-text-secondary);
+          gap: var(--pos-spacing);
+          padding: var(--pos-spacing) var(--pos-spacing);
+          border: 1px solid var(--pos-border);
+          border-radius: var(--pos-radius-lg);
+          background: var(--pos-surface);
+          color: var(--pos-text-gray);
           cursor: pointer;
-          transition: var(--odoo-transition);
-          box-shadow: var(--odoo-shadow-sm);
+          transition: var(--pos-transition);
+          box-shadow: var(--pos-shadow-sm);
           
           &:hover:not(:disabled) {
-            background: var(--odoo-bg-hover);
-            border-color: var(--odoo-primary);
-            color: var(--odoo-primary);
+            background: var(--pos-btn-bg);
+            border-color: var(--pos-primary);
+            color: var(--pos-primary);
             transform: translateY(-1px);
-            box-shadow: var(--odoo-shadow);
+            box-shadow: var(--pos-shadow);
           }
           
           &:disabled {
@@ -1167,7 +1146,7 @@
 @media (max-width: 992px) {
   .pos-header {
     .header-center {
-      margin: 0 var(--odoo-spacing);
+      margin: 0 var(--pos-spacing);
     }
   }
   
@@ -1193,10 +1172,10 @@
 
 @media (max-width: 768px) {
   .pos-header {
-    padding: var(--odoo-spacing-sm) var(--odoo-spacing);
+    padding: var(--pos-spacing-sm) var(--pos-spacing);
     
     .header-left {
-      gap: var(--odoo-spacing);
+      gap: var(--pos-spacing);
       
       .pos-logo {
         font-size: 1.25rem;
@@ -1208,7 +1187,7 @@
     }
     
     .header-center {
-      margin: 0 var(--odoo-spacing-sm);
+      margin: 0 var(--pos-spacing-sm);
       
       .search-container {
         .search-shortcuts {
@@ -1232,7 +1211,7 @@
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         
         .category-btn {
-          padding: var(--odoo-spacing-sm) var(--odoo-spacing-xs);
+          padding: var(--pos-spacing-sm) var(--pos-spacing-xs);
           
           mat-icon {
             font-size: 24px;
@@ -1248,10 +1227,10 @@
     .products-section {
       .products-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: var(--odoo-spacing-sm);
+        gap: var(--pos-spacing-sm);
         
         .product-card {
-          padding: var(--odoo-spacing-sm);
+          padding: var(--pos-spacing-sm);
           
           .product-image {
             width: 60px;
@@ -1285,20 +1264,20 @@
 
 .products-section::-webkit-scrollbar-track,
 .cart-content::-webkit-scrollbar-track {
-  background: var(--odoo-bg-tertiary);
-  border-radius: var(--odoo-radius);
+  background: var(--pos-input-bg);
+  border-radius: var(--pos-radius);
 }
 
 .products-section::-webkit-scrollbar-thumb,
 .cart-content::-webkit-scrollbar-thumb {
-  background: var(--odoo-border);
-  border-radius: var(--odoo-radius);
-  transition: var(--odoo-transition);
+  background: var(--pos-border);
+  border-radius: var(--pos-radius);
+  transition: var(--pos-transition);
 }
 
 .products-section::-webkit-scrollbar-thumb:hover,
 .cart-content::-webkit-scrollbar-thumb:hover {
-  background: var(--odoo-text-secondary);
+  background: var(--pos-text-gray);
 }
 
 // Animaciones adicionales

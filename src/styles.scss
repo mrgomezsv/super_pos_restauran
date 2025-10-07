@@ -1,21 +1,21 @@
 /* Super POS - Estilos Globales */
 
-// Variables de colores y diseño
+// Sistema de Diseño Unificado - Basado en Login Moderno
 :root {
-  // Colores primarios
-  --primary-color: #1976d2;
-  --primary-dark: #1565c0;
-  --primary-light: #42a5f5;
-  --primary-50: #e3f2fd;
-  --primary-100: #bbdefb;
-  --primary-200: #90caf9;
-  --primary-300: #64b5f6;
-  --primary-400: #42a5f5;
-  --primary-500: #2196f3;
-  --primary-600: #1e88e5;
-  --primary-700: #1976d2;
-  --primary-800: #1565c0;
-  --primary-900: #0d47a1;
+  // Colores principales del sistema
+  --primary: #000000;
+  --primary-light: #22211F;
+  --primary-disabled: #363435;
+  --primary-lighter: #454344;
+  --secondary: #1D1D1D;
+  --text: #11181C;
+  --text-gray: #687076;
+  --text-placeholder: #8890A7;
+  --border: #DFE3E6;
+  --btn-bg: #EDEDED;
+  --input-bg: #F1F2F3;
+  --background: #F8F8FF;
+  --error: #e5484d;
   
   // Colores de acento
   --accent-color: #4caf50;
@@ -33,7 +33,7 @@
   --accent-900: #1b5e20;
   
   // Colores de advertencia
-  --warn-color: #f44336;
+  --warn-color: #e5484d;
   --warn-dark: #d32f2f;
   --warn-light: #ef5350;
   --warn-50: #ffebee;
@@ -41,33 +41,33 @@
   --warn-200: #ef9a9a;
   --warn-300: #e57373;
   --warn-400: #ef5350;
-  --warn-500: #f44336;
+  --warn-500: #e5484d;
   --warn-600: #e53935;
   --warn-700: #d32f2f;
   --warn-800: #c62828;
   --warn-900: #b71c1c;
   
-  // Colores de superficie
-  --background-color: #fafbfc;
+  // Colores de superficie (compatibilidad)
+  --background-color: #F8F8FF;
   --surface-color: #ffffff;
-  --surface-variant: #f8fafc;
+  --surface-variant: #F1F2F3;
   --surface-elevated: #ffffff;
-  --surface-hover: #f1f5f9;
+  --surface-hover: #EDEDED;
   
-  // Colores de texto
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-disabled: #94a3b8;
+  // Colores de texto (compatibilidad)
+  --text-primary: #11181C;
+  --text-secondary: #687076;
+  --text-tertiary: #8890A7;
+  --text-disabled: #8890A7;
   --text-on-primary: #ffffff;
   --text-on-accent: #ffffff;
   --text-on-warn: #ffffff;
   
-  // Colores de borde
-  --border-color: #e2e8f0;
-  --border-light: #f1f5f9;
-  --border-medium: #cbd5e1;
-  --border-dark: #94a3b8;
+  // Colores de borde (compatibilidad)
+  --border-color: #DFE3E6;
+  --border-light: #F1F2F3;
+  --border-medium: #DFE3E6;
+  --border-dark: #687076;
   
   // Sombras
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -99,7 +99,7 @@
   --spacing-4xl: 80px;
   
   // Tipografía
-  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   
   // Tamaños de fuente

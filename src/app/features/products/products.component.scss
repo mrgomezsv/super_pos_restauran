@@ -1,7 +1,9 @@
 .products-container {
-  padding: 0;
+  padding: var(--spacing-xl);
   max-width: 100%;
   margin: 0;
+  background: var(--background);
+  min-height: 100vh;
 }
 
 // Header Styles
@@ -20,14 +22,15 @@
       .page-title {
         font-size: var(--text-3xl);
         font-weight: var(--font-weight-bold);
-        color: var(--text-primary);
+        color: var(--text);
         margin: 0 0 var(--spacing-sm) 0;
         line-height: var(--leading-tight);
+        font-family: 'Poppins', sans-serif;
       }
       
       .page-subtitle {
         font-size: var(--text-base);
-        color: var(--text-secondary);
+        color: var(--text-gray);
         margin: 0;
         line-height: var(--leading-relaxed);
       }
@@ -38,7 +41,7 @@
       align-items: center;
       gap: var(--spacing-sm);
       padding: var(--spacing-md) var(--spacing-lg);
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      background: var(--primary);
       color: white;
       border: none;
       border-radius: var(--border-radius-lg);
@@ -51,7 +54,7 @@
       &:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
-        background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+        background: var(--primary-light);
       }
       
       &:active {
