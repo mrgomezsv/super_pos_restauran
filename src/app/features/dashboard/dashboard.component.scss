@@ -61,7 +61,7 @@
   }
 }
 
-// POS Quick Access - Estilo Odoo
+// POS Quick Access - Estilo Limpio
 .pos-quick-access {
   margin-bottom: var(--spacing-2xl);
   background: var(--surface-color);
@@ -75,8 +75,8 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-lg) var(--spacing-xl);
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
+    background: var(--input-bg);
+    color: var(--text);
     
     .pos-title {
       display: flex;
@@ -134,7 +134,7 @@
         .stat-number {
           font-size: 2rem;
           font-weight: 800;
-          color: var(--primary);
+          color: var(--text);
           margin-bottom: var(--spacing-xs);
         }
         
@@ -155,9 +155,9 @@
         align-items: center;
         gap: var(--spacing-sm);
         padding: var(--spacing-md) var(--spacing-lg);
-        background: var(--primary);
-        color: white;
-        border: none;
+        background: var(--btn-bg);
+        color: var(--text);
+        border: 1px solid var(--border);
         border-radius: var(--border-radius-md);
         font-size: 1rem;
         font-weight: 600;
@@ -165,7 +165,7 @@
         transition: all var(--transition-fast);
         
         &:hover {
-          background: var(--primary-light);
+          background: var(--input-bg);
           transform: translateY(-2px);
           box-shadow: var(--shadow-md);
         }
@@ -227,18 +227,21 @@
       justify-content: center;
       
       &.cash {
-        background: linear-gradient(135deg, #4caf50, #66bb6a);
-        color: white;
+        background: var(--btn-bg);
+        color: var(--text-gray);
+        border: 1px solid var(--border);
       }
       
       &.card {
-        background: linear-gradient(135deg, #2196f3, #42a5f5);
-        color: white;
+        background: var(--btn-bg);
+        color: var(--text-gray);
+        border: 1px solid var(--border);
       }
       
       &.transfer {
-        background: linear-gradient(135deg, #ff9800, #ffb74d);
-        color: white;
+        background: var(--btn-bg);
+        color: var(--text-gray);
+        border: 1px solid var(--border);
       }
       
       mat-icon {
@@ -298,53 +301,53 @@
       }
       
       &.primary {
-        border-color: var(--primary);
+        border-color: var(--border);
         
         &:hover {
-          background: var(--primary);
-          color: white;
+          background: var(--btn-bg);
+          color: var(--text);
           
           .action-icon mat-icon {
-            color: white;
+            color: var(--text);
           }
         }
       }
       
       &.secondary {
-        border-color: var(--text-gray);
+        border-color: var(--border);
         
         &:hover {
-          background: var(--text-gray);
-          color: white;
+          background: var(--btn-bg);
+          color: var(--text);
           
           .action-icon mat-icon {
-            color: white;
+            color: var(--text);
           }
         }
       }
       
       &.accent {
-        border-color: #4caf50;
+        border-color: var(--border);
         
         &:hover {
-          background: #4caf50;
-          color: white;
+          background: var(--btn-bg);
+          color: var(--text);
           
           .action-icon mat-icon {
-            color: white;
+            color: var(--text);
           }
         }
       }
       
       &.warning {
-        border-color: #ff9800;
+        border-color: var(--border);
         
         &:hover {
-          background: #ff9800;
-          color: white;
+          background: var(--btn-bg);
+          color: var(--text);
           
           .action-icon mat-icon {
-            color: white;
+            color: var(--text);
           }
         }
       }
