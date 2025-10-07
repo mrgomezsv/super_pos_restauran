@@ -77,4 +77,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
   goToReports(): void {
     this.router.navigate(['/reports']);
   }
+
+  goToUsers(): void {
+    this.router.navigate(['/users']);
+  }
+
+  getCurrentDate(): string {
+    const today = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    return today.toLocaleDateString('es-ES', options);
+  }
+
+  getRoleIcon(): string {
+    if (!this.currentUser) return '👤';
+    
+    switch (this.currentUser.role) {
+      case 'admin':
+        return '👑';
+      case 'manager':
+        return '👔';
+      case 'cashier':
+        return '💰';
+      default:
+        return '👤';
+    }
+  }
+
+  getRoleText(): string {
+    if (!this.currentUser) return 'Usuario';
+    
+    switch (this.currentUser.role) {
+      case 'admin':
+        return 'Administrador';
+      case 'manager':
+        return 'Gerente';
+      case 'cashier':
+        return 'Cajero';
+      default:
+        return 'Usuario';
+    }
+  }
 }
