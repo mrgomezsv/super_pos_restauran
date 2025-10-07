@@ -57,24 +57,32 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
+    console.log('Form submitted:', this.loginForm.value);
+    console.log('Form valid:', this.loginForm.valid);
+    
     if (this.loginForm.valid) {
       this.isLoading = true;
       const credentials: LoginRequest = this.loginForm.value;
+      console.log('Sending credentials:', credentials);
 
       this.authService.login(credentials).subscribe({
         next: (response) => {
+          console.log('Login successful:', response);
           this.isLoading = false;
           this.playSound('success');
           this.notificationService.success(`Bienvenido, ${response.user.name}`);
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          this.isLoading = false;
           console.error('Login error:', error);
+          this.isLoading = false;
           this.playSound('error');
           this.notificationService.error('Credenciales inválidas');
         }
       });
+    } else {
+      console.log('Form is invalid');
+      this.notificationService.error('Por favor, completa todos los campos');
     }
   }
 
