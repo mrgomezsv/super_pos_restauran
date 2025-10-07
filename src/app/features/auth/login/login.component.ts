@@ -100,6 +100,11 @@ export class LoginComponent implements OnInit {
     this.playSound('click');
   }
 
+  togglePasswordVisibility(): void {
+    this.hidePassword = !this.hidePassword;
+    this.playSound('click');
+  }
+
   private playSound(type: 'success' | 'error' | 'click'): void {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
