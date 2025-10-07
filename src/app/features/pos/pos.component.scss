@@ -845,8 +845,36 @@
     flex-direction: column;
     gap: var(--pos-spacing-lg);
     background: var(--pos-surface);
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+    
+    // Estilos personalizados para la scrollbar
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: var(--pos-bg);
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: var(--pos-border);
+      border-radius: 4px;
+      transition: background 0.3s ease;
+      
+      &:hover {
+        background: var(--pos-primary);
+      }
+    }
+    
+    // Para Firefox
+    scrollbar-width: thin;
+    scrollbar-color: var(--pos-border) var(--pos-bg);
     
     .numeric-keypad {
+      flex-shrink: 0; // No reducir el tamaño del teclado
+      
       .keypad-row {
         display: flex;
         gap: var(--pos-spacing-sm);
@@ -904,6 +932,8 @@
     }
     
     .payment-methods {
+      flex-shrink: 0; // No reducir el tamaño
+      
       h4 {
         font-size: 0.875rem;
         font-weight: 700;
@@ -982,6 +1012,8 @@
     }
     
     .payment-amount {
+      flex-shrink: 0; // No reducir el tamaño
+      
       .amount-input {
         margin-bottom: var(--pos-spacing);
         
@@ -1075,6 +1107,8 @@
     }
     
     .quick-actions {
+      flex-shrink: 0; // No reducir el tamaño
+      
       h4 {
         font-size: 0.875rem;
         font-weight: 700;
