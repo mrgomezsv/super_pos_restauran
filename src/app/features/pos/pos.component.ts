@@ -634,7 +634,10 @@ export class PosComponent implements OnInit, OnDestroy {
     const sale: Sale = {
       id: 0, // Se asignará en el backend
       invoiceNumber: '', // Se generará en el backend
-      invoiceType: 'consumidor_final',
+      invoiceType: paymentData.invoiceType || 'consumidor_final',
+      customerName: paymentData.customerName,
+      customerDocument: paymentData.customerDocument,
+      customerEmail: paymentData.customerEmail,
       items: this.cartItems,
       subtotal: this.cartTotals.subtotal,
       taxAmount: this.cartTotals.taxAmount,
@@ -653,12 +656,22 @@ export class PosComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe({
       next: (response) => {
-        this.toastr.success('Venta procesada exitosamente');
+        this.notificationService.success('Venta procesada exitosamente');
+        this.playSound('payment');
+        this.addHapticFeedback();
+        
+        // Mostrar información del cambio si es efectivo
+        if (paymentData.method === 'cash' && paymentData.change > 0) {
+          this.notificationService.info(`Cambio: $${paymentData.change.toFixed(2)}`);
+        }
+        
         this.clearCart();
+        this.loadProducts(); // Recargar productos para actualizar stock
       },
       error: (error) => {
         console.error('Error processing sale:', error);
-        this.toastr.error('Error al procesar la venta');
+        this.notificationService.error('Error al procesar la venta');
+        this.playSound('error');
       }
     });
   }

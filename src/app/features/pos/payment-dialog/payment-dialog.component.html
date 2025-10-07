@@ -10,15 +10,15 @@
       <h3>Resumen de la Venta</h3>
       <div class="summary-row">
         <span>Subtotal:</span>
-        <span>${{ data.cartTotals.subtotal | number:'1.2-2' }}</span>
+        <span>${{ cartTotals.subtotal | number:'1.2-2' }}</span>
       </div>
       <div class="summary-row">
         <span>Impuestos:</span>
-        <span>${{ data.cartTotals.taxAmount | number:'1.2-2' }}</span>
+        <span>${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
       </div>
       <div class="summary-row total-row">
         <span>Total:</span>
-        <span>${{ data.cartTotals.total | number:'1.2-2' }}</span>
+        <span>${{ cartTotals.total | number:'1.2-2' }}</span>
       </div>
     </div>
 
