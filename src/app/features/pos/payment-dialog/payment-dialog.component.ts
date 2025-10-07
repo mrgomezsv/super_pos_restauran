@@ -28,7 +28,6 @@ interface PaymentDialogData {
     CommonModule,
     FormsModule,
     MatDialogModule,
-    MatDialogTitle,
     MatDialogContent,
     MatDialogActions,
     MatFormFieldModule,
@@ -61,11 +60,17 @@ export class PaymentDialogComponent implements OnInit {
   }
 
   onPaymentMethodChange(): void {
+    // Al cambiar método de pago, ajustar el monto
     if (this.paymentMethod === 'cash') {
       this.paymentAmount = this.data.cartTotals.total;
     } else {
+      // Para tarjeta y transferencia, el monto es exacto
       this.paymentAmount = this.data.cartTotals.total;
     }
+    this.calculateChange();
+  }
+
+  onPaymentAmountChange(): void {
     this.calculateChange();
   }
 
@@ -73,15 +78,22 @@ export class PaymentDialogComponent implements OnInit {
     if (this.paymentMethod === 'cash') {
       this.change = this.paymentAmount - this.data.cartTotals.total;
     } else {
+      // Para tarjeta y transferencia no hay cambio
       this.change = 0;
     }
   }
 
   canConfirm(): boolean {
     if (this.paymentMethod === 'cash') {
-      return this.paymentAmount >= this.data.cartTotals.total;
+      return this.paymentAmount >= this.data.cartTotals.total && this.paymentAmount > 0;
     }
-    return this.paymentAmount >= this.data.cartTotals.total;
+    // Para tarjeta y transferencia, debe ser el monto exacto
+    return Math.abs(this.paymentAmount - this.data.cartTotals.total) < 0.01 && this.paymentAmount > 0;
+  }
+
+  setExactAmount(): void {
+    this.paymentAmount = this.data.cartTotals.total;
+    this.calculateChange();
   }
 
   onConfirm(): void {

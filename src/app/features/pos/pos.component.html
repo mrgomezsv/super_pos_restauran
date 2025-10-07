@@ -20,7 +20,7 @@
             type="text" 
             placeholder="Buscar producto o escanear código de barras..."
             [(ngModel)]="searchTerm"
-            (keyup.enter)="searchProducts()"
+            (keydown)="onSearchKeyDown($event)"
             (input)="onSearchInput()"
             class="search-input"
             #searchInput>
@@ -38,6 +38,12 @@
           </button>
           <button class="shortcut-btn" (click)="openPaymentDialog()" matTooltip="F2 - Pago" [disabled]="cartItems.length === 0">
             <span>F2</span>
+          </button>
+          <button class="shortcut-btn" (click)="clearCart()" matTooltip="F3 - Limpiar Carrito" [disabled]="cartItems.length === 0">
+            <span>F3</span>
+          </button>
+          <button class="shortcut-btn" (click)="setExactAmount()" matTooltip="F4 - Monto Exacto" [disabled]="cartItems.length === 0">
+            <span>F4</span>
           </button>
         </div>
       </div>

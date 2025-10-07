@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { LoginRequest } from '../../../core/models/user.model';
 
 @Component({
@@ -33,12 +34,14 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   hidePassword = true;
+  mousePosition = { x: 0, y: 0 };
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private notificationService: NotificationService
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -61,15 +64,30 @@ export class LoginComponent implements OnInit {
       this.authService.login(credentials).subscribe({
         next: (response) => {
           this.isLoading = false;
-          this.toastr.success(`Bienvenido, ${response.user.name}`);
+          this.playSound('success');
+          this.notificationService.success(`Bienvenido, ${response.user.name}`);
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.isLoading = false;
           console.error('Login error:', error);
-          this.toastr.error('Credenciales inválidas');
+          this.playSound('error');
+          this.notificationService.error('Credenciales inválidas');
         }
       });
+    }
+  }
+
+  @HostListener('mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    this.mousePosition.x = event.clientX;
+    this.mousePosition.y = event.clientY;
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !this.isLoading) {
+      this.onSubmit();
     }
   }
 
@@ -78,6 +96,36 @@ export class LoginComponent implements OnInit {
       username,
       password
     });
-    this.toastr.info(`Cuenta ${username} cargada`, 'Demo');
+    this.notificationService.info(`Cuenta ${username} cargada`, 'Demo');
+    this.playSound('click');
+  }
+
+  private playSound(type: 'success' | 'error' | 'click'): void {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      const soundConfig = {
+        success: { frequency: 800, duration: 0.15, volume: 0.08 },
+        error: { frequency: 300, duration: 0.25, volume: 0.1 },
+        click: { frequency: 1000, duration: 0.08, volume: 0.06 }
+      };
+      
+      const config = soundConfig[type];
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(config.volume, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + config.duration);
+      oscillator.frequency.setValueAtTime(config.frequency, audioContext.currentTime);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + config.duration);
+    } catch (error) {
+      console.debug('Audio not supported');
+    }
   }
 }

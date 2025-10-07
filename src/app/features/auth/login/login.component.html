@@ -1,125 +1,102 @@
 <div class="login-container">
-  <div class="login-background">
-    <div class="background-pattern"></div>
-    <div class="floating-shapes">
-      <div class="shape shape-1"></div>
-      <div class="shape shape-2"></div>
-      <div class="shape shape-3"></div>
-    </div>
-  </div>
-  
-  <div class="login-content">
-    <div class="login-card">
-      <!-- Header -->
-      <div class="login-header">
-        <div class="logo-container">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
-              <path d="M9 8H11V16H9V8ZM13 8H15V16H13V8Z"/>
-            </svg>
-          </div>
-          <h1 class="app-title">Super POS</h1>
-          <p class="app-subtitle">Sistema de Punto de Ventas</p>
-        </div>
-      </div>
-
-      <!-- Form -->
-      <div class="login-form-container">
-        <h2 class="form-title">Iniciar Sesión</h2>
-        <p class="form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
-        
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-          <div class="form-group">
-            <label for="username" class="form-label">
-              <mat-icon>person_outline</mat-icon>
-              Nombre de Usuario
-            </label>
-            <div class="input-container">
-              <input 
-                id="username"
-                type="text" 
-                formControlName="username" 
-                placeholder="Ingresa tu nombre de usuario"
-                class="form-input"
-                [class.error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-              <mat-icon class="input-icon">person</mat-icon>
-            </div>
-            <div class="error-message" *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
-              El nombre de usuario es requerido
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="password" class="form-label">
-              <mat-icon>lock_outline</mat-icon>
-              Contraseña
-            </label>
-            <div class="input-container">
-              <input 
-                id="password"
-                [type]="hidePassword ? 'password' : 'text'" 
-                formControlName="password" 
-                placeholder="Ingresa tu contraseña"
-                class="form-input"
-                [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-              <button 
-                type="button"
-                class="password-toggle" 
-                (click)="hidePassword = !hidePassword">
-                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-            </div>
-            <div class="error-message" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
-              La contraseña es requerida
-            </div>
-          </div>
-
-          <button 
-            type="submit" 
-            class="login-button"
-            [disabled]="loginForm.invalid || isLoading">
-            <div class="button-content">
-              <mat-spinner diameter="20" *ngIf="isLoading" class="button-spinner"></mat-spinner>
-              <mat-icon *ngIf="!isLoading">login</mat-icon>
-              <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
-            </div>
-          </button>
-        </form>
-      </div>
-
-      <!-- Demo Accounts -->
-      <div class="demo-section">
-        <div class="demo-header">
-          <mat-icon>info_outline</mat-icon>
-          <h3>Cuentas de Demostración</h3>
-        </div>
-        <div class="demo-accounts">
-          <div class="demo-account" (click)="fillDemoAccount('admin', 'admin123')">
-            <div class="account-icon admin">
-              <mat-icon>admin_panel_settings</mat-icon>
-            </div>
-            <div class="account-info">
-              <h4>Administrador</h4>
-              <p>Acceso completo al sistema</p>
-              <code>admin / admin123</code>
-            </div>
-            <mat-icon class="account-arrow">arrow_forward_ios</mat-icon>
-          </div>
-          
-          <div class="demo-account" (click)="fillDemoAccount('cajero1', 'cajero123')">
-            <div class="account-icon cashier">
-              <mat-icon>point_of_sale</mat-icon>
-            </div>
-            <div class="account-info">
-              <h4>Cajero</h4>
-              <p>Punto de venta y reportes</p>
-              <code>cajero1 / cajero123</code>
-            </div>
-            <mat-icon class="account-arrow">arrow_forward_ios</mat-icon>
-          </div>
-        </div>
+  <div class="form-wrapper">
+  <!-- Info Side -->
+  <aside class="info-side">
+    <div class="blockquote-wrapper">
+      <img 
+        src="/returns.png" alt="Returns" 
+        class="returns"
+      >
+      <blockquote>
+        Con Super POS, he optimizado significativamente 
+        las ventas en los últimos tres años.
+      </blockquote>
+      <div class="author">
+        <img src="/avatar.png" alt="Avatar" class="avatar">
+        <span class="author-name">&#64;super_pos_admin</span>
       </div>
     </div>
+  </aside>
+
+  <!-- Form Side -->
+  <main class="form-side">
+    <a href="#" title="Logo">
+      <img src="/laplace.svg" alt="Super POS Logo" class="logo">
+    </a>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="my-form">
+      <div class="form-welcome-row">
+        <h1>¡Bienvenido de vuelta! &#128079;</h1>
+        <h2>Inicia sesión con tu cuenta</h2>
+      </div>
+
+      <!-- Demo Accounts as Social Buttons -->
+      <div class="socials-row">
+        <a href="#" title="Cuenta Administrador" (click)="fillDemoAccount('admin', 'admin123'); $event.preventDefault()">
+          <!-- <mat-icon>admin_panel_settings</mat-icon> -->
+          Continuar como Administrador
+        </a>
+      </div>
+      <div class="socials-row">
+        <a href="#" title="Cuenta Cajero" (click)="fillDemoAccount('cajero1', 'cajero123'); $event.preventDefault()">
+          <!-- <mat-icon>point_of_sale</mat-icon> -->
+          Continuar como Cajero
+        </a>
+      </div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        o
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="text-field">
+        <label for="username">Nombre de Usuario</label>
+        <input 
+          type="text" 
+          id="username" 
+          formControlName="username" 
+          autocomplete="off" 
+          placeholder="Usuario"
+          required>
+        <div class="error-message" *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
+          El nombre de usuario es requerido
+        </div>
+      </div>
+
+      <div class="text-field">
+        <label for="password">Contraseña</label>
+        <input 
+          id="password" 
+          [type]="hidePassword ? 'password' : 'text'" 
+          formControlName="password" 
+          placeholder="Tu contraseña"
+          required
+        >
+        <div class="error-message" *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+          La contraseña es requerida
+        </div>
+      </div>
+
+      <button 
+        class="my-form__button" 
+        type="submit"
+        [disabled]="loginForm.invalid || isLoading">
+        <div class="button-content">
+          <mat-spinner diameter="20" *ngIf="isLoading" class="button-spinner"></mat-spinner>
+          <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
+        </div>
+      </button>
+
+      <div class="my-form__actions">
+        <div class="my-form__row">
+          <span>¿No tienes una cuenta?</span>
+          <a href="#" title="Contactar Administrador">
+            Contactar Administrador
+          </a>
+        </div>
+      </div>
+    </form>
+  </main>
   </div>
 </div>

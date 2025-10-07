@@ -13,6 +13,7 @@ import { ToastrService } from 'ngx-toastr';
 import { ProductService } from '../../core/services/product.service';
 import { SaleService } from '../../core/services/sale.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Product } from '../../core/models/product.model';
 import { CartItem, Sale } from '../../core/models/sale.model';
 import { User } from '../../core/models/user.model';
@@ -77,7 +78,8 @@ export class PosComponent implements OnInit, OnDestroy {
     private saleService: SaleService,
     private authService: AuthService,
     private dialog: MatDialog,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private notificationService: NotificationService
   ) {
     // Configurar búsqueda con debounce
     this.searchSubject.pipe(
@@ -108,7 +110,7 @@ export class PosComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent): void {
-    // Atajos de teclado
+    // Atajos de teclado mejorados
     switch (event.key) {
       case 'F1':
         event.preventDefault();
@@ -120,9 +122,35 @@ export class PosComponent implements OnInit, OnDestroy {
           this.openPaymentDialog();
         }
         break;
+      case 'F3':
+        event.preventDefault();
+        this.clearCart();
+        break;
+      case 'F4':
+        event.preventDefault();
+        this.setExactAmount();
+        break;
       case 'Escape':
         event.preventDefault();
-        this.clearSearch();
+        if (this.searchTerm) {
+          this.clearSearch();
+        } else if (this.cartItems.length > 0) {
+          this.clearCart();
+        }
+        break;
+      case 'Delete':
+        // Si hay productos en el carrito, eliminar el último
+        if (this.cartItems.length > 0 && !event.ctrlKey) {
+          event.preventDefault();
+          this.removeFromCart(this.cartItems.length - 1);
+        }
+        break;
+      case 'Enter':
+        // Si no hay focus en input, procesar pago
+        if (document.activeElement?.tagName !== 'INPUT' && this.cartItems.length > 0) {
+          event.preventDefault();
+          this.openPaymentDialog();
+        }
         break;
     }
   }
@@ -194,6 +222,32 @@ export class PosComponent implements OnInit, OnDestroy {
     this.filterProducts();
   }
 
+  // Búsqueda rápida por código de barras (enter)
+  onSearchKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      const searchTerm = this.searchTerm.trim();
+      
+      // Si parece ser un código de barras (solo números y más de 8 dígitos)
+      if (/^\d{8,}$/.test(searchTerm)) {
+        this.searchByBarcode(searchTerm);
+      } else {
+        this.searchProducts();
+      }
+    }
+  }
+
+  private searchByBarcode(barcode: string): void {
+    // Simular búsqueda por código de barras
+    const product = this.products.find(p => p.barcode === barcode);
+    if (product) {
+      this.addToCart(product);
+      this.searchTerm = '';
+    } else {
+      this.notificationService.barcodeNotFound(barcode);
+      this.playSound('error');
+    }
+  }
+
   clearSearch(): void {
     this.searchTerm = '';
     this.filterProducts();
@@ -241,7 +295,8 @@ export class PosComponent implements OnInit, OnDestroy {
 
   addToCart(product: Product): void {
     if (product.stock <= 0) {
-      this.toastr.warning('Producto sin stock disponible');
+      this.notificationService.productOutOfStock(product.name);
+      this.playSound('error');
       return;
     }
 
@@ -249,7 +304,8 @@ export class PosComponent implements OnInit, OnDestroy {
     
     if (existingItem) {
       if (existingItem.quantity >= product.stock) {
-        this.toastr.warning('No hay suficiente stock disponible');
+        this.notificationService.insufficientStock(product.name);
+        this.playSound('error');
         return;
       }
       existingItem.quantity += 1;
@@ -268,7 +324,9 @@ export class PosComponent implements OnInit, OnDestroy {
     }
 
     this.calculateCartTotals();
-    this.toastr.success(`${product.name} agregado al carrito`);
+    this.notificationService.productAdded(product.name);
+    this.playSound('success');
+    this.addHapticFeedback();
   }
 
   increaseQuantity(index: number): void {
@@ -279,8 +337,10 @@ export class PosComponent implements OnInit, OnDestroy {
       item.quantity += 1;
       item.total = item.unitPrice * item.quantity;
       this.calculateCartTotals();
+      this.playSound('click');
     } else {
       this.toastr.warning('No hay suficiente stock disponible');
+      this.playSound('error');
     }
   }
 
@@ -290,6 +350,7 @@ export class PosComponent implements OnInit, OnDestroy {
       item.quantity -= 1;
       item.total = item.unitPrice * item.quantity;
       this.calculateCartTotals();
+      this.playSound('click');
     }
   }
 
@@ -318,17 +379,32 @@ export class PosComponent implements OnInit, OnDestroy {
   removeFromCart(index: number): void {
     this.cartItems.splice(index, 1);
     this.calculateCartTotals();
+    this.playSound('click');
   }
 
   clearCart(): void {
     this.cartItems = [];
     this.calculateCartTotals();
-    this.toastr.info('Carrito limpiado');
+    this.notificationService.cartCleared();
   }
 
   private calculateCartTotals(): void {
-    const subtotal = this.cartItems.reduce((sum, item) => sum + item.total, 0);
-    const taxAmount = this.cartItems.reduce((sum, item) => sum + (item.total * (item.tax / 100)), 0);
+    if (this.cartItems.length === 0) {
+      this.cartTotals = { subtotal: 0, taxAmount: 0, total: 0 };
+      return;
+    }
+
+    const subtotal = this.cartItems.reduce((sum, item) => {
+      const itemTotal = item.unitPrice * item.quantity;
+      return sum + itemTotal;
+    }, 0);
+
+    const taxAmount = this.cartItems.reduce((sum, item) => {
+      const itemTotal = item.unitPrice * item.quantity;
+      const itemTax = itemTotal * (item.tax / 100);
+      return sum + itemTax;
+    }, 0);
+
     const total = subtotal + taxAmount;
 
     this.cartTotals = {
@@ -347,26 +423,106 @@ export class PosComponent implements OnInit, OnDestroy {
   addToPayment(value: string): void {
     if (!this.selectedPaymentMethod) {
       this.toastr.warning('Selecciona un método de pago primero');
+      this.playSound('error');
       return;
     }
 
     if (value === '.' && this.paymentAmount.includes('.')) {
+      this.playSound('error');
       return; // No permitir múltiples puntos decimales
     }
 
     this.paymentAmount += value;
+    this.playSound('click');
   }
 
   clearPayment(): void {
     this.paymentAmount = '';
+    this.playSound('click');
   }
 
   getPaymentAmount(): number {
     return parseFloat(this.paymentAmount) || 0;
   }
 
+  // Efectos de sonido mejorados con configuración
+  private playSound(type: 'success' | 'error' | 'click' | 'payment'): void {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Configuraciones de sonido mejoradas
+      const soundConfig = {
+        success: {
+          frequency: [800, 1200],
+          duration: 0.15,
+          volume: 0.08,
+          type: 'sine'
+        },
+        error: {
+          frequency: [300, 150],
+          duration: 0.25,
+          volume: 0.1,
+          type: 'square'
+        },
+        click: {
+          frequency: [1000],
+          duration: 0.08,
+          volume: 0.06,
+          type: 'sine'
+        },
+        payment: {
+          frequency: [600, 800, 1000],
+          duration: 0.3,
+          volume: 0.1,
+          type: 'sine'
+        }
+      };
+      
+      const config = soundConfig[type];
+      oscillator.type = config.type as OscillatorType;
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(config.volume, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + config.duration);
+      
+      if (config.frequency.length === 1) {
+        oscillator.frequency.setValueAtTime(config.frequency[0], audioContext.currentTime);
+      } else {
+        oscillator.frequency.setValueAtTime(config.frequency[0], audioContext.currentTime);
+        for (let i = 1; i < config.frequency.length; i++) {
+          oscillator.frequency.exponentialRampToValueAtTime(
+            config.frequency[i], 
+            audioContext.currentTime + (config.duration / config.frequency.length) * i
+          );
+        }
+      }
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + config.duration);
+    } catch (error) {
+      console.debug('Audio not supported');
+    }
+  }
+
+  // Feedback táctil para dispositivos móviles
+  private addHapticFeedback(): void {
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50); // Vibración corta de 50ms
+      }
+    } catch (error) {
+      // Silenciar errores de vibración
+      console.debug('Vibration not supported');
+    }
+  }
+
   setExactAmount(): void {
     this.paymentAmount = this.cartTotals.total.toString();
+    this.playSound('click');
   }
 
   addDiscount(): void {
@@ -382,16 +538,19 @@ export class PosComponent implements OnInit, OnDestroy {
   processPayment(): void {
     if (!this.selectedPaymentMethod) {
       this.toastr.warning('Selecciona un método de pago');
+      this.playSound('error');
       return;
     }
 
     const amount = parseFloat(this.paymentAmount);
     if (isNaN(amount) || amount < this.cartTotals.total) {
       this.toastr.warning('El monto debe ser mayor o igual al total');
+      this.playSound('error');
       return;
     }
 
     const change = amount - this.cartTotals.total;
+    this.playSound('payment');
     
     // Crear la venta
     const sale: Sale = {

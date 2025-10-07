@@ -63,8 +63,13 @@
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Monto Recibido</mat-label>
-        <input matInput type="number" step="0.01" [(ngModel)]="paymentAmount" (input)="calculateChange()">
+        <input matInput type="number" step="0.01" [(ngModel)]="paymentAmount" (input)="onPaymentAmountChange()">
       </mat-form-field>
+      
+      <button mat-stroked-button (click)="setExactAmount()" class="exact-amount-btn">
+        <mat-icon>receipt</mat-icon>
+        Monto Exacto
+      </button>
     </div>
 
     <!-- Cambio -->
