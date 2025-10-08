@@ -128,7 +128,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   openProductDialog(product?: Product): void {
     const dialogRef = this.dialog.open(ProductDialogComponent, {
-      width: '600px',
+      width: '90vw',
+      maxWidth: '800px',
+      maxHeight: '90vh',
+      panelClass: 'custom-dialog-container',
+      disableClose: false,
+      autoFocus: true,
       data: product
     });
 
