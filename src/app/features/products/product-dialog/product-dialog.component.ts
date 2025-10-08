@@ -29,7 +29,10 @@ import { Product, ProductCategory } from '../../../core/models/product.model';
     MatCheckboxModule
   ],
   templateUrl: './product-dialog.component.html',
-  styleUrls: ['./product-dialog.component.scss']
+  styleUrls: ['./product-dialog.component.scss'],
+  host: {
+    'class': 'custom-dialog-container'
+  }
 })
 export class ProductDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

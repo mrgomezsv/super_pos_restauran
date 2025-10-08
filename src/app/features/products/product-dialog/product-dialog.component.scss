@@ -1,3 +1,15 @@
+// Estilos para el contenedor del modal
+:host {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  width: 90vw !important;
+  max-width: 800px !important;
+  max-height: 90vh !important;
+}
+
 .product-dialog {
   width: 100%;
   max-width: 800px;
