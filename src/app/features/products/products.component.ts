@@ -134,6 +134,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
       panelClass: 'custom-dialog-container',
       disableClose: false,
       autoFocus: true,
+      hasBackdrop: true,
+      backdropClass: 'custom-backdrop',
+      position: {
+        top: '50%',
+        left: '50%'
+      },
       data: product
     });
 

@@ -737,12 +737,16 @@ a {
     border-radius: var(--border-radius-xl) !important;
     overflow: hidden !important;
   }
-  
-  .cdk-overlay-backdrop {
-    background: rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(4px) !important;
-  }
-  
+}
+
+// Backdrop personalizado
+::ng-deep .custom-backdrop {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+// Forzar centrado del overlay
+::ng-deep .cdk-overlay-container {
   .cdk-overlay-pane {
     position: fixed !important;
     top: 50% !important;
