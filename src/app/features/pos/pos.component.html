@@ -292,16 +292,16 @@
           <h4>Acciones Rápidas</h4>
           <div class="action-buttons">
             <button class="action-btn" (click)="setExactAmount()" [disabled]="cartItems.length === 0">
-              <mat-icon>receipt</mat-icon>
-              <span>Monto Exacto</span>
+              <mat-icon>payment</mat-icon>
+              <span>Procesar Pago (F2)</span>
             </button>
             <button class="action-btn" (click)="addDiscount()" [disabled]="cartItems.length === 0">
               <mat-icon>local_offer</mat-icon>
-              <span>Descuento</span>
+              <span>Aplicar Descuento</span>
             </button>
             <button class="action-btn" (click)="printReceipt()" [disabled]="cartItems.length === 0">
               <mat-icon>print</mat-icon>
-              <span>Imprimir</span>
+              <span>Vista Previa</span>
             </button>
           </div>
         </div>

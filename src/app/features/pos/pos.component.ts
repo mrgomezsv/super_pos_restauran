@@ -521,18 +521,209 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   setExactAmount(): void {
-    this.paymentAmount = this.cartTotals.total.toString();
+    if (this.cartItems.length === 0) {
+      this.notificationService.warning('Agrega productos al carrito primero');
+      this.playSound('error');
+      return;
+    }
+    
+    // Abrir diálogo de pago directamente
+    this.openPaymentDialog();
     this.playSound('click');
   }
 
   addDiscount(): void {
-    // TODO: Implementar descuentos
-    this.toastr.info('Funcionalidad de descuentos próximamente');
+    if (this.cartItems.length === 0) {
+      this.notificationService.warning('Agrega productos al carrito primero');
+      this.playSound('error');
+      return;
+    }
+    
+    // Solicitar porcentaje de descuento
+    const discount = prompt('Ingrese el porcentaje de descuento (0-100):');
+    
+    if (discount === null) {
+      return; // Usuario canceló
+    }
+    
+    const discountValue = parseFloat(discount);
+    
+    if (isNaN(discountValue) || discountValue < 0 || discountValue > 100) {
+      this.notificationService.error('Porcentaje de descuento inválido');
+      this.playSound('error');
+      return;
+    }
+    
+    // Aplicar descuento a cada item
+    const discountMultiplier = 1 - (discountValue / 100);
+    this.cartItems.forEach(item => {
+      item.unitPrice = item.unitPrice * discountMultiplier;
+      item.total = item.unitPrice * item.quantity;
+    });
+    
+    this.calculateCartTotals();
+    this.notificationService.success(`Descuento del ${discountValue}% aplicado`);
+    this.playSound('success');
   }
 
   printReceipt(): void {
-    // TODO: Implementar impresión
-    this.toastr.info('Funcionalidad de impresión próximamente');
+    if (this.cartItems.length === 0) {
+      this.notificationService.warning('No hay productos en el carrito');
+      this.playSound('error');
+      return;
+    }
+    
+    // Generar contenido del recibo
+    const receiptContent = this.generateReceiptContent();
+    
+    // Abrir ventana de impresión
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(receiptContent);
+      printWindow.document.close();
+      printWindow.focus();
+      
+      // Esperar a que cargue y luego imprimir
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+      
+      this.notificationService.info('Preparando impresión...');
+      this.playSound('click');
+    } else {
+      this.notificationService.error('No se pudo abrir la ventana de impresión');
+      this.playSound('error');
+    }
+  }
+
+  private generateReceiptContent(): string {
+    const date = new Date().toLocaleString('es-ES');
+    const items = this.cartItems.map(item => `
+      <tr>
+        <td>${item.productName}</td>
+        <td style="text-align: center;">${item.quantity}</td>
+        <td style="text-align: right;">$${item.unitPrice.toFixed(2)}</td>
+        <td style="text-align: right;">$${item.total.toFixed(2)}</td>
+      </tr>
+    `).join('');
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Recibo - Super POS</title>
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 24px;
+          }
+          .header p {
+            margin: 5px 0;
+            font-size: 12px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+          }
+          th {
+            border-bottom: 1px solid #000;
+            padding: 5px 0;
+            text-align: left;
+            font-size: 12px;
+          }
+          td {
+            padding: 5px 0;
+            font-size: 12px;
+          }
+          .totals {
+            border-top: 2px dashed #000;
+            padding-top: 10px;
+            margin-top: 15px;
+          }
+          .totals div {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+          }
+          .total-row {
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #000;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 20px;
+            border-top: 2px dashed #000;
+            padding-top: 10px;
+            font-size: 12px;
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>SUPER POS</h1>
+          <p>Sistema de Punto de Ventas</p>
+          <p>Fecha: ${date}</p>
+          <p>Cajero: ${this.currentUser?.name || 'N/A'}</p>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th style="text-align: center;">Cant.</th>
+              <th style="text-align: right;">Precio</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items}
+          </tbody>
+        </table>
+        
+        <div class="totals">
+          <div>
+            <span>Subtotal:</span>
+            <span>$${this.cartTotals.subtotal.toFixed(2)}</span>
+          </div>
+          <div>
+            <span>Impuestos:</span>
+            <span>$${this.cartTotals.taxAmount.toFixed(2)}</span>
+          </div>
+          <div class="total-row">
+            <span>TOTAL:</span>
+            <span>$${this.cartTotals.total.toFixed(2)}</span>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>¡Gracias por su compra!</p>
+          <p>Vuelva pronto</p>
+        </div>
+      </body>
+      </html>
+    `;
   }
 
   processPayment(): void {

@@ -165,6 +165,8 @@
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
   overflow: hidden;
+  margin-top: 8px;
+  transform: translateX(-20px);
   
   .menu-header {
     padding: var(--spacing-lg);
