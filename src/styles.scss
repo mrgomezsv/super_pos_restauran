@@ -722,39 +722,17 @@ a {
 // Estilos para modales personalizados
 ::ng-deep .custom-dialog-container {
   .mat-mdc-dialog-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: none !important;
-    max-height: none !important;
-    border-radius: var(--border-radius-xl) !important;
-    box-shadow: var(--shadow-lg) !important;
-    overflow: hidden !important;
+    padding: 0;
+    margin: 0;
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
   }
   
   .mat-mdc-dialog-surface {
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: var(--border-radius-xl) !important;
-    overflow: hidden !important;
-  }
-}
-
-// Backdrop personalizado
-::ng-deep .custom-backdrop {
-  background: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(4px) !important;
-}
-
-// Forzar centrado del overlay
-::ng-deep .cdk-overlay-container {
-  .cdk-overlay-pane {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    max-width: 90vw !important;
-    max-height: 90vh !important;
-    width: auto !important;
-    height: auto !important;
+    padding: 0;
+    margin: 0;
+    border-radius: var(--border-radius-xl);
+    overflow: hidden;
   }
 }

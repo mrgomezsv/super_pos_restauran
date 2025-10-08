@@ -128,18 +128,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   openProductDialog(product?: Product): void {
     const dialogRef = this.dialog.open(ProductDialogComponent, {
-      width: '90vw',
-      maxWidth: '800px',
+      width: '800px',
       maxHeight: '90vh',
       panelClass: 'custom-dialog-container',
       disableClose: false,
       autoFocus: true,
       hasBackdrop: true,
-      backdropClass: 'custom-backdrop',
-      position: {
-        top: '50%',
-        left: '50%'
-      },
       data: product
     });
 
