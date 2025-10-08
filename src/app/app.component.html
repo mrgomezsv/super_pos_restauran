@@ -22,7 +22,7 @@
       </div>
       
       <div class="header-right">
-        <div class="user-info" [matMenuTriggerFor]="userMenu">
+        <div class="user-info" (click)="toggleUserMenu()" [class.active]="isUserMenuOpen">
           <div class="user-avatar">
             <mat-icon>account_circle</mat-icon>
           </div>
@@ -35,28 +35,32 @@
           </div>
         </div>
         
-        <mat-menu #userMenu="matMenu" class="user-menu" xPosition="after" yPosition="below">
-          <div class="menu-header">
-            <div class="menu-user-info">
-              <div class="menu-user-avatar">
-                <mat-icon>account_circle</mat-icon>
-              </div>
-              <div class="menu-user-details">
-                <span class="menu-user-name">{{ currentUser?.name }}</span>
-                <span class="menu-user-role">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cajero' }}</span>
+        <!-- Popover personalizado -->
+        <div class="user-popover" *ngIf="isUserMenuOpen">
+          <div class="popover-arrow"></div>
+          <div class="popover-content">
+            <div class="menu-header">
+              <div class="menu-user-info">
+                <div class="menu-user-avatar">
+                  <mat-icon>account_circle</mat-icon>
+                </div>
+                <div class="menu-user-details">
+                  <span class="menu-user-name">{{ currentUser?.name }}</span>
+                  <span class="menu-user-role">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cajero' }}</span>
+                </div>
               </div>
             </div>
+            <div class="menu-divider"></div>
+            <!-- <button (click)="goToDashboard(); closeUserMenu()" class="menu-item">
+              <mat-icon>dashboard</mat-icon>
+              <span>Dashboard</span>
+            </button> -->
+            <button (click)="logout(); closeUserMenu()" class="menu-item logout">
+              <mat-icon>logout</mat-icon>
+              <span>Cerrar Sesión</span>
+            </button>
           </div>
-          <div class="menu-divider"></div>
-          <button mat-menu-item (click)="goToDashboard()" class="menu-item">
-            <mat-icon>dashboard</mat-icon>
-            <span>Dashboard</span>
-          </button>
-          <button mat-menu-item (click)="logout()" class="menu-item logout">
-            <mat-icon>logout</mat-icon>
-            <span>Cerrar Sesión</span>
-          </button>
-        </mat-menu>
+        </div>
       </div>
     </div>
   </header>

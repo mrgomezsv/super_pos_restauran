@@ -86,6 +86,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    position: relative;
     
       .user-info {
         display: flex;
@@ -154,19 +155,62 @@
           color: var(--text);
           transform: rotate(180deg);
         }
+        
+        &.active {
+          background: var(--btn-bg);
+          
+          .user-menu-arrow {
+            color: var(--text);
+            transform: rotate(180deg);
+          }
+        }
       }
   }
 }
 
-// User Menu Styles
-.user-menu {
+// User Popover Styles
+.user-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
   min-width: 280px;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
+  background: var(--surface-color);
+  z-index: 1000;
   overflow: hidden;
-  margin-top: 8px;
-  transform: translateX(-20px);
+  animation: popoverSlideIn 0.2s ease-out;
+  
+  .popover-arrow {
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid var(--border);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: -7px;
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 7px solid var(--surface-color);
+    }
+  }
+  
+  .popover-content {
+    background: var(--surface-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+  }
   
   .menu-header {
     padding: var(--spacing-lg);
@@ -226,6 +270,11 @@
     padding: var(--spacing-md) var(--spacing-lg);
     transition: all var(--transition-fast);
     min-height: 48px;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
     
     mat-icon {
       font-size: 20px;
@@ -261,6 +310,18 @@
         }
       }
     }
+  }
+}
+
+// Animación de entrada del popover
+@keyframes popoverSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -628,4 +689,5 @@
 
 .main-content .content-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
+}
 }
