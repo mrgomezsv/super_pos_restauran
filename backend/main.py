@@ -3,7 +3,7 @@ Super POS - Backend API con FastAPI
 Sistema de Punto de Ventas para Supermercados
 """
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta
@@ -11,12 +11,13 @@ from typing import List, Optional
 import uuid
 
 # Importar modelos y esquemas
-from models import User, Product, Sale, ProductCategory, CartItem
+from models import User, Product, Sale, ProductCategory
 from schemas import (
     UserLogin, UserResponse, UserCreate, UserUpdate,
     ProductResponse, ProductCreate, ProductUpdate,
     SaleCreate, SaleResponse, SaleSummary,
-    LoginResponse, CartItem as CartItemSchema
+    LoginResponse, CartItem as CartItemSchema,
+    ProductCategoryCreate
 )
 
 # Crear aplicación FastAPI
@@ -69,7 +70,7 @@ users_db = [
 products_db = [
     Product(
         id=1,
-        code="PROD001",
+        code="SKU00001",
         name="Coca Cola 350ml",
         description="Bebida gaseosa Coca Cola 350ml",
         price=1.25,
@@ -87,7 +88,7 @@ products_db = [
     ),
     Product(
         id=2,
-        code="PROD002",
+        code="SKU00002",
         name="Pan Integral",
         description="Pan integral 500g",
         price=2.50,
@@ -105,7 +106,7 @@ products_db = [
     ),
     Product(
         id=3,
-        code="PROD003",
+        code="SKU00003",
         name="Leche Entera 1L",
         description="Leche entera pasteurizada 1 litro",
         price=3.20,
@@ -157,6 +158,47 @@ def calculate_totals(items: List[CartItemSchema]) -> dict:
         "taxAmount": tax_amount,
         "total": total
     }
+
+def generate_next_sku() -> str:
+    """Generar el siguiente SKU disponible de forma secuencial"""
+    # Buscar todos los números de SKU existentes
+    sku_numbers = []
+    for product in products_db:
+        if product.code.startswith("SKU"):
+            try:
+                # Extraer el número del SKU (SKU00001 -> 1)
+                number = int(product.code[3:])  # Remover "SKU" y convertir a número
+                sku_numbers.append(number)
+            except ValueError:
+                continue
+    
+    if not sku_numbers:
+        # Si no hay SKUs existentes, empezar con SKU00001
+        return "SKU00001"
+    
+    # Ordenar los números para encontrar el siguiente en secuencia
+    sku_numbers.sort()
+    
+    # Encontrar el primer número faltante en la secuencia
+    expected_number = 1
+    for sku_num in sku_numbers:
+        if sku_num == expected_number:
+            expected_number += 1
+        else:
+            # Encontramos un hueco en la secuencia, usar ese número
+            break
+    
+    # Formatear con ceros a la izquierda (5 dígitos)
+    return f"SKU{expected_number:05d}"
+
+def get_next_product_id() -> int:
+    """Obtener el siguiente ID de producto disponible"""
+    if not products_db:
+        return 1
+    
+    # Encontrar el ID más alto y sumar 1
+    max_id = max(product.id for product in products_db)
+    return max_id + 1
 
 # Rutas de autenticación
 @app.post("/api/auth/login", response_model=LoginResponse)
@@ -213,6 +255,62 @@ async def get_products(
     
     return [ProductResponse.model_validate(p.model_dump()) for p in filtered_products]
 
+@app.get("/api/products/next-sku")
+async def get_next_sku():
+    """Obtener el siguiente SKU disponible"""
+    next_sku = generate_next_sku()
+    return {"nextSKU": next_sku}
+
+@app.get("/api/products/sku-info")
+async def get_sku_info():
+    """Obtener información sobre la secuencia de SKUs"""
+    sku_numbers = []
+    for product in products_db:
+        if product.code.startswith("SKU"):
+            try:
+                number = int(product.code[3:])
+                sku_numbers.append(number)
+            except ValueError:
+                continue
+    
+    sku_numbers.sort()
+    
+    return {
+        "totalSKUs": len(sku_numbers),
+        "firstSKU": f"SKU{sku_numbers[0]:05d}" if sku_numbers else None,
+        "lastSKU": f"SKU{sku_numbers[-1]:05d}" if sku_numbers else None,
+        "nextSKU": generate_next_sku(),
+        "sequenceComplete": len(sku_numbers) == (sku_numbers[-1] - sku_numbers[0] + 1) if sku_numbers else True
+    }
+
+# Rutas de categorías (deben ir ANTES de las rutas con parámetros)
+@app.get("/api/products/categories", response_model=List[ProductCategory])
+async def get_categories():
+    """Obtener categorías de productos"""
+    return categories_db
+
+@app.post("/api/products/categories", response_model=ProductCategory)
+async def create_category(category: ProductCategoryCreate):
+    """Crear nueva categoría"""
+    # Verificar si ya existe una categoría con ese nombre
+    existing_category = next((c for c in categories_db if c.name.lower() == category.name.lower()), None)
+    if existing_category:
+        raise HTTPException(status_code=400, detail="Ya existe una categoría con ese nombre")
+    
+    # Obtener el siguiente ID
+    next_id = max([c.id for c in categories_db], default=0) + 1
+    
+    # Crear nueva categoría
+    new_category = ProductCategory(
+        id=next_id,
+        name=category.name.strip(),
+        isActive=category.isActive
+    )
+    
+    categories_db.append(new_category)
+    
+    return new_category
+
 @app.get("/api/products/{product_id}", response_model=ProductResponse)
 async def get_product(product_id: int):
     """Obtener producto por ID"""
@@ -239,14 +337,31 @@ async def get_product_by_barcode(barcode: str):
 
 @app.post("/api/products", response_model=ProductResponse)
 async def create_product(product_data: ProductCreate):
-    """Crear nuevo producto"""
-    # Verificar que el código no exista
-    if any(p.code == product_data.code for p in products_db):
-        raise HTTPException(status_code=400, detail="El código del producto ya existe")
+    """Crear nuevo producto con SKU automático secuencial"""
+    # Siempre generar SKU automáticamente para mantener secuencia
+    # Ignorar cualquier código proporcionado por el cliente
+    product_code = generate_next_sku()
+    
+    # Verificar que el SKU generado no exista (doble verificación)
+    max_attempts = 10
+    attempts = 0
+    while any(p.code == product_code for p in products_db) and attempts < max_attempts:
+        product_code = generate_next_sku()
+        attempts += 1
+    
+    if attempts >= max_attempts:
+        raise HTTPException(
+            status_code=500, 
+            detail="Error al generar SKU único. Intente nuevamente."
+        )
+    
+    # Crear el producto con el SKU generado automáticamente
+    product_dict = product_data.model_dump()
+    product_dict['code'] = product_code
     
     new_product = Product(
-        id=len(products_db) + 1,
-        **product_data.model_dump(),
+        id=get_next_product_id(),
+        **product_dict,
         createdAt=datetime.now(),
         updatedAt=datetime.now()
     )
@@ -276,11 +391,6 @@ async def delete_product(product_id: int):
     
     products_db.remove(product)
     return {"message": "Producto eliminado exitosamente"}
-
-@app.get("/api/products/categories", response_model=List[ProductCategory])
-async def get_categories():
-    """Obtener categorías de productos"""
-    return categories_db
 
 # Rutas de ventas
 @app.post("/api/sales", response_model=SaleResponse)
@@ -312,7 +422,7 @@ async def get_sales(
     endDate: Optional[str] = None,
     cashierId: Optional[int] = None,
     invoiceType: Optional[str] = None,
-    status: Optional[str] = None
+    sale_status: Optional[str] = None
 ):
     """Obtener lista de ventas con filtros"""
     filtered_sales = sales_db.copy()
@@ -331,8 +441,8 @@ async def get_sales(
     if invoiceType:
         filtered_sales = [s for s in filtered_sales if s.invoiceType == invoiceType]
     
-    if status:
-        filtered_sales = [s for s in filtered_sales if s.status == status]
+    if sale_status:
+        filtered_sales = [s for s in filtered_sales if s.status == sale_status]
     
     return [SaleResponse.model_validate(s.model_dump()) for s in filtered_sales]
 

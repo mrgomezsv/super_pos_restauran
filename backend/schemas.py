@@ -4,7 +4,7 @@ Esquemas de validación para el sistema Super POS
 
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field, EmailStr, validator
+from pydantic import BaseModel, Field, EmailStr
 
 # Esquemas de usuario
 class UserResponse(BaseModel):
@@ -62,7 +62,7 @@ class ProductResponse(BaseModel):
     updatedAt: datetime
 
 class ProductCreate(BaseModel):
-    code: str = Field(..., min_length=3, max_length=50)
+    code: Optional[str] = Field(None, max_length=50)  # Opcional, se genera automáticamente
     name: str = Field(..., min_length=2, max_length=200)
     description: Optional[str] = Field(None, max_length=500)
     price: float = Field(..., gt=0)

@@ -69,4 +69,9 @@ export class ProductService {
   deleteCategory(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/products/categories/${id}`);
   }
+
+  getNextSKU(): Observable<{ nextSKU: string }> {
+    return this.http.get<{ nextSKU: string }>(`${this.API_URL}/products/next-sku`);
+  }
+
 }

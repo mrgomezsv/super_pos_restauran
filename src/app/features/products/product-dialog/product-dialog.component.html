@@ -27,24 +27,34 @@
           </h3>
           
           <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('code')?.hasError('required') && productForm.get('code')?.touched">
-              <!-- <mat-label>Código del Producto *</mat-label> -->
+            <mat-form-field appearance="outline" class="form-field sku-field">
+              <!-- <mat-label>SKU</mat-label> -->
               <input 
                 matInput 
                 formControlName="code" 
-                placeholder="Código del Producto *"
+                [placeholder]="isEdit ? 'SKU del producto' : 'Cargando siguiente SKU...'"
                 autocomplete="off"
-                maxlength="20">
-              <mat-error *ngIf="productForm.get('code')?.hasError('required') && productForm.get('code')?.touched">
-                {{ getErrorMessage('code') }}
-              </mat-error>
+                maxlength="20"
+                readonly="true">
+              <mat-icon matSuffix class="sku-info-icon" matTooltip="SKU asignado automáticamente por el sistema de forma secuencial" matTooltipPosition="above">
+                info
+              </mat-icon>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('category')?.hasError('required') && productForm.get('category')?.touched">
+            <mat-form-field appearance="outline" class="form-field category-field" [class.mat-form-field-invalid]="productForm.get('category')?.hasError('required') && productForm.get('category')?.touched">
               <!-- <mat-label>Categoría *</mat-label> -->
-              <mat-select formControlName="category" placeholder="Categoría *">
+              <mat-select formControlName="category" placeholder="Categoría *" [disabled]="isLoadingCategories" (selectionChange)="onCategoryChange($event)">
                 <mat-option *ngFor="let category of categories" [value]="category.name">
-                  {{ category.name }}
+                  <div class="category-option">
+                    <mat-icon class="category-icon">{{ getCategoryIcon(category.name) }}</mat-icon>
+                    <span class="category-name">{{ category.name }}</span>
+                  </div>
+                </mat-option>
+                <mat-option value="__NEW_CATEGORY__" class="new-category-option">
+                  <div class="new-category-content">
+                    <mat-icon>add_circle</mat-icon>
+                    <span>Crear nueva categoría...</span>
+                  </div>
                 </mat-option>
               </mat-select>
               <mat-error *ngIf="productForm.get('category')?.hasError('required') && productForm.get('category')?.touched">
@@ -236,6 +246,44 @@
         <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
         {{ isEdit ? 'Actualizar' : 'Crear' }}
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Diálogo para crear nueva categoría -->
+<div class="category-dialog-overlay" *ngIf="showNewCategoryDialog" (click)="closeNewCategoryDialog()">
+  <div class="category-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Crear Nueva Categoría</h3>
+      <button mat-icon-button class="close-btn" (click)="closeNewCategoryDialog()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <mat-form-field appearance="outline" class="full-width">
+        <input 
+          matInput 
+          [(ngModel)]="newCategoryName" 
+          placeholder="Nombre de la nueva categoría"
+          maxlength="50"
+          #newCategoryInput>
+      </mat-form-field>
+      
+      <div class="dialog-actions">
+        <button mat-button (click)="closeNewCategoryDialog()" class="cancel-btn">
+          Cancelar
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="createNewCategory()"
+          [disabled]="!newCategoryName?.trim() || isCreatingCategory"
+          class="create-btn">
+          <mat-icon *ngIf="isCreatingCategory">refresh</mat-icon>
+          {{ isCreatingCategory ? 'Creando...' : 'Crear Categoría' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
