@@ -727,6 +727,10 @@ a {
     border-radius: var(--border-radius-xl);
     box-shadow: var(--shadow-lg);
     overflow: hidden;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
   }
   
   .mat-mdc-dialog-surface {
@@ -734,5 +738,41 @@ a {
     margin: 0;
     border-radius: var(--border-radius-xl);
     overflow: hidden;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
   }
+}
+
+// Centrado del modal en la pantalla
+::ng-deep .cdk-overlay-container {
+  .cdk-overlay-pane {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--spacing-lg);
+    box-sizing: border-box;
+  }
+  
+  .mat-mdc-dialog-container {
+    margin: auto;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+  }
+}
+
+// Asegurar que el backdrop cubra toda la pantalla
+::ng-deep .cdk-overlay-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+// Estilos para el backdrop personalizado
+::ng-deep .custom-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
 }

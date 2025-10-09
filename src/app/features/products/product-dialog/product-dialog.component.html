@@ -1,275 +1,241 @@
-<div class="product-dialog">
-  <div class="dialog-header">
-    <div class="header-icon">
-      <mat-icon>{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
-    </div>
-    <div class="header-content">
-      <h2 class="dialog-title">{{ isEdit ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
-      <p class="dialog-subtitle">
-        {{ isEdit ? 'Modifica la información del producto' : 'Agrega un nuevo producto al inventario' }}
-      </p>
-    </div>
-  </div>
-
-  <div class="dialog-content">
-    <form [formGroup]="productForm" class="product-form">
-      <!-- Información Básica -->
-      <div class="form-section">
-        <h3 class="section-title">
-          <mat-icon>info</mat-icon>
-          Información Básica
-        </h3>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>qr_code</mat-icon>
-              Código del Producto
-            </label>
-            <input 
-              type="text" 
-              formControlName="code" 
-              placeholder="Ej: PROD001"
-              class="form-input"
-              [class.error]="productForm.get('code')?.invalid && productForm.get('code')?.touched">
-            <div class="error-message" *ngIf="productForm.get('code')?.hasError('required') && productForm.get('code')?.touched">
-              El código es requerido
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>category</mat-icon>
-              Categoría
-            </label>
-            <mat-select formControlName="category" class="form-select">
-              <mat-option *ngFor="let category of categories" [value]="category.name">
-                {{ category.name }}
-              </mat-option>
-            </mat-select>
-            <div class="error-message" *ngIf="productForm.get('category')?.hasError('required') && productForm.get('category')?.touched">
-              La categoría es requerida
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">
-            <mat-icon>inventory</mat-icon>
-            Nombre del Producto
-          </label>
-          <input 
-            type="text" 
-            formControlName="name" 
-            placeholder="Ingrese el nombre del producto"
-            class="form-input"
-            [class.error]="productForm.get('name')?.invalid && productForm.get('name')?.touched">
-          <div class="error-message" *ngIf="productForm.get('name')?.hasError('required') && productForm.get('name')?.touched">
-            El nombre es requerido
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">
-            <mat-icon>description</mat-icon>
-            Descripción
-          </label>
-          <textarea 
-            formControlName="description" 
-            placeholder="Descripción del producto (opcional)"
-            rows="3"
-            class="form-textarea">
-          </textarea>
+<div class="modal-overlay">
+  <div class="modal-container">
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <div class="header-content">
+        <mat-icon class="header-icon">{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+        <div class="header-text">
+          <h2 class="modal-title">{{ isEdit ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+          <p class="modal-subtitle">
+            {{ isEdit ? 'Modifica la información del producto' : 'Agrega un nuevo producto al inventario' }}
+          </p>
         </div>
       </div>
+      <button mat-icon-button class="close-btn" (click)="onCancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
 
-      <!-- Precios y Costos -->
-      <div class="form-section">
-        <h3 class="section-title">
-          <mat-icon>attach_money</mat-icon>
-          Precios y Costos
-        </h3>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>sell</mat-icon>
-              Precio de Venta
-            </label>
-            <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+    <!-- Contenido del Modal -->
+    <div class="modal-content">
+      <form [formGroup]="productForm" class="product-form">
+        <!-- Información Básica -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>info</mat-icon>
+            Información Básica
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('code')?.hasError('required') && productForm.get('code')?.touched">
+              <!-- <mat-label>Código del Producto *</mat-label> -->
               <input 
+                matInput 
+                formControlName="code" 
+                placeholder="Código del Producto *"
+                autocomplete="off"
+                maxlength="20">
+              <mat-error *ngIf="productForm.get('code')?.hasError('required') && productForm.get('code')?.touched">
+                {{ getErrorMessage('code') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('category')?.hasError('required') && productForm.get('category')?.touched">
+              <!-- <mat-label>Categoría *</mat-label> -->
+              <mat-select formControlName="category" placeholder="Categoría *">
+                <mat-option *ngFor="let category of categories" [value]="category.name">
+                  {{ category.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="productForm.get('category')?.hasError('required') && productForm.get('category')?.touched">
+                {{ getErrorMessage('category') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="form-field full-width" [class.mat-form-field-invalid]="productForm.get('name')?.hasError('required') && productForm.get('name')?.touched">
+            <!-- <mat-label>Nombre del Producto *</mat-label> -->
+            <input 
+              matInput 
+              formControlName="name" 
+              placeholder="Nombre del Producto *"
+              autocomplete="off"
+              maxlength="100">
+            <mat-error *ngIf="productForm.get('name')?.hasError('required') && productForm.get('name')?.touched">
+              {{ getErrorMessage('name') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width textarea-field">
+            <!-- <mat-label>Descripción</mat-label> -->
+            <textarea 
+              matInput 
+              formControlName="description" 
+              rows="4" 
+              placeholder="Descripción del producto (opcional)"
+              autocomplete="off"
+              maxlength="500"></textarea>
+          </mat-form-field>
+        </div>
+
+        <!-- Precios y Costos -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>attach_money</mat-icon>
+            Precios y Costos
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('price')?.hasError('required') && productForm.get('price')?.touched">
+              <!-- <mat-label>Precio de Venta *</mat-label> -->
+              <input 
+                matInput 
                 type="number" 
                 formControlName="price" 
-                placeholder="0.00"
+                placeholder="Precio de Venta *" 
                 step="0.01"
-                class="form-input"
-                [class.error]="productForm.get('price')?.invalid && productForm.get('price')?.touched">
-            </div>
-            <div class="error-message" *ngIf="productForm.get('price')?.hasError('required') && productForm.get('price')?.touched">
-              El precio es requerido
-            </div>
-            <div class="error-message" *ngIf="productForm.get('price')?.hasError('min') && productForm.get('price')?.touched">
-              El precio debe ser mayor a 0
-            </div>
-          </div>
+                min="0.01"
+                autocomplete="off">
+              <span matPrefix>$&nbsp;</span>
+              <mat-error *ngIf="productForm.get('price')?.hasError('required') && productForm.get('price')?.touched">
+                {{ getErrorMessage('price') }}
+              </mat-error>
+            </mat-form-field>
 
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>monetization_on</mat-icon>
-              Costo
-            </label>
-            <div class="input-with-prefix">
-              <span class="input-prefix">$</span>
+            <mat-form-field appearance="outline" class="form-field">
+              <!-- <mat-label>Costo</mat-label> -->
               <input 
+                matInput 
                 type="number" 
                 formControlName="cost" 
-                placeholder="0.00"
+                placeholder="Costo" 
                 step="0.01"
-                class="form-input">
-            </div>
+                min="0"
+                autocomplete="off">
+              <span matPrefix>$&nbsp;</span>
+            </mat-form-field>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label">
-            <mat-icon>percent</mat-icon>
-            Porcentaje de Impuesto
-          </label>
-          <div class="input-with-suffix">
+          <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('taxRate')?.hasError('required') && productForm.get('taxRate')?.touched">
+            <!-- <mat-label>Porcentaje de Impuesto *</mat-label> -->
             <input 
+              matInput 
               type="number" 
               formControlName="taxRate" 
-              placeholder="15"
+              placeholder="Porcentaje de Impuesto *" 
               step="0.01"
-              class="form-input"
-              [class.error]="productForm.get('taxRate')?.invalid && productForm.get('taxRate')?.touched">
-            <span class="input-suffix">%</span>
-          </div>
-          <div class="error-message" *ngIf="productForm.get('taxRate')?.hasError('required') && productForm.get('taxRate')?.touched">
-            El porcentaje de impuesto es requerido
-          </div>
-          <div class="error-message" *ngIf="productForm.get('taxRate')?.hasError('min') && productForm.get('taxRate')?.touched">
-            El porcentaje no puede ser negativo
-          </div>
+              min="0"
+              max="100"
+              autocomplete="off">
+            <span matSuffix>%</span>
+            <mat-error *ngIf="productForm.get('taxRate')?.hasError('required') && productForm.get('taxRate')?.touched">
+              {{ getErrorMessage('taxRate') }}
+            </mat-error>
+          </mat-form-field>
         </div>
-      </div>
 
-      <!-- Inventario -->
-      <div class="form-section">
+        <!-- Control de Inventario -->
+        <div class="form-section">
         <h3 class="section-title">
-          <mat-icon>inventory_2</mat-icon>
+          <mat-icon>inventory</mat-icon>
           Control de Inventario
         </h3>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>warehouse</mat-icon>
-              Stock Actual
-            </label>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('stock')?.hasError('required') && productForm.get('stock')?.touched">
+              <!-- <mat-label>Stock Actual *</mat-label> -->
+              <input 
+                matInput 
+                type="number" 
+                formControlName="stock" 
+                placeholder="Stock Actual *"
+                min="0"
+                autocomplete="off">
+              <mat-error *ngIf="productForm.get('stock')?.hasError('required') && productForm.get('stock')?.touched">
+                {{ getErrorMessage('stock') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="productForm.get('minStock')?.hasError('required') && productForm.get('minStock')?.touched">
+              <!-- <mat-label>Stock Mínimo *</mat-label> -->
+              <input 
+                matInput 
+                type="number" 
+                formControlName="minStock" 
+                placeholder="Stock Mínimo *"
+                min="0"
+                autocomplete="off">
+              <mat-error *ngIf="productForm.get('minStock')?.hasError('required') && productForm.get('minStock')?.touched">
+                {{ getErrorMessage('minStock') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <!-- <mat-label>Stock Máximo</mat-label> -->
             <input 
+              matInput 
               type="number" 
-              formControlName="stock" 
-              placeholder="0"
-              class="form-input"
-              [class.error]="productForm.get('stock')?.invalid && productForm.get('stock')?.touched">
-            <div class="error-message" *ngIf="productForm.get('stock')?.hasError('required') && productForm.get('stock')?.touched">
-              El stock es requerido
-            </div>
-            <div class="error-message" *ngIf="productForm.get('stock')?.hasError('min') && productForm.get('stock')?.touched">
-              El stock no puede ser negativo
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>warning</mat-icon>
-              Stock Mínimo
-            </label>
-            <input 
-              type="number" 
-              formControlName="minStock" 
-              placeholder="0"
-              class="form-input"
-              [class.error]="productForm.get('minStock')?.invalid && productForm.get('minStock')?.touched">
-            <div class="error-message" *ngIf="productForm.get('minStock')?.hasError('required') && productForm.get('minStock')?.touched">
-              El stock mínimo es requerido
-            </div>
-            <div class="error-message" *ngIf="productForm.get('minStock')?.hasError('min') && productForm.get('minStock')?.touched">
-              El stock mínimo no puede ser negativo
-            </div>
-          </div>
+              formControlName="maxStock" 
+              placeholder="Stock Máximo"
+              min="0"
+              autocomplete="off">
+          </mat-form-field>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">
-            <mat-icon>storage</mat-icon>
-            Stock Máximo
-          </label>
-          <input 
-            type="number" 
-            formControlName="maxStock" 
-            placeholder="0"
-            class="form-input">
-        </div>
-      </div>
+        <!-- Información Adicional -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>more_horiz</mat-icon>
+            Información Adicional
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <!-- <mat-label>Marca</mat-label> -->
+              <input 
+                matInput 
+                formControlName="brand" 
+                placeholder="Marca del producto (opcional)"
+                autocomplete="off"
+                maxlength="50">
+            </mat-form-field>
 
-      <!-- Información Adicional -->
-      <div class="form-section">
-        <h3 class="section-title">
-          <mat-icon>more_horiz</mat-icon>
-          Información Adicional
-        </h3>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>business</mat-icon>
-              Marca
-            </label>
-            <input 
-              type="text" 
-              formControlName="brand" 
-              placeholder="Marca del producto (opcional)"
-              class="form-input">
+            <mat-form-field appearance="outline" class="form-field">
+              <!-- <mat-label>Código de Barras</mat-label> -->
+              <input 
+                matInput 
+                formControlName="barcode" 
+                placeholder="Código de barras (opcional)"
+                autocomplete="off"
+                maxlength="20">
+            </mat-form-field>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">
-              <mat-icon>qr_code_scanner</mat-icon>
-              Código de Barras
-            </label>
-            <input 
-              type="text" 
-              formControlName="barcode" 
-              placeholder="Código de barras (opcional)"
-              class="form-input">
+          <div class="checkbox-container">
+            <mat-checkbox formControlName="isActive" class="status-checkbox">
+              Producto Activo
+            </mat-checkbox>
           </div>
         </div>
+      </form>
+    </div>
 
-        <div class="checkbox-group">
-          <mat-checkbox formControlName="isActive" class="status-checkbox">
-            <mat-icon>check_circle</mat-icon>
-            Producto Activo
-          </mat-checkbox>
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <div class="dialog-actions">
-    <button mat-button (click)="onCancel()" class="cancel-btn">
-      <mat-icon>close</mat-icon>
-      Cancelar
-    </button>
-    <button 
-      mat-raised-button 
-      (click)="onSave()"
-      [disabled]="productForm.invalid || productForm.pristine"
-      class="save-btn">
-      <mat-icon>save</mat-icon>
-      {{ isEdit ? 'Actualizar' : 'Crear' }}
-    </button>
+    <!-- Acciones del Modal -->
+    <div class="modal-actions">
+      <button mat-button (click)="onCancel()" class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary"
+        (click)="onSave()"
+        [disabled]="productForm.invalid || productForm.pristine"
+        class="save-btn">
+        <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+        {{ isEdit ? 'Actualizar' : 'Crear' }}
+      </button>
+    </div>
   </div>
 </div>

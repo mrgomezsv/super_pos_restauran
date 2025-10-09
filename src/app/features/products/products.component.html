@@ -183,4 +183,11 @@
       </ng-template>
     </mat-card-content>
   </mat-card>
+
+  <!-- Modal de Producto -->
+  <app-product-dialog 
+    *ngIf="showProductDialog"
+    [product]="selectedProduct"
+    (close)="onProductDialogResult($event)">
+  </app-product-dialog>
 </div>

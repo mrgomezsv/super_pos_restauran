@@ -35,7 +35,8 @@ import { ProductDialogComponent } from './product-dialog/product-dialog.componen
     MatSelectModule,
     MatChipsModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    ProductDialogComponent
   ],
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss']
@@ -126,22 +127,24 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.loadProducts();
   }
 
-  openProductDialog(product?: Product): void {
-    const dialogRef = this.dialog.open(ProductDialogComponent, {
-      width: '800px',
-      maxHeight: '90vh',
-      panelClass: 'custom-dialog-container',
-      disableClose: false,
-      autoFocus: true,
-      hasBackdrop: true,
-      data: product
-    });
+  showProductDialog = false;
+  selectedProduct: Product | null = null;
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loadProducts();
-      }
-    });
+  openProductDialog(product?: Product): void {
+    this.selectedProduct = product || null;
+    this.showProductDialog = true;
+  }
+
+  closeProductDialog(): void {
+    this.showProductDialog = false;
+    this.selectedProduct = null;
+  }
+
+  onProductDialogResult(result: boolean): void {
+    this.closeProductDialog();
+    if (result) {
+      this.loadProducts();
+    }
   }
 
   editProduct(product: Product): void {
