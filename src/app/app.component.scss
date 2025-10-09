@@ -409,6 +409,7 @@
             transition: all var(--transition-fast);
             position: relative;
             z-index: 1;
+            pointer-events: none;
             
             mat-icon {
               font-size: 20px;
@@ -424,6 +425,7 @@
             transition: color var(--transition-fast);
             position: relative;
             z-index: 1;
+            pointer-events: none;
           }
           
           .nav-indicator {
@@ -436,6 +438,7 @@
             transition: all var(--transition-fast);
             position: relative;
             z-index: 1;
+            pointer-events: none;
           }
           
           &:hover {
