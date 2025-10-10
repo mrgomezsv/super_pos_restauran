@@ -827,14 +827,52 @@
     padding: var(--pos-spacing);
     border-bottom: 1px solid var(--pos-border);
     background: var(--pos-input-bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     
-    h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--pos-text);
-      margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: var(--pos-spacing-sm);
+      
+      mat-icon {
+        color: var(--pos-primary);
+      }
+      
+      h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--pos-text);
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+    
+    .mode-indicator {
+      padding: 4px 12px;
+      border-radius: var(--pos-radius);
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      &.search {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+      }
+      
+      &.quantity {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+      
+      &.disabled {
+        background: var(--pos-border);
+        color: var(--pos-text-muted);
+      }
     }
   }
   
@@ -871,6 +909,168 @@
     // Para Firefox
     scrollbar-width: thin;
     scrollbar-color: var(--pos-border) var(--pos-bg);
+    
+    .keypad-display {
+      background: var(--pos-surface);
+      border: 2px solid var(--pos-border);
+      border-radius: var(--pos-radius-lg);
+      padding: var(--pos-spacing);
+      margin-bottom: var(--pos-spacing);
+      
+      label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--pos-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 8px;
+      }
+      
+      .display-value {
+        display: flex;
+        align-items: center;
+        gap: var(--pos-spacing-sm);
+        padding: 12px;
+        background: var(--pos-input-bg);
+        border-radius: var(--pos-radius);
+        border: 2px solid var(--pos-border);
+        transition: var(--pos-transition);
+        
+        &.search {
+          border-color: #3b82f6;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.05));
+        }
+        
+        &.quantity {
+          border-color: #10b981;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+        }
+        
+        .keypad-input {
+          flex: 1;
+          border: none;
+          background: transparent;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: var(--pos-text);
+          outline: none;
+          
+          &::placeholder {
+            color: var(--pos-text-muted);
+            font-weight: 400;
+          }
+        }
+        
+        .mode-icon {
+          color: var(--pos-primary);
+          font-size: 24px;
+        }
+      }
+      
+      .selected-product-info {
+        margin-top: var(--pos-spacing);
+        padding: var(--pos-spacing);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+        border: 1px solid #10b981;
+        border-radius: var(--pos-radius);
+        
+        .product-detail {
+          display: flex;
+          align-items: flex-start;
+          gap: var(--pos-spacing-sm);
+          
+          mat-icon {
+            color: #10b981;
+            font-size: 32px;
+            width: 32px;
+            height: 32px;
+          }
+          
+          div {
+            flex: 1;
+            
+            strong {
+              display: block;
+              color: var(--pos-text);
+              font-size: 0.9rem;
+              margin-bottom: 4px;
+            }
+            
+            p {
+              margin: 0;
+              font-size: 0.75rem;
+              color: var(--pos-text-muted);
+            }
+          }
+        }
+      }
+    }
+    
+    .keypad-actions {
+      display: flex;
+      gap: var(--pos-spacing-sm);
+      margin-top: var(--pos-spacing);
+      
+      .action-btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: var(--pos-radius);
+        border: 2px solid var(--pos-border);
+        background: var(--pos-surface);
+        color: var(--pos-text);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: var(--pos-transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+        
+        &.secondary {
+          border-color: #6b7280;
+          
+          &:hover {
+            background: #6b7280;
+            color: white;
+          }
+        }
+        
+        &.cancel {
+          border-color: var(--odoo-danger);
+          color: var(--odoo-danger);
+          
+          &:hover {
+            background: var(--odoo-danger);
+            color: white;
+          }
+        }
+        
+        &.confirm {
+          border-color: #10b981;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          
+          &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+          }
+          
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+          }
+        }
+      }
+    }
     
     .numeric-keypad {
       flex-shrink: 0; // No reducir el tamaño del teclado
