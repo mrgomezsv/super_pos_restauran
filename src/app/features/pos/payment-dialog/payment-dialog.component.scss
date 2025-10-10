@@ -23,7 +23,7 @@
   background: var(--surface);
   border-radius: var(--border-radius-xl);
   box-shadow: var(--shadow-2xl);
-  max-width: 700px;
+  max-width: 800px;
   width: 100%;
   max-height: 90vh;
   display: flex;
@@ -78,10 +78,10 @@
 .modal-content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl) var(--spacing-xl);
 
   .form-section {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
     
     &:last-child {
       margin-bottom: 0;
@@ -91,15 +91,15 @@
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
-      margin-bottom: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
       color: var(--primary);
-      font-size: var(--font-size-lg);
+      font-size: var(--font-size-xl);
       font-weight: var(--font-weight-bold);
 
       mat-icon {
-        font-size: 24px;
-        width: 24px;
-        height: 24px;
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
       }
     }
   }
@@ -110,13 +110,13 @@
   background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05), rgba(var(--secondary-rgb), 0.05));
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-xl) var(--spacing-2xl);
 
   .summary-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-md) 0;
     border-bottom: 1px solid var(--border-color);
 
     &:last-child {
@@ -124,14 +124,14 @@
     }
 
     &.total-row {
-      margin-top: var(--spacing-md);
-      padding-top: var(--spacing-md);
-      border-top: 2px solid var(--primary);
+      margin-top: var(--spacing-lg);
+      padding-top: var(--spacing-lg);
+      border-top: 3px solid var(--primary);
       border-bottom: none;
 
       .summary-label,
       .summary-value {
-        font-size: var(--font-size-xl);
+        font-size: var(--font-size-2xl);
         font-weight: var(--font-weight-bold);
         color: var(--primary);
       }
@@ -140,12 +140,13 @@
     .summary-label {
       color: var(--text-gray);
       font-weight: var(--font-weight-medium);
+      font-size: var(--font-size-base);
     }
 
     .summary-value {
       color: var(--text-primary);
       font-weight: var(--font-weight-semibold);
-      font-size: var(--font-size-lg);
+      font-size: var(--font-size-xl);
     }
   }
 }
@@ -154,12 +155,36 @@
 .form-field {
   width: 100%;
   margin-bottom: var(--spacing-md);
+
+  ::ng-deep {
+    .mat-mdc-text-field-wrapper {
+      padding: 0;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 56px;
+      padding: 12px 0;
+    }
+
+    .mat-mdc-input-element {
+      font-size: var(--font-size-base);
+      padding: 8px 12px;
+    }
+
+    .mat-mdc-select-value {
+      font-size: var(--font-size-base);
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 8px;
+    }
+  }
 }
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-md);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
   margin-bottom: var(--spacing-md);
 }
 
@@ -189,12 +214,14 @@
 // Botón de monto exacto
 .exact-amount-btn {
   width: 100%;
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-xl);
   border: 2px dashed var(--primary);
   color: var(--primary);
   font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
   transition: all 0.3s ease;
+  min-height: 48px;
 
   &:hover {
     background: rgba(var(--primary-rgb), 0.1);
@@ -204,7 +231,7 @@
   }
 
   mat-icon {
-    margin-right: var(--spacing-xs);
+    margin-right: var(--spacing-sm);
   }
 }
 
@@ -294,43 +321,54 @@
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl) var(--spacing-2xl);
   border-top: 1px solid var(--border-color);
   background: var(--surface-alt);
 
   button {
-    min-width: 140px;
+    min-width: 160px;
+    min-height: 48px;
     padding: var(--spacing-md) var(--spacing-xl);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
     transition: all 0.3s ease;
+    border-radius: var(--border-radius-md);
 
     mat-icon {
-      margin-right: var(--spacing-xs);
+      margin-right: var(--spacing-sm);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
   }
 
   .cancel-btn {
     color: var(--text-gray);
+    border: 2px solid var(--border-color);
     
     &:hover {
       background-color: rgba(var(--text-gray-rgb), 0.1);
       color: var(--text-primary);
+      border-color: var(--text-gray);
+      transform: translateY(-2px);
     }
   }
 
   .confirm-btn {
     background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: white;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 
     &:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.3);
+      box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.4);
     }
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      box-shadow: none;
     }
   }
 }
