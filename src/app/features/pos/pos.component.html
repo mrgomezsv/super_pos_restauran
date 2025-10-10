@@ -200,98 +200,109 @@
       </div>
     </div>
 
-    <!-- Columna derecha: Panel de pago -->
+    <!-- Columna derecha: Panel con teclado contextual -->
     <div class="payment-panel">
       <div class="payment-header">
-        <h3>Pago</h3>
+        <div class="header-content">
+          <mat-icon>dialpad</mat-icon>
+          <h3>Teclado Numérico</h3>
+        </div>
+        <div class="mode-indicator" [ngClass]="keypadMode">
+          <span *ngIf="keypadMode === 'search'">🔍 Búsqueda</span>
+          <span *ngIf="keypadMode === 'quantity'">📦 Cantidad</span>
+          <span *ngIf="keypadMode === 'disabled'">🚫 Deshabilitado</span>
+        </div>
       </div>
 
       <div class="payment-content">
+        <!-- Display del teclado -->
+        <div class="keypad-display">
+          <label>{{ getKeypadLabel() }}</label>
+          <div class="display-value" [ngClass]="keypadMode">
+            <input 
+              type="text" 
+              [value]="keypadValue"
+              [placeholder]="getKeypadPlaceholder()"
+              readonly
+              class="keypad-input">
+            <mat-icon class="mode-icon">
+              <span *ngIf="keypadMode === 'search'">search</span>
+              <span *ngIf="keypadMode === 'quantity'">shopping_cart</span>
+            </mat-icon>
+          </div>
+          
+          <!-- Info del producto seleccionado -->
+          <div class="selected-product-info" *ngIf="selectedProductForQuantity">
+            <div class="product-detail">
+              <mat-icon>inventory_2</mat-icon>
+              <div>
+                <strong>{{ selectedProductForQuantity.name }}</strong>
+                <p>Stock: {{ selectedProductForQuantity.stock }} | Precio: ${{ selectedProductForQuantity.price | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Teclado numérico -->
         <div class="numeric-keypad">
           <div class="keypad-row">
-            <button class="keypad-btn" (click)="addToPayment('1')">1</button>
-            <button class="keypad-btn" (click)="addToPayment('2')">2</button>
-            <button class="keypad-btn" (click)="addToPayment('3')">3</button>
+            <button class="keypad-btn" (click)="onKeypadPress('1')" [disabled]="keypadMode === 'disabled'">1</button>
+            <button class="keypad-btn" (click)="onKeypadPress('2')" [disabled]="keypadMode === 'disabled'">2</button>
+            <button class="keypad-btn" (click)="onKeypadPress('3')" [disabled]="keypadMode === 'disabled'">3</button>
           </div>
           <div class="keypad-row">
-            <button class="keypad-btn" (click)="addToPayment('4')">4</button>
-            <button class="keypad-btn" (click)="addToPayment('5')">5</button>
-            <button class="keypad-btn" (click)="addToPayment('6')">6</button>
+            <button class="keypad-btn" (click)="onKeypadPress('4')" [disabled]="keypadMode === 'disabled'">4</button>
+            <button class="keypad-btn" (click)="onKeypadPress('5')" [disabled]="keypadMode === 'disabled'">5</button>
+            <button class="keypad-btn" (click)="onKeypadPress('6')" [disabled]="keypadMode === 'disabled'">6</button>
           </div>
           <div class="keypad-row">
-            <button class="keypad-btn" (click)="addToPayment('7')">7</button>
-            <button class="keypad-btn" (click)="addToPayment('8')">8</button>
-            <button class="keypad-btn" (click)="addToPayment('9')">9</button>
+            <button class="keypad-btn" (click)="onKeypadPress('7')" [disabled]="keypadMode === 'disabled'">7</button>
+            <button class="keypad-btn" (click)="onKeypadPress('8')" [disabled]="keypadMode === 'disabled'">8</button>
+            <button class="keypad-btn" (click)="onKeypadPress('9')" [disabled]="keypadMode === 'disabled'">9</button>
           </div>
           <div class="keypad-row">
-            <button class="keypad-btn" (click)="addToPayment('.')">.</button>
-            <button class="keypad-btn" (click)="addToPayment('0')">0</button>
-            <button class="keypad-btn clear" (click)="clearPayment()">
+            <button class="keypad-btn" (click)="onKeypadPress('.')" [disabled]="keypadMode !== 'search'">.</button>
+            <button class="keypad-btn" (click)="onKeypadPress('0')" [disabled]="keypadMode === 'disabled'">0</button>
+            <button class="keypad-btn clear" (click)="clearKeypad()" [disabled]="keypadMode === 'disabled'">
               <mat-icon>backspace</mat-icon>
             </button>
           </div>
         </div>
 
-        <!-- Métodos de pago -->
-        <div class="payment-methods">
-          <h4>Métodos de Pago</h4>
-          <div class="payment-buttons">
-            <button 
-              class="payment-btn cash"
-              (click)="selectPaymentMethod('cash')"
-              [class.active]="selectedPaymentMethod === 'cash'">
-              <mat-icon>money</mat-icon>
-              <span>Efectivo</span>
-            </button>
-            <button 
-              class="payment-btn card"
-              (click)="selectPaymentMethod('card')"
-              [class.active]="selectedPaymentMethod === 'card'">
-              <mat-icon>credit_card</mat-icon>
-              <span>Tarjeta</span>
-            </button>
-            <button 
-              class="payment-btn transfer"
-              (click)="selectPaymentMethod('transfer')"
-              [class.active]="selectedPaymentMethod === 'transfer'">
-              <mat-icon>account_balance</mat-icon>
-              <span>Transferencia</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Monto a pagar -->
-        <div class="payment-amount" *ngIf="selectedPaymentMethod">
-          <div class="amount-input">
-            <label>Monto a Pagar</label>
-            <div class="input-wrapper">
-              <span class="currency">$</span>
-              <input 
-                type="text" 
-                [(ngModel)]="paymentAmount"
-                placeholder="0.00"
-                class="amount-field"
-                readonly>
-            </div>
-          </div>
+        <!-- Botones de acción contextuales -->
+        <div class="keypad-actions">
+          <!-- Modo búsqueda: botón para resetear -->
+          <button 
+            *ngIf="keypadMode === 'search' && keypadValue"
+            class="action-btn secondary"
+            (click)="resetKeypad()">
+            <mat-icon>refresh</mat-icon>
+            <span>Limpiar</span>
+          </button>
           
-          <div class="payment-actions">
+          <!-- Modo cantidad: botones para confirmar o cancelar -->
+          <ng-container *ngIf="keypadMode === 'quantity'">
             <button 
-              class="pay-btn"
-              (click)="processPayment()"
-              [disabled]="!paymentAmount || getPaymentAmount() < cartTotals.total">
-              <mat-icon>payment</mat-icon>
-              <span>Procesar Pago</span>
+              class="action-btn cancel"
+              (click)="resetKeypad()">
+              <mat-icon>close</mat-icon>
+              <span>Cancelar</span>
             </button>
-          </div>
+            <button 
+              class="action-btn confirm"
+              (click)="confirmQuantityAndAddToCart()"
+              [disabled]="!keypadValue || keypadValue === '0'">
+              <mat-icon>add_shopping_cart</mat-icon>
+              <span>Agregar al Carrito</span>
+            </button>
+          </ng-container>
         </div>
 
         <!-- Acciones rápidas -->
         <div class="quick-actions">
           <h4>Acciones Rápidas</h4>
           <div class="action-buttons">
-            <button class="action-btn" (click)="setExactAmount()" [disabled]="cartItems.length === 0">
+            <button class="action-btn" (click)="openPaymentDialog()" [disabled]="cartItems.length === 0">
               <mat-icon>payment</mat-icon>
               <span>Procesar Pago (F2)</span>
             </button>
@@ -303,10 +314,10 @@
               <mat-icon>print</mat-icon>
               <span>Vista Previa</span>
             </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 </div>
 
 <!-- Modal de Procesar Pago -->

@@ -61,6 +61,11 @@ export class PosComponent implements OnInit, OnDestroy {
   showPaymentDialog = false;
   currentTime = new Date();
   
+  // Keypad context management
+  keypadMode: 'search' | 'quantity' | 'disabled' = 'search';
+  keypadValue = '';
+  selectedProductForQuantity: Product | null = null;
+  
   // Payment related
   selectedPaymentMethod: string | null = null;
   paymentAmount = '';
@@ -295,7 +300,7 @@ export class PosComponent implements OnInit, OnDestroy {
     return 'check_circle';
   }
 
-  addToCart(product: Product): void {
+  addToCart(product: Product, quantity: number = 1): void {
     if (product.stock <= 0) {
       this.notificationService.productOutOfStock(product.name);
       this.playSound('error');
@@ -305,22 +310,28 @@ export class PosComponent implements OnInit, OnDestroy {
     const existingItem = this.cartItems.find(item => item.productId === product.id);
     
     if (existingItem) {
-      if (existingItem.quantity >= product.stock) {
+      const newQuantity = existingItem.quantity + quantity;
+      if (newQuantity > product.stock) {
         this.notificationService.insufficientStock(product.name);
         this.playSound('error');
         return;
       }
-      existingItem.quantity += 1;
+      existingItem.quantity = newQuantity;
       existingItem.total = existingItem.unitPrice * existingItem.quantity;
     } else {
+      if (quantity > product.stock) {
+        this.notificationService.insufficientStock(product.name);
+        this.playSound('error');
+        return;
+      }
       const newItem: CartItem = {
         productId: product.id,
         productName: product.name,
         unitPrice: product.price,
-        quantity: 1,
-        total: product.price,
+        quantity: quantity,
+        total: product.price * quantity,
         tax: 13, // 13% de impuesto
-        subtotal: product.price
+        subtotal: product.price * quantity
       };
       this.cartItems.push(newItem);
     }
@@ -416,31 +427,136 @@ export class PosComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Payment methods
+  // Métodos del teclado numérico contextual
+  onKeypadPress(value: string): void {
+    this.playSound('click');
+    
+    switch (this.keypadMode) {
+      case 'search':
+        this.handleSearchMode(value);
+        break;
+      case 'quantity':
+        this.handleQuantityMode(value);
+        break;
+      case 'disabled':
+        this.toastr.info('Teclado deshabilitado en este momento');
+        break;
+    }
+  }
+
+  private handleSearchMode(value: string): void {
+    if (value === '.' && this.keypadValue.includes('.')) {
+      return; // No permitir múltiples puntos
+    }
+    
+    this.keypadValue += value;
+    
+    // Buscar producto por código o SKU
+    if (this.keypadValue.length >= 3) {
+      this.searchByCode(this.keypadValue);
+    }
+  }
+
+  private handleQuantityMode(value: string): void {
+    if (value === '.' || this.keypadValue.length >= 4) {
+      return; // Solo números enteros, máximo 9999
+    }
+    
+    this.keypadValue += value;
+  }
+
+  private searchByCode(code: string): void {
+    const product = this.products.find(p => 
+      p.code.toLowerCase().includes(code.toLowerCase()) ||
+      p.barcode?.toLowerCase().includes(code.toLowerCase())
+    );
+    
+    if (product) {
+      this.playSound('success');
+      this.toastr.success(`Producto encontrado: ${product.name}`);
+      this.selectProductForQuantity(product);
+    }
+  }
+
+  selectProductForQuantity(product: Product): void {
+    this.selectedProductForQuantity = product;
+    this.keypadMode = 'quantity';
+    this.keypadValue = '1'; // Cantidad por defecto
+    this.playSound('success');
+  }
+
+  confirmQuantityAndAddToCart(): void {
+    if (!this.selectedProductForQuantity) return;
+    
+    const quantity = parseInt(this.keypadValue) || 1;
+    
+    if (quantity <= 0) {
+      this.toastr.warning('La cantidad debe ser mayor a 0');
+      return;
+    }
+    
+    if (quantity > this.selectedProductForQuantity.stock) {
+      this.toastr.warning(`Stock insuficiente. Disponible: ${this.selectedProductForQuantity.stock}`);
+      return;
+    }
+    
+    this.addToCart(this.selectedProductForQuantity, quantity);
+    this.resetKeypad();
+  }
+
+  resetKeypad(): void {
+    this.keypadValue = '';
+    this.selectedProductForQuantity = null;
+    this.keypadMode = 'search';
+    this.selectedPaymentMethod = null;
+  }
+
+  clearKeypad(): void {
+    if (this.keypadValue.length > 0) {
+      this.keypadValue = this.keypadValue.slice(0, -1);
+    } else {
+      this.resetKeypad();
+    }
+    this.playSound('click');
+  }
+
+  getKeypadLabel(): string {
+    switch (this.keypadMode) {
+      case 'search':
+        return 'Buscar por código';
+      case 'quantity':
+        return `Cantidad de: ${this.selectedProductForQuantity?.name}`;
+      case 'disabled':
+        return 'Teclado deshabilitado';
+      default:
+        return '';
+    }
+  }
+
+  getKeypadPlaceholder(): string {
+    switch (this.keypadMode) {
+      case 'search':
+        return 'Ingrese código o SKU...';
+      case 'quantity':
+        return 'Cantidad...';
+      default:
+        return '';
+    }
+  }
+
+  // Payment methods (mantener compatibilidad)
   selectPaymentMethod(method: string): void {
     this.selectedPaymentMethod = method;
     this.paymentAmount = '';
   }
 
   addToPayment(value: string): void {
-    if (!this.selectedPaymentMethod) {
-      this.toastr.warning('Selecciona un método de pago primero');
-      this.playSound('error');
-      return;
-    }
-
-    if (value === '.' && this.paymentAmount.includes('.')) {
-      this.playSound('error');
-      return; // No permitir múltiples puntos decimales
-    }
-
-    this.paymentAmount += value;
-    this.playSound('click');
+    // Mantener para compatibilidad, pero ahora usa onKeypadPress
+    this.onKeypadPress(value);
   }
 
   clearPayment(): void {
-    this.paymentAmount = '';
-    this.playSound('click');
+    this.clearKeypad();
   }
 
   getPaymentAmount(): number {
