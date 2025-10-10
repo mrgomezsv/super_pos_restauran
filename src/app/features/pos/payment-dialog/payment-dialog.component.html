@@ -1,117 +1,202 @@
-<div class="payment-dialog">
-  <div class="dialog-title">
-    <mat-icon>payment</mat-icon>
-    Procesar Pago
-  </div>
-
-  <mat-dialog-content>
-    <!-- Resumen de la venta -->
-    <div class="sale-summary">
-      <h3>Resumen de la Venta</h3>
-      <div class="summary-row">
-        <span>Subtotal:</span>
-        <span>${{ cartTotals.subtotal | number:'1.2-2' }}</span>
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <div class="header-content">
+        <mat-icon class="header-icon">payment</mat-icon>
+        <h2>Procesar Pago</h2>
       </div>
-      <div class="summary-row">
-        <span>Impuestos:</span>
-        <span>${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
-      </div>
-      <div class="summary-row total-row">
-        <span>Total:</span>
-        <span>${{ cartTotals.total | number:'1.2-2' }}</span>
-      </div>
-    </div>
-
-    <!-- Información del cliente -->
-    <div class="customer-info">
-      <h3>Información del Cliente</h3>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Nombre del Cliente</mat-label>
-        <input matInput [(ngModel)]="customerName" placeholder="Opcional">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Documento</mat-label>
-        <input matInput [(ngModel)]="customerDocument" placeholder="Opcional">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" [(ngModel)]="customerEmail" placeholder="Opcional">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Tipo de Factura</mat-label>
-        <mat-select [(ngModel)]="invoiceType">
-          <mat-option value="consumidor_final">Consumidor Final</mat-option>
-          <mat-option value="credito_fiscal">Crédito Fiscal</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-
-    <!-- Método de pago -->
-    <div class="payment-method">
-      <h3>Método de Pago</h3>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Método de Pago</mat-label>
-        <mat-select [(ngModel)]="paymentMethod" (selectionChange)="onPaymentMethodChange()">
-          <mat-option value="cash">Efectivo</mat-option>
-          <mat-option value="card">Tarjeta</mat-option>
-          <mat-option value="transfer">Transferencia</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Monto Recibido</mat-label>
-        <input matInput type="number" step="0.01" [(ngModel)]="paymentAmount" (input)="onPaymentAmountChange()">
-      </mat-form-field>
-      
-      <button mat-stroked-button (click)="setExactAmount()" class="exact-amount-btn">
-        <mat-icon>receipt</mat-icon>
-        Monto Exacto
+      <button mat-icon-button class="close-button" (click)="onCancel()">
+        <mat-icon>close</mat-icon>
       </button>
     </div>
 
-    <!-- Cambio -->
-    <div class="change-display" *ngIf="paymentMethod === 'cash' && paymentAmount > 0">
-      <mat-card class="change-card">
-        <mat-card-content>
-          <div class="change-info">
-            <mat-icon class="change-icon">monetization_on</mat-icon>
-            <div>
-              <h4>Cambio</h4>
-              <p class="change-amount">${{ change | number:'1.2-2' }}</p>
+    <!-- Contenido del Modal -->
+    <div class="modal-content">
+      <form [formGroup]="paymentForm">
+        
+        <!-- Resumen de la Venta -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>receipt_long</mat-icon>
+            Resumen de la Venta
+          </h3>
+          
+          <div class="sale-summary">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal:</span>
+              <span class="summary-value">${{ cartTotals.subtotal | number:'1.2-2' }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Impuestos:</span>
+              <span class="summary-value">${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="summary-row total-row">
+              <span class="summary-label">Total:</span>
+              <span class="summary-value total-amount">${{ cartTotals.total | number:'1.2-2' }}</span>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+        </div>
 
-    <!-- Fondos insuficientes -->
-    <div class="insufficient-funds" *ngIf="change < 0">
-      <mat-card class="error-card">
-        <mat-card-content>
-          <div class="error-info">
-            <mat-icon class="error-icon">warning</mat-icon>
-            <div>
-              <h3>Fondos Insuficientes</h3>
-              <p>Faltan ${{ getAbsChange() | number:'1.2-2' }}</p>
-            </div>
+        <!-- Información del Cliente -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>person</mat-icon>
+            Información del Cliente
+          </h3>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Nombre del Cliente</mat-label>
+            <input 
+              matInput 
+              formControlName="customerName" 
+              placeholder="Ingrese el nombre (opcional)"
+              autocomplete="off">
+            <mat-icon matSuffix>person</mat-icon>
+          </mat-form-field>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Documento</mat-label>
+              <input 
+                matInput 
+                formControlName="customerDocument" 
+                placeholder="DUI, NIT, etc."
+                autocomplete="off">
+              <mat-icon matSuffix>badge</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Email</mat-label>
+              <input 
+                matInput 
+                type="email"
+                formControlName="customerEmail" 
+                placeholder="correo@ejemplo.com"
+                autocomplete="off">
+              <mat-icon matSuffix>email</mat-icon>
+            </mat-form-field>
           </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  </mat-dialog-content>
 
-  <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Cancelar</button>
-    <button 
-      mat-raised-button 
-      color="primary" 
-      (click)="onConfirm()"
-      [disabled]="!canConfirm()">
-      <mat-icon>check_circle</mat-icon>
-      Confirmar Pago
-    </button>
-  </mat-dialog-actions>
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Tipo de Factura</mat-label>
+            <mat-select formControlName="invoiceType">
+              <mat-option value="consumidor_final">
+                <div class="invoice-option">
+                  <mat-icon>receipt</mat-icon>
+                  <span>Consumidor Final</span>
+                </div>
+              </mat-option>
+              <mat-option value="credito_fiscal">
+                <div class="invoice-option">
+                  <mat-icon>description</mat-icon>
+                  <span>Crédito Fiscal</span>
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Método de Pago -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>credit_card</mat-icon>
+            Método de Pago
+          </h3>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Método de Pago</mat-label>
+            <mat-select formControlName="paymentMethod">
+              <mat-option value="cash">
+                <div class="payment-option">
+                  <mat-icon>money</mat-icon>
+                  <span>Efectivo</span>
+                </div>
+              </mat-option>
+              <mat-option value="card">
+                <div class="payment-option">
+                  <mat-icon>credit_card</mat-icon>
+                  <span>Tarjeta</span>
+                </div>
+              </mat-option>
+              <mat-option value="transfer">
+                <div class="payment-option">
+                  <mat-icon>account_balance</mat-icon>
+                  <span>Transferencia</span>
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Monto Recibido</mat-label>
+            <input 
+              matInput 
+              type="number" 
+              step="0.01" 
+              formControlName="paymentAmount"
+              placeholder="0.00">
+            <span matPrefix>$&nbsp;</span>
+            <mat-hint>{{ paymentForm.get('paymentMethod')?.value === 'cash' ? 'Ingrese el monto que recibe del cliente' : 'Monto exacto de la venta' }}</mat-hint>
+          </mat-form-field>
+          
+          <button 
+            mat-stroked-button 
+            (click)="setExactAmount()" 
+            type="button"
+            class="exact-amount-btn">
+            <mat-icon>calculate</mat-icon>
+            Monto Exacto
+          </button>
+        </div>
+
+        <!-- Cambio o Alerta -->
+        <div class="change-section" *ngIf="paymentForm.get('paymentMethod')?.value === 'cash' && paymentForm.get('paymentAmount')?.value > 0">
+          <!-- Cambio Positivo -->
+          <mat-card class="change-card" *ngIf="change >= 0">
+            <mat-card-content>
+              <div class="change-info">
+                <mat-icon class="change-icon">monetization_on</mat-icon>
+                <div class="change-details">
+                  <h4>Cambio a Devolver</h4>
+                  <p class="change-amount">${{ change | number:'1.2-2' }}</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Fondos Insuficientes -->
+          <mat-card class="error-card" *ngIf="change < 0">
+            <mat-card-content>
+              <div class="error-info">
+                <mat-icon class="error-icon">warning</mat-icon>
+                <div class="error-details">
+                  <h4>Fondos Insuficientes</h4>
+                  <p class="error-amount">Faltan: ${{ getAbsChange() | number:'1.2-2' }}</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Acciones del Modal -->
+    <div class="modal-actions">
+      <button mat-button (click)="onCancel()" class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+      <button 
+        mat-raised-button 
+        (click)="onConfirm()"
+        [disabled]="!canConfirm()"
+        class="confirm-btn">
+        <mat-icon>check_circle</mat-icon>
+        Confirmar Pago
+      </button>
+    </div>
+  </div>
 </div>
+

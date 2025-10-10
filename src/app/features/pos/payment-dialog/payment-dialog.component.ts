@@ -1,47 +1,38 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialogTitle, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { Subject } from 'rxjs';
 import { CartItem } from '../../../core/models/sale.model';
-
-
-interface PaymentDialogData {
-  total: number;
-  items: CartItem[];
-}
 
 @Component({
   selector: 'app-payment-dialog',
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     FormsModule,
-    MatDialogModule,
-    MatDialogContent,
-    MatDialogActions,
+    MatButtonModule,
+    MatIconModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
     MatCardModule
   ],
   templateUrl: './payment-dialog.component.html',
   styleUrls: ['./payment-dialog.component.scss']
 })
-export class PaymentDialogComponent implements OnInit {
-  customerName = '';
-  customerDocument = '';
-  customerEmail = '';
-  invoiceType: 'consumidor_final' | 'credito_fiscal' = 'consumidor_final';
-  paymentMethod: 'cash' | 'card' | 'transfer' = 'cash';
-  paymentAmount = 0;
+export class PaymentDialogComponent implements OnInit, OnDestroy {
+  @Input() total: number = 0;
+  @Input() items: CartItem[] = [];
+  @Output() close = new EventEmitter<any>();
+
+  paymentForm!: FormGroup;
   change = 0;
   cartTotals: {
     subtotal: number;
@@ -49,37 +40,63 @@ export class PaymentDialogComponent implements OnInit {
     total: number;
   };
 
-  constructor(
-    public dialogRef: MatDialogRef<PaymentDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: PaymentDialogData
-  ) {
-    // Calcular totales basados en los items
-    this.cartTotals = this.calculateTotalsFromItems(data.items);
+  private destroy$ = new Subject<void>();
+
+  constructor(private fb: FormBuilder) {
+    this.cartTotals = { subtotal: 0, taxAmount: 0, total: 0 };
   }
 
   ngOnInit(): void {
-    this.paymentAmount = this.data.total;
+    this.cartTotals = this.calculateTotalsFromItems(this.items);
+    this.initializeForm();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeForm(): void {
+    this.paymentForm = this.fb.group({
+      customerName: [''],
+      customerDocument: [''],
+      customerEmail: ['', [Validators.email]],
+      invoiceType: ['consumidor_final', Validators.required],
+      paymentMethod: ['cash', Validators.required],
+      paymentAmount: [this.cartTotals.total, [Validators.required, Validators.min(0.01)]]
+    });
+
+    // Observar cambios en el método de pago
+    this.paymentForm.get('paymentMethod')?.valueChanges.subscribe(() => {
+      this.onPaymentMethodChange();
+    });
+
+    // Observar cambios en el monto
+    this.paymentForm.get('paymentAmount')?.valueChanges.subscribe(() => {
+      this.calculateChange();
+    });
+
     this.calculateChange();
   }
 
   onPaymentMethodChange(): void {
-    // Al cambiar método de pago, ajustar el monto
-    if (this.paymentMethod === 'cash') {
-      this.paymentAmount = this.data.total;
+    const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
+    
+    if (paymentMethod === 'cash') {
+      this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
     } else {
       // Para tarjeta y transferencia, el monto es exacto
-      this.paymentAmount = this.data.total;
+      this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
     }
     this.calculateChange();
   }
 
-  onPaymentAmountChange(): void {
-    this.calculateChange();
-  }
-
   calculateChange(): void {
-    if (this.paymentMethod === 'cash') {
-      this.change = this.paymentAmount - this.data.total;
+    const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
+    const paymentAmount = this.paymentForm.get('paymentAmount')?.value || 0;
+
+    if (paymentMethod === 'cash') {
+      this.change = paymentAmount - this.cartTotals.total;
     } else {
       // Para tarjeta y transferencia no hay cambio
       this.change = 0;
@@ -87,15 +104,18 @@ export class PaymentDialogComponent implements OnInit {
   }
 
   canConfirm(): boolean {
-    if (this.paymentMethod === 'cash') {
-      return this.paymentAmount >= this.data.total && this.paymentAmount > 0;
+    const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
+    const paymentAmount = this.paymentForm.get('paymentAmount')?.value || 0;
+
+    if (paymentMethod === 'cash') {
+      return paymentAmount >= this.cartTotals.total && paymentAmount > 0;
     }
     // Para tarjeta y transferencia, debe ser el monto exacto
-    return Math.abs(this.paymentAmount - this.data.total) < 0.01 && this.paymentAmount > 0;
+    return Math.abs(paymentAmount - this.cartTotals.total) < 0.01 && paymentAmount > 0;
   }
 
   setExactAmount(): void {
-    this.paymentAmount = this.data.total;
+    this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
     this.calculateChange();
   }
 
@@ -104,21 +124,22 @@ export class PaymentDialogComponent implements OnInit {
       return;
     }
 
+    const formValue = this.paymentForm.value;
     const result = {
-      customerName: this.customerName || undefined,
-      customerDocument: this.customerDocument || undefined,
-      customerEmail: this.customerEmail || undefined,
-      invoiceType: this.invoiceType,
-      method: this.paymentMethod,
-      amount: this.paymentAmount,
+      customerName: formValue.customerName || undefined,
+      customerDocument: formValue.customerDocument || undefined,
+      customerEmail: formValue.customerEmail || undefined,
+      invoiceType: formValue.invoiceType,
+      method: formValue.paymentMethod,
+      amount: formValue.paymentAmount,
       change: this.change
     };
 
-    this.dialogRef.close(result);
+    this.close.emit(result);
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    this.close.emit(null);
   }
 
   getAbsChange(): number {
@@ -145,3 +166,4 @@ export class PaymentDialogComponent implements OnInit {
     };
   }
 }
+

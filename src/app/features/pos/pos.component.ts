@@ -42,7 +42,8 @@ interface PaymentMethod {
     MatIconModule,
     MatDialogModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    PaymentDialogComponent
   ],
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss']
@@ -57,6 +58,7 @@ export class PosComponent implements OnInit, OnDestroy {
   searchTerm = '';
   selectedCategory = '';
   isLoadingProducts = true;
+  showPaymentDialog = false;
   currentTime = new Date();
   
   // Payment related
@@ -805,20 +807,14 @@ export class PosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dialogRef = this.dialog.open(PaymentDialogComponent, {
-      width: '500px',
-      data: {
-        total: this.cartTotals.total,
-        items: this.cartItems
-      }
-    });
+    this.showPaymentDialog = true;
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Procesar pago desde el diálogo
-        this.processPaymentFromDialog(result);
-      }
-    });
+  closePaymentDialog(result?: any): void {
+    this.showPaymentDialog = false;
+    if (result) {
+      this.processPaymentFromDialog(result);
+    }
   }
 
   private processPaymentFromDialog(paymentData: any): void {

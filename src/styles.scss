@@ -723,46 +723,23 @@ a {
 ::ng-deep .custom-dialog-container {
   .mat-mdc-dialog-container {
     padding: 0;
-    margin: 0;
     border-radius: var(--border-radius-xl);
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-    max-width: 90vw;
-    max-height: 90vh;
-    width: auto;
-    height: auto;
+    box-shadow: var(--shadow-2xl);
+    overflow: visible;
   }
   
   .mat-mdc-dialog-surface {
     padding: 0;
-    margin: 0;
     border-radius: var(--border-radius-xl);
-    overflow: hidden;
-    max-width: 90vw;
+    overflow: auto;
     max-height: 90vh;
-    width: auto;
-    height: auto;
   }
 }
 
-// Centrado del modal en la pantalla
-::ng-deep .cdk-overlay-container {
-  .cdk-overlay-pane {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: var(--spacing-lg);
-    box-sizing: border-box;
-  }
-  
-  .mat-mdc-dialog-container {
-    margin: auto;
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-  }
+// Centrado del modal en la pantalla - Angular Material lo hace automáticamente
+::ng-deep .cdk-overlay-pane {
+  max-width: 90vw !important;
+  max-height: 90vh !important;
 }
 
 // Asegurar que el backdrop cubra toda la pantalla

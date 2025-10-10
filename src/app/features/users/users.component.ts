@@ -73,7 +73,13 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   openUserDialog(user?: User): void {
     const dialogRef = this.dialog.open(UserDialogComponent, {
-      width: '500px',
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      panelClass: 'custom-dialog-container',
+      hasBackdrop: true,
+      disableClose: false,
+      autoFocus: true,
       data: user
     });
 

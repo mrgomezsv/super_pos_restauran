@@ -303,9 +303,17 @@
               <mat-icon>print</mat-icon>
               <span>Vista Previa</span>
             </button>
-          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Modal de Procesar Pago -->
+<app-payment-dialog
+  *ngIf="showPaymentDialog"
+  [total]="cartTotals.total"
+  [items]="cartItems"
+  (close)="closePaymentDialog($event)">
+</app-payment-dialog>
 </div>
