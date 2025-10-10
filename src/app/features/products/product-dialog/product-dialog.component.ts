@@ -91,15 +91,18 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
 
   private loadCategories(): void {
     this.isLoadingCategories = true;
+    console.log('🔄 Cargando categorías...');
+    
     this.productService.getCategories()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (categories) => {
           this.categories = categories;
           this.isLoadingCategories = false;
+          console.log('✅ Categorías cargadas:', categories);
         },
         error: (error) => {
-          console.error('Error loading categories:', error);
+          console.error('❌ Error loading categories:', error);
           this.toastr.error('Error al cargar las categorías');
           this.isLoadingCategories = false;
         }
@@ -147,7 +150,7 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
   }
 
   createNewCategory(): void {
-    if (!this.newCategoryName?.trim()) return;
+    if (!this.newCategoryName || !this.newCategoryName.trim()) return;
 
     this.isCreatingCategory = true;
     const categoryData = {
