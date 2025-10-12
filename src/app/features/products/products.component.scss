@@ -269,352 +269,125 @@
     
     .products-table {
       width: 100%;
+      min-width: 800px;
       background: transparent;
       
-      // Table headers
-      .mat-mdc-header-row {
+      // Mantener tamaño de letra de 16px en toda la tabla
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
+        font-size: 16px;
+      }
+    }
+    
+    // Specific column styles
+    .price {
+      font-size: 16px;
+      font-weight: 600;
+      color: #059669;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    
+    // Mat chips styling
+    ::ng-deep .mat-mdc-chip {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 20px;
+      
+      &.mat-mdc-chip.mat-primary {
         background: linear-gradient(135deg, #017E84, #20C997);
-        
-        .mat-mdc-header-cell {
-          font-weight: 600;
-          color: white;
-          font-size: 16px;
-          padding: 20px 16px;
-          border-bottom: none;
-          text-align: left;
-          
-          &:first-child {
-            padding-left: 24px;
-          }
-          
-          &:last-child {
-            padding-right: 24px;
-          }
-        }
+        color: white;
       }
       
-      // Table rows
-      .mat-mdc-row {
-        transition: all 0.3s ease;
+      &.mat-mdc-chip.mat-warn {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+    }
+    
+    // Stock styling
+    .stock-high {
+      color: #059669;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .stock-medium {
+      color: #d97706;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .stock-low {
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    // Action buttons
+    .mat-mdc-icon-button {
+      width: 36px;
+      height: 36px;
+      margin: 0 4px;
+      
+      .mat-icon {
+        font-size: 20px;
+      }
+      
+      &:first-child {
+        color: #017E84;
         
         &:hover {
-          background: #f8f9fa;
-          transform: translateY(-1px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        &:nth-child(even) {
-          background: #fafbfc;
-        }
-        
-        .mat-mdc-cell {
-          padding: 16px;
-          border-bottom: 1px solid #e2e8f0;
-          color: #333;
-          font-size: 16px;
-          font-weight: 500;
-          vertical-align: middle;
-          
-          &:first-child {
-            padding-left: 24px;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-weight: 600;
-            color: #017E84;
-          }
-          
-          &:last-child {
-            padding-right: 24px;
-          }
+          background: rgba(1, 126, 132, 0.1);
         }
       }
       
-      // Specific column styles
-      .price {
-        font-size: 16px;
-        font-weight: 600;
-        color: #059669;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      }
-      
-      // Mat chips styling
-      ::ng-deep .mat-mdc-chip {
-        font-size: 14px;
-        font-weight: 500;
-        padding: 8px 12px;
-        border-radius: 20px;
-        
-        &.mat-mdc-chip.mat-primary {
-          background: linear-gradient(135deg, #017E84, #20C997);
-          color: white;
-        }
-        
-        &.mat-mdc-chip.mat-warn {
-          background: #fef2f2;
-          color: #dc2626;
-          border: 1px solid #fecaca;
-        }
-      }
-      
-      // Stock styling
-      .stock-high {
-        color: #059669;
-        font-weight: 600;
-      }
-      
-      .stock-medium {
-        color: #d97706;
-        font-weight: 600;
-      }
-      
-      .stock-low {
+      &:last-child {
         color: #dc2626;
-        font-weight: 600;
-      }
-      
-      // Action buttons
-      .mat-mdc-icon-button {
-        width: 36px;
-        height: 36px;
-        margin: 0 4px;
         
-        .mat-icon {
-          font-size: 20px;
-        }
-        
-        &:first-child {
-          color: #017E84;
-          
-          &:hover {
-            background: rgba(1, 126, 132, 0.1);
-          }
-        }
-        
-        &:last-child {
-          color: #dc2626;
-          
-          &:hover {
-            background: rgba(220, 38, 38, 0.1);
-          }
-        }
-      }
-      
-      // Specific column styles
-      .product-code {
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        font-weight: 600;
-        color: #017E84;
-      }
-      
-      .product-name {
-        font-weight: 500;
-        color: #333;
-      }
-      
-      .product-category {
-        .category-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--spacing-xs);
-          padding: var(--spacing-xs) var(--spacing-sm);
-          background: var(--btn-bg);
-          color: var(--text);
-          border-radius: var(--border-radius-full);
-          font-size: var(--text-xs);
-          font-weight: var(--font-weight-medium);
-          
-          mat-icon {
-            font-size: 14px;
-          }
-        }
-      }
-      
-      .product-price {
-        font-weight: var(--font-weight-semibold);
-        color: var(--primary);
-        font-size: var(--text-base);
-      }
-      
-      .product-stock {
-        .stock-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--spacing-xs);
-          padding: var(--spacing-xs) var(--spacing-sm);
-          border-radius: var(--border-radius-full);
-          font-size: var(--text-xs);
-          font-weight: var(--font-weight-medium);
-          
-          &.stock-high {
-            background: var(--btn-bg);
-            color: var(--text);
-          }
-          
-          &.stock-medium {
-            background: #fff3cd;
-            color: #856404;
-          }
-          
-          &.stock-low {
-            background: #fee2e2;
-            color: #dc2626;
-          }
-          
-          mat-icon {
-            font-size: 14px;
-          }
-        }
-      }
-      
-      .product-status {
-        .status-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--spacing-xs);
-          padding: var(--spacing-xs) var(--spacing-sm);
-          border-radius: var(--border-radius-full);
-          font-size: var(--text-xs);
-          font-weight: var(--font-weight-medium);
-          
-          &.status-active {
-            background: var(--btn-bg);
-            color: var(--text);
-          }
-          
-          &.status-inactive {
-            background: #fee2e2;
-            color: #dc2626;
-          }
-          
-          mat-icon {
-            font-size: 14px;
-          }
-        }
-      }
-      
-      .product-actions {
-        .action-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          border: none;
-          border-radius: var(--border-radius-md);
-          cursor: pointer;
-          transition: all var(--transition-fast);
-          margin-right: var(--spacing-xs);
-          
-          &.edit-btn {
-            background: var(--btn-bg);
-            color: var(--primary);
-            
-            &:hover {
-              background: var(--primary);
-              color: white;
-              transform: scale(1.1);
-            }
-          }
-          
-          &.delete-btn {
-            background: #fee2e2;
-            color: #dc2626;
-            
-            &:hover {
-              background: #dc2626;
-              color: white;
-              transform: scale(1.1);
-            }
-          }
-          
-          mat-icon {
-            font-size: 18px;
-          }
+        &:hover {
+          background: rgba(220, 38, 38, 0.1);
         }
       }
     }
   }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
 }
 
-// Loading and Empty States
+// Loading States
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-4xl);
-  text-align: center;
-  
-  .loading-spinner {
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .loading-text {
-    font-size: var(--text-lg);
-    color: var(--text-gray);
-    font-weight: var(--font-weight-medium);
-  }
-}
+  padding: 40px;
+  color: #666;
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-4xl);
-  text-align: center;
-  
-  .empty-icon {
-    width: 80px;
-    height: 80px;
-    background: var(--btn-bg);
-    border-radius: var(--border-radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: var(--spacing-lg);
-    
-    mat-icon {
-      font-size: 40px;
-      color: var(--text-placeholder);
-    }
-  }
-  
-  .empty-title {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text);
-    margin-bottom: var(--spacing-sm);
-  }
-  
-  .empty-subtitle {
-    font-size: var(--text-base);
-    color: var(--text-gray);
-    margin-bottom: var(--spacing-lg);
-    max-width: 400px;
-  }
-  
-  .empty-action {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md) var(--spacing-lg);
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    border: none;
-    border-radius: var(--border-radius-lg);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-    
-    mat-icon {
-      font-size: 18px;
-    }
+  p {
+    margin-top: 16px;
+    font-size: 16px;
   }
 }
 

@@ -46,15 +46,82 @@
 }
 
 .users-table-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  
   .table-container {
     overflow-x: auto;
+    
+    .users-table {
+      width: 100%;
+      min-width: 800px;
+      background: transparent;
+      
+      // Mantener tamaño de letra de 16px en toda la tabla
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
+        font-size: 16px;
+      }
+    }
+    
+    // Mat chips styling
+    ::ng-deep .mat-mdc-chip {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 20px;
+      
+      &.mat-mdc-chip.mat-primary {
+        background: linear-gradient(135deg, #017E84, #20C997);
+        color: white;
+      }
+      
+      &.mat-mdc-chip.mat-warn {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+    }
+    
+    // Action buttons
+    .mat-mdc-icon-button {
+      width: 36px;
+      height: 36px;
+      margin: 0 4px;
+      
+      .mat-icon {
+        font-size: 20px;
+      }
+      
+      &:first-child {
+        color: #017E84;
+        
+        &:hover {
+          background: rgba(1, 126, 132, 0.1);
+        }
+      }
+      
+      &:nth-child(2) {
+        color: #d97706;
+        
+        &:hover {
+          background: rgba(217, 119, 6, 0.1);
+        }
+      }
+      
+      &:last-child {
+        color: #dc2626;
+        
+        &:hover {
+          background: rgba(220, 38, 38, 0.1);
+        }
+      }
+    }
   }
-
-  .users-table {
-    width: 100%;
-    min-width: 800px;
-  }
-
+  
   .no-data {
     display: flex;
     flex-direction: column;
@@ -76,7 +143,7 @@
       font-size: 16px;
     }
   }
-
+  
   .loading-container {
     display: flex;
     flex-direction: column;

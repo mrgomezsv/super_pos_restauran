@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -11,6 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../core/models/user.model';
+import { Overlay } from '@angular/cdk/overlay';
 
 @Component({
   selector: 'app-user-dialog',
@@ -68,42 +69,42 @@ import { User } from '../../../core/models/user.model';
                   </mat-error>
                 </mat-form-field>
 
-                <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="userForm.get('role')?.hasError('required') && userForm.get('role')?.touched">
-                  <mat-label>Rol *</mat-label>
-                  <mat-select formControlName="role" placeholder="Seleccione un rol">
-                    <mat-option value="admin">
-                      <div class="role-option">
-                        <mat-icon class="role-icon">admin_panel_settings</mat-icon>
-                        <div class="role-info">
-                          <span class="role-name">Administrador</span>
-                          <span class="role-description">Acceso completo al sistema</span>
-                        </div>
+                <div class="custom-select-field">
+                  <label class="custom-select-label">Rol *</label>
+                  <div class="select-wrapper">
+                    <div 
+                      class="custom-select-display"
+                      [class.invalid]="userForm.get('role')?.hasError('required') && userForm.get('role')?.touched"
+                      (click)="toggleRoleDropdown()">
+                      <span class="select-value">{{ getRoleDisplayValue() }}</span>
+                      <span class="select-arrow" [class.open]="isRoleDropdownOpen">▼</span>
+                    </div>
+                    <div class="custom-dropdown" [class.open]="isRoleDropdownOpen">
+                      <div 
+                        class="dropdown-option" 
+                        [class.selected]="userForm.get('role')?.value === 'admin'"
+                        (click)="selectRole('admin')">
+                        Administrador
                       </div>
-                    </mat-option>
-                    <mat-option value="manager">
-                      <div class="role-option">
-                        <mat-icon class="role-icon">manage_accounts</mat-icon>
-                        <div class="role-info">
-                          <span class="role-name">Gerente</span>
-                          <span class="role-description">Gestión de ventas y productos</span>
-                        </div>
+                      <div 
+                        class="dropdown-option" 
+                        [class.selected]="userForm.get('role')?.value === 'manager'"
+                        (click)="selectRole('manager')">
+                        Gerente
                       </div>
-                    </mat-option>
-                    <mat-option value="cashier">
-                      <div class="role-option">
-                        <mat-icon class="role-icon">point_of_sale</mat-icon>
-                        <div class="role-info">
-                          <span class="role-name">Cajero</span>
-                          <span class="role-description">Procesar ventas únicamente</span>
-                        </div>
+                      <div 
+                        class="dropdown-option" 
+                        [class.selected]="userForm.get('role')?.value === 'cashier'"
+                        (click)="selectRole('cashier')">
+                        Cajero
                       </div>
-                    </mat-option>
-                  </mat-select>
-                  <mat-hint>Define los permisos del usuario</mat-hint>
-                  <mat-error *ngIf="userForm.get('role')?.hasError('required') && userForm.get('role')?.touched">
+                    </div>
+                  </div>
+                  <div class="select-hint">Define los permisos del usuario</div>
+                  <div class="select-error" *ngIf="userForm.get('role')?.hasError('required') && userForm.get('role')?.touched">
                     El rol es requerido
-                  </mat-error>
-                </mat-form-field>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -554,42 +555,132 @@ import { User } from '../../../core/models/user.model';
         }
       }
 
-      // Estilos para opciones de rol
-      .role-option {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 0;
 
-        .role-icon {
+      // Estilos para el select personalizado
+      .custom-select-field {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-bottom: 16px;
+        position: relative;
+
+        .custom-select-label {
+          position: absolute;
+          top: -8px;
+          left: 12px;
+          background: #ffffff;
+          padding: 0 4px;
+          font-size: 12px;
+          font-weight: 600;
           color: #017E84;
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-          background: rgba(1, 126, 132, 0.1);
-          border-radius: 4px;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          z-index: 1;
+          margin-bottom: 8px;
         }
 
-        .role-info {
+        .select-wrapper {
+          position: relative;
+          width: 100%;
+        }
+
+        .custom-select-display {
+          width: 100%;
+          padding: 16px 12px 8px 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          background: #ffffff;
+          color: #333;
+          font-size: 16px;
+          min-height: 56px;
+          cursor: pointer;
+          transition: all 0.3s ease;
           display: flex;
-          flex-direction: column;
-          gap: 2px;
+          align-items: center;
+          justify-content: space-between;
 
-          .role-name {
-            font-weight: 600;
+          &:hover {
+            border-color: #017E84;
+            box-shadow: 0 2px 8px rgba(1, 126, 132, 0.1);
+          }
+
+          &.invalid {
+            border-color: #f44336;
+            border-width: 2px;
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+          }
+
+          .select-value {
+            flex: 1;
             color: #333;
-            font-size: 14px;
+            
+            &:empty::before {
+              content: 'Seleccione un rol';
+              color: #a0aec0;
+              font-style: italic;
+            }
           }
 
-          .role-description {
-            font-size: 12px;
+          .select-arrow {
             color: #666;
-            font-style: italic;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+            
+            &.open {
+              transform: rotate(180deg);
+            }
           }
+        }
+
+        .custom-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          z-index: 1000;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.3s ease;
+          margin-top: 4px;
+
+          &.open {
+            max-height: 200px;
+            border: 1px solid #017E84;
+          }
+
+          .dropdown-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            color: #333;
+            font-size: 16px;
+
+            &:hover {
+              background: rgba(1, 126, 132, 0.1);
+            }
+
+            &.selected {
+              background: rgba(1, 126, 132, 0.15);
+              color: #017E84;
+              font-weight: 600;
+            }
+          }
+        }
+
+        .select-hint {
+          font-size: 12px;
+          color: #666;
+          margin-top: 4px;
+          padding: 0 12px;
+        }
+
+        .select-error {
+          font-size: 12px;
+          color: #f44336;
+          margin-top: 4px;
+          padding: 0 12px;
         }
       }
 
@@ -956,13 +1047,15 @@ export class UserDialogComponent implements OnInit {
   userForm: FormGroup;
   isEdit = false;
   hidePassword = true;
+  isRoleDropdownOpen = false;
 
   constructor(
     public dialogRef: MatDialogRef<UserDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: User | null,
     private fb: FormBuilder,
     private userService: UserService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private overlay: Overlay
   ) {
     this.userForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
@@ -982,6 +1075,7 @@ export class UserDialogComponent implements OnInit {
       this.userForm.get('password')?.clearValidators();
       this.userForm.get('password')?.updateValueAndValidity();
     }
+
   }
 
   onCancel() {
@@ -1029,4 +1123,35 @@ export class UserDialogComponent implements OnInit {
     const totalFieldsCount = Object.keys(totalFields).length;
     return Math.round((validFields / totalFieldsCount) * 100);
   }
+
+  // Métodos para el dropdown personalizado de rol
+  toggleRoleDropdown() {
+    this.isRoleDropdownOpen = !this.isRoleDropdownOpen;
+  }
+
+  selectRole(role: string) {
+    this.userForm.get('role')?.setValue(role);
+    this.isRoleDropdownOpen = false;
+  }
+
+  getRoleDisplayValue(): string {
+    const role = this.userForm.get('role')?.value;
+    switch (role) {
+      case 'admin': return 'Administrador';
+      case 'manager': return 'Gerente';
+      case 'cashier': return 'Cajero';
+      default: return '';
+    }
+  }
+
+  // Cerrar dropdown cuando se hace clic fuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select-field')) {
+      this.isRoleDropdownOpen = false;
+    }
+  }
+
+
 }
