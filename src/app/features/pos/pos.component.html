@@ -109,7 +109,7 @@
             <div class="product-info">
               <h4 class="product-name">{{ product.name }}</h4>
               <p class="product-code">{{ product.code }}</p>
-              <div class="product-price">${{ product.price | number:'1.2-2' }}</div>
+              <div class="product-price">${{ getDisplayPrice(product) | number:'1.2-2' }}</div>
               <div class="product-stock" [class]="getStockClass(product.stock, product.minStock)">
                 <mat-icon>{{ getStockIcon(product.stock, product.minStock) }}</mat-icon>
                 <span>{{ product.stock }} unidades</span>
@@ -237,7 +237,7 @@
               <mat-icon>inventory_2</mat-icon>
               <div>
                 <strong>{{ selectedProductForQuantity.name }}</strong>
-                <p>Stock: {{ selectedProductForQuantity.stock }} | Precio: ${{ selectedProductForQuantity.price | number:'1.2-2' }}</p>
+                <p>Stock: {{ selectedProductForQuantity.stock }} | Precio: ${{ getDisplayPrice(selectedProductForQuantity) | number:'1.2-2' }}</p>
               </div>
             </div>
           </div>

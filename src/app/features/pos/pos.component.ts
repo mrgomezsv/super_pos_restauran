@@ -14,9 +14,11 @@ import { ProductService } from '../../core/services/product.service';
 import { SaleService } from '../../core/services/sale.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { BusinessService } from '../../core/services/business.service';
 import { Product } from '../../core/models/product.model';
 import { CartItem, Sale } from '../../core/models/sale.model';
 import { User } from '../../core/models/user.model';
+import { BusinessConfiguration } from '../../core/models/business.model';
 import { PaymentDialogComponent } from './payment-dialog/payment-dialog.component';
 import { ReceiptModalComponent } from '../../shared/components/receipt-modal/receipt-modal.component';
 
@@ -62,6 +64,9 @@ export class PosComponent implements OnInit, OnDestroy {
   showPaymentDialog = false;
   currentTime = new Date();
   
+  // Business configuration
+  businessConfig: BusinessConfiguration | null = null;
+  
   // Keypad context management
   keypadMode: 'search' | 'quantity' | 'disabled' = 'search';
   keypadValue = '';
@@ -87,7 +92,8 @@ export class PosComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private dialog: MatDialog,
     private toastr: ToastrService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private businessService: BusinessService
   ) {
     // Configurar búsqueda con debounce
     this.searchSubject.pipe(
@@ -103,6 +109,7 @@ export class PosComponent implements OnInit, OnDestroy {
     this.currentUser = this.authService.getCurrentUser();
     this.loadProducts();
     this.loadCategories();
+    this.loadBusinessConfig();
     this.updateCurrentTime();
     
     // Actualizar tiempo cada minuto
@@ -193,6 +200,29 @@ export class PosComponent implements OnInit, OnDestroy {
       }
     });
     this.categories = Array.from(categories).sort();
+  }
+
+  loadBusinessConfig(): void {
+    this.businessService.getConfiguration()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config: BusinessConfiguration) => {
+          this.businessConfig = config;
+        },
+        error: (error: any) => {
+          console.error('Error loading business configuration:', error);
+        }
+      });
+  }
+
+  getDisplayPrice(product: Product): number {
+    if (!this.businessConfig || !this.businessConfig.showPricesWithTax) {
+      return product.price;
+    }
+    
+    // Calcular precio con IVA incluido (13%)
+    const taxRate = this.businessConfig.defaultTaxRate || 13;
+    return product.price * (1 + taxRate / 100);
   }
 
   selectCategory(category: string): void {
@@ -308,6 +338,9 @@ export class PosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Obtener el precio correcto (con o sin IVA según configuración)
+    const displayPrice = this.getDisplayPrice(product);
+
     const existingItem = this.cartItems.find(item => item.productId === product.id);
     
     if (existingItem) {
@@ -328,11 +361,11 @@ export class PosComponent implements OnInit, OnDestroy {
       const newItem: CartItem = {
         productId: product.id,
         productName: product.name,
-        unitPrice: product.price,
+        unitPrice: displayPrice,
         quantity: quantity,
-        total: product.price * quantity,
+        total: displayPrice * quantity,
         tax: 13, // 13% de impuesto
-        subtotal: product.price * quantity
+        subtotal: displayPrice * quantity
       };
       this.cartItems.push(newItem);
     }
@@ -408,24 +441,43 @@ export class PosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const subtotal = this.cartItems.reduce((sum, item) => {
-      const itemTotal = item.unitPrice * item.quantity;
-      return sum + itemTotal;
-    }, 0);
+    // Si los precios ya incluyen IVA, el total es simplemente la suma de los items
+    if (this.businessConfig?.showPricesWithTax) {
+      const total = this.cartItems.reduce((sum, item) => {
+        return sum + (item.unitPrice * item.quantity);
+      }, 0);
+      
+      // Calcular el subtotal (precio sin IVA) y el impuesto desde el total
+      const taxRate = this.businessConfig.defaultTaxRate || 13;
+      const subtotal = total / (1 + taxRate / 100);
+      const taxAmount = total - subtotal;
+      
+      this.cartTotals = {
+        subtotal: Math.round(subtotal * 100) / 100,
+        taxAmount: Math.round(taxAmount * 100) / 100,
+        total: Math.round(total * 100) / 100
+      };
+    } else {
+      // Cálculo original cuando los precios NO incluyen IVA
+      const subtotal = this.cartItems.reduce((sum, item) => {
+        const itemTotal = item.unitPrice * item.quantity;
+        return sum + itemTotal;
+      }, 0);
 
-    const taxAmount = this.cartItems.reduce((sum, item) => {
-      const itemTotal = item.unitPrice * item.quantity;
-      const itemTax = itemTotal * (item.tax / 100);
-      return sum + itemTax;
-    }, 0);
+      const taxAmount = this.cartItems.reduce((sum, item) => {
+        const itemTotal = item.unitPrice * item.quantity;
+        const itemTax = itemTotal * (item.tax / 100);
+        return sum + itemTax;
+      }, 0);
 
-    const total = subtotal + taxAmount;
+      const total = subtotal + taxAmount;
 
-    this.cartTotals = {
-      subtotal: Math.round(subtotal * 100) / 100,
-      taxAmount: Math.round(taxAmount * 100) / 100,
-      total: Math.round(total * 100) / 100
-    };
+      this.cartTotals = {
+        subtotal: Math.round(subtotal * 100) / 100,
+        taxAmount: Math.round(taxAmount * 100) / 100,
+        total: Math.round(total * 100) / 100
+      };
+    }
   }
 
   // Métodos del teclado numérico contextual
