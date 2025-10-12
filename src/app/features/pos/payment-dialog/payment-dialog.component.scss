@@ -31,6 +31,7 @@
     box-shadow: none !important;
     padding: 0 !important;
     z-index: 1000 !important;
+    overflow: visible !important;
   }
 
   .mat-mdc-dialog-backdrop {
@@ -84,6 +85,7 @@
   z-index: 10001 !important;
 }
 
+// Forzar estilos para el panel del select
 ::ng-deep .mat-mdc-select-panel {
   z-index: 10002 !important;
   position: fixed !important;
@@ -93,6 +95,29 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   max-height: 300px !important;
   overflow-y: auto !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+// Asegurar que las opciones sean visibles
+::ng-deep .mat-mdc-option {
+  background: white !important;
+  color: black !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 48px !important;
+  padding: 12px 16px !important;
+}
+
+::ng-deep .mat-mdc-option:hover {
+  background: #f5f5f5 !important;
+}
+
+::ng-deep .mat-mdc-option.mdc-list-item--selected {
+  background: #1976d2 !important;
+  color: white !important;
 }
 
 @keyframes backdropFadeIn {
@@ -113,7 +138,7 @@
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   box-shadow: var(--modal-shadow-lg);
   z-index: 1001;
@@ -339,6 +364,37 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       max-height: 300px !important;
       overflow-y: auto !important;
+    }
+
+    // Estilos para dropdowns nativos
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--modal-text);
+      margin-bottom: 8px;
+    }
+
+    .native-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--modal-border);
+      border-radius: var(--border-radius);
+      background: white;
+      color: var(--modal-text);
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      &:focus {
+        outline: none;
+        border-color: var(--modal-primary);
+        box-shadow: 0 0 0 2px rgba(var(--modal-primary-rgb), 0.1);
+      }
+      
+      &:hover {
+        border-color: var(--modal-primary);
+      }
     }
   }
 }

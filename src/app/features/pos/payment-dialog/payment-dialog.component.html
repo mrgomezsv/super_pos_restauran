@@ -77,13 +77,14 @@
             </mat-form-field>
           </div>
 
-          <mat-form-field appearance="outline" class="form-field full-width">
-            <mat-label>Tipo de Factura</mat-label>
-            <mat-select formControlName="invoiceType">
-              <mat-option value="consumidor_final">Consumidor Final</mat-option>
-              <mat-option value="credito_fiscal">Crédito Fiscal</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <!-- Dropdown nativo temporal para testing -->
+          <div class="form-field full-width">
+            <label class="form-label">Tipo de Factura</label>
+            <select formControlName="invoiceType" class="native-select">
+              <option value="consumidor_final">Consumidor Final</option>
+              <option value="credito_fiscal">Crédito Fiscal</option>
+            </select>
+          </div>
         </div>
 
         <!-- Método de Pago -->
@@ -93,15 +94,16 @@
             Método de Pago
           </h3>
 
-          <mat-form-field appearance="outline" class="form-field full-width">
-            <mat-label>Método de Pago</mat-label>
-            <mat-select formControlName="paymentMethod">
-              <mat-option value="cash">Efectivo</mat-option>
-              <mat-option value="card">Tarjeta</mat-option>
-              <mat-option value="transfer">Transferencia</mat-option>
-              <mat-option value="bitcoin">Bitcoin</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <!-- Dropdown nativo temporal para testing -->
+          <div class="form-field full-width">
+            <label class="form-label">Método de Pago</label>
+            <select formControlName="paymentMethod" class="native-select">
+              <option value="cash">Efectivo</option>
+              <option value="card">Tarjeta</option>
+              <option value="transfer">Transferencia</option>
+              <option value="bitcoin">Bitcoin</option>
+            </select>
+          </div>
 
           <mat-form-field appearance="outline" class="form-field full-width">
             <mat-label>Monto Recibido</mat-label>

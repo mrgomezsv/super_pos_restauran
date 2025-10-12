@@ -1030,7 +1030,7 @@ export class PosComponent implements OnInit, OnDestroy {
         left: '50%'
       },
       panelClass: 'payment-dialog-container',
-      scrollStrategy: this.overlay.scrollStrategies.reposition(),
+      scrollStrategy: this.overlay.scrollStrategies.noop(),
       data: {
         total: this.cartTotals.total,
         items: this.cartItems
