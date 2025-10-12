@@ -103,19 +103,6 @@
           background: rgba(0, 0, 0, 0.04);
         }
       }
-
-      &.print-btn {
-        background: linear-gradient(135deg, #017E84, #20C997);
-        color: white;
-        border: none;
-        box-shadow: 0 2px 8px rgba(1, 126, 132, 0.3);
-
-        &:hover {
-          background: linear-gradient(135deg, #015a5e, #017E84);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(1, 126, 132, 0.4);
-        }
-      }
     }
   }
 }

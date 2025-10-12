@@ -319,6 +319,11 @@
 
 // Print styles
 @media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
   .receipt-container {
     background: white;
     padding: 0;
@@ -328,11 +333,28 @@
       box-shadow: none;
       width: 100%;
       max-width: none;
+      margin: 0;
+      padding: 10px;
+      background: white !important;
+      color: black !important;
     }
 
     .receipt-actions {
       display: none;
     }
+  }
+  
+  // Ocultar elementos del modal durante la impresión
+  .modal-header,
+  .modal-actions,
+  .modal-content {
+    display: none !important;
+  }
+  
+  .receipt-modal {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 }
 
@@ -340,5 +362,31 @@
 .no-print {
   @media print {
     display: none !important;
+  }
+}
+
+// Clase para modo de impresión desde modal
+.printing-receipt {
+  .modal-header,
+  .modal-actions {
+    display: none !important;
+  }
+  
+  .receipt-modal {
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  
+  .modal-content {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  
+  .receipt-container {
+    background: white !important;
+    padding: 10px !important;
+    min-height: auto !important;
   }
 }

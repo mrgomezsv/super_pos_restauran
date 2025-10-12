@@ -62,11 +62,4 @@ export class ReceiptModalComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  onPrint(): void {
-    // El componente de receipt maneja la impresión
-    const receiptComponent = document.querySelector('app-receipt');
-    if (receiptComponent) {
-      (receiptComponent as any).printReceipt();
-    }
-  }
 }
