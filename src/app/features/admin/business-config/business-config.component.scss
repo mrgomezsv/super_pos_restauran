@@ -1,34 +1,10 @@
-// Variables CSS modernas
+// Usar las mismas variables CSS que el resto del proyecto para consistencia
+
+// Variables de sombra adicionales para este componente
 :root {
-  --primary-color: #017E84;
-  --primary-light: #4DB6C4;
-  --primary-dark: #015A5F;
-  --secondary-color: #6366F1;
-  --success-color: #10B981;
-  --warning-color: #F59E0B;
-  --error-color: #EF4444;
-  --background: #F8FAFC;
-  --surface: #FFFFFF;
-  --surface-variant: #F1F5F9;
-  --text-primary: #1E293B;
-  --text-secondary: #64748B;
-  --text-muted: #94A3B8;
-  --border-color: #E2E8F0;
-  --border-light: #F1F5F9;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --spacing-xs: 8px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
 }
 
 // Contenedor principal
@@ -40,13 +16,14 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-// Header moderno
+// Header moderno optimizado
 .modern-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: white;
   padding: var(--spacing-xl) var(--spacing-2xl);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-lg);
 
   &::before {
     content: '';
@@ -100,7 +77,7 @@
 
       .icon-wrapper {
         background: rgba(255, 255, 255, 0.2);
-        border-radius: var(--radius-xl);
+        border-radius: var(--border-radius-lg);
         padding: var(--spacing-lg);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -118,13 +95,17 @@
           font-weight: 700;
           margin: 0 0 var(--spacing-xs) 0;
           line-height: 1.2;
+          color: white;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         p {
           font-size: 1.1rem;
-          opacity: 0.9;
+          opacity: 0.95;
           margin: 0;
           line-height: 1.5;
+          color: white;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
       }
     }
@@ -139,34 +120,38 @@
           align-items: center;
           gap: var(--spacing-xs);
           padding: var(--spacing-sm) var(--spacing-md);
-          border-radius: var(--radius-lg);
-          font-size: 0.85rem;
-          font-weight: 500;
+          border-radius: var(--border-radius-lg);
+          font-size: 0.9rem;
+          font-weight: 600;
           transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
 
           &.warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: #F59E0B;
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: rgba(229, 72, 77, 0.15);
+            color: var(--error);
+            border: 2px solid rgba(229, 72, 77, 0.3);
+            box-shadow: 0 2px 4px rgba(229, 72, 77, 0.1);
           }
 
           &.saving {
-            background: rgba(99, 102, 241, 0.2);
-            color: #6366F1;
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            background: rgba(0, 0, 0, 0.15);
+            color: var(--primary);
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
 
           &.success {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10B981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--accent-color);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.1);
           }
 
           .warning-icon,
           .success-icon {
-            font-size: 16px;
-            width: 16px;
-            height: 16px;
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
           }
         }
 
@@ -175,14 +160,15 @@
           align-items: center;
           gap: var(--spacing-xs);
           padding: var(--spacing-sm) var(--spacing-lg);
-          border-radius: var(--radius-lg);
+          border-radius: var(--border-radius-lg);
           font-weight: 600;
           text-transform: none;
           font-size: 14px;
-          transition: all 0.2s ease;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
 
           &:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
           }
@@ -190,38 +176,49 @@
           &.restore-btn {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
             
             &:hover:not(:disabled) {
               background: rgba(255, 255, 255, 0.2);
-              transform: translateY(-1px);
+              border-color: rgba(255, 255, 255, 0.4);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             }
           }
 
           &.preview-btn {
             background: rgba(255, 255, 255, 0.15);
             color: white;
+            border-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
             
             &:hover:not(:disabled) {
               background: rgba(255, 255, 255, 0.25);
-              transform: translateY(-1px);
+              border-color: rgba(255, 255, 255, 0.4);
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             }
           }
 
           &.save-btn {
             background: white;
-            color: var(--primary-color);
+            color: var(--primary);
             box-shadow: var(--shadow-md);
+            border-color: rgba(255, 255, 255, 0.3);
+            font-weight: 700;
             
             &:hover:not(:disabled) {
-              background: var(--surface-variant);
-              transform: translateY(-1px);
+              background: var(--btn-bg);
+              color: var(--primary);
+              transform: translateY(-2px);
               box-shadow: var(--shadow-lg);
             }
 
             &:disabled {
               background: rgba(255, 255, 255, 0.7);
-              color: rgba(1, 126, 132, 0.6);
+              color: var(--text-gray);
+              border-color: rgba(255, 255, 255, 0.2);
             }
           }
         }
@@ -239,9 +236,9 @@
 
   .loading-card {
     text-align: center;
-    background: var(--surface);
+    background: var(--background);
     padding: var(--spacing-2xl);
-    border-radius: var(--radius-xl);
+    border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-lg);
     max-width: 400px;
 
@@ -261,11 +258,11 @@
 // Preview section
 .preview-section {
   padding: var(--spacing-xl) var(--spacing-2xl);
-  background: var(--surface-variant);
+  background: var(--background);
 
   .preview-card {
-    background: var(--surface);
-    border-radius: var(--radius-xl);
+    background: var(--background);
+    border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-lg);
     overflow: hidden;
 
@@ -308,11 +305,11 @@
   padding: 0 var(--spacing-2xl) var(--spacing-lg) var(--spacing-2xl);
 
   .progress-card {
-    background: var(--surface);
-    border-radius: var(--radius-xl);
+    background: var(--background);
+    border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
     padding: var(--spacing-xl);
-    border: 1px solid var(--border-light);
+    border: 2px solid var(--border);
 
     .progress-header {
       display: flex;
@@ -322,18 +319,19 @@
 
       h3 {
         margin: 0;
-        color: var(--text-primary);
-        font-weight: 600;
-        font-size: 1.1rem;
+        color: var(--text);
+        font-weight: 700;
+        font-size: 1.2rem;
       }
 
       .progress-percentage {
-        background: var(--primary-color);
+        background: var(--primary);
         color: white;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--radius-md);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius-md);
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 1rem;
+        box-shadow: var(--shadow-sm);
       }
     }
 
@@ -341,7 +339,7 @@
       margin-bottom: var(--spacing-lg);
       
       ::ng-deep .mat-mdc-progress-bar-buffer {
-        background-color: var(--border-light);
+        background-color: var(--border);
       }
       
       ::ng-deep .mat-mdc-progress-bar-fill::after {
@@ -356,14 +354,16 @@
       .stat-item {
         display: flex;
         align-items: center;
-        gap: var(--spacing-xs);
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+        gap: var(--spacing-sm);
+        color: var(--text);
+        font-size: 0.95rem;
+        font-weight: 500;
 
         mat-icon {
-          font-size: 16px;
-          width: 16px;
-          height: 16px;
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          color: var(--primary);
         }
       }
     }
@@ -396,15 +396,17 @@
 
 // Section cards
 .section-card {
-  background: var(--surface);
-  border-radius: var(--radius-xl);
+  background: var(--background);
+  border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
   overflow: hidden;
   transition: all 0.3s ease;
 
   &:hover {
     box-shadow: var(--shadow-lg);
     transform: translateY(-2px);
+    border-color: var(--border);
   }
 
   .section-header {
@@ -412,20 +414,21 @@
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-lg) var(--spacing-xl);
-    background: linear-gradient(135deg, var(--surface-variant) 0%, var(--surface) 100%);
-    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, var(--input-bg) 0%, var(--background) 100%);
+    border-bottom: 2px solid var(--border);
     position: relative;
     cursor: pointer;
     transition: all 0.3s ease;
 
     &:hover {
-      background: linear-gradient(135deg, var(--border-light) 0%, var(--surface-variant) 100%);
+      background: linear-gradient(135deg, var(--btn-bg) 0%, var(--input-bg) 100%);
+      border-bottom-color: var(--primary);
     }
 
     .section-icon {
-      background: var(--primary-color);
+      background: var(--primary);
       color: white;
-      border-radius: var(--radius-lg);
+      border-radius: var(--border-radius-lg);
       padding: var(--spacing-sm);
       display: flex;
       align-items: center;
@@ -443,14 +446,14 @@
 
       h3 {
         margin: 0 0 var(--spacing-xs) 0;
-        color: var(--text-primary);
+        color: var(--text);
         font-weight: 600;
         font-size: 1.2rem;
       }
 
       p {
         margin: 0;
-        color: var(--text-secondary);
+        color: var(--text-gray);
         font-size: 0.9rem;
       }
     }
@@ -481,7 +484,7 @@
         background: var(--primary-color);
         color: white;
         padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--radius-md);
+        border-radius: var(--border-radius-md);
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
@@ -518,20 +521,21 @@
     
     ::ng-deep {
       .mat-mdc-text-field-wrapper {
-        border-radius: var(--radius-lg);
+        border-radius: var(--border-radius-lg);
         min-height: 56px;
-        background: var(--surface);
-        border: 2px solid var(--border-color);
+        background: var(--background);
+        border: 2px solid var(--border);
         transition: all 0.3s ease;
         
         &:hover {
-          border-color: var(--primary-color);
-          box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
         }
         
         &.mdc-text-field--focused {
-          border-color: var(--primary-color);
-          box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+          background: var(--input-bg);
         }
       }
 
@@ -542,36 +546,40 @@
 
       .mat-mdc-input-element {
         font-size: 16px;
-        color: var(--text-primary);
+        color: var(--text);
         padding: 0;
+        font-weight: 500;
       }
 
       .mat-mdc-form-field-label {
-        color: var(--text-secondary);
+        color: var(--text-gray);
         font-weight: 600;
         font-size: 14px;
         transform: translateY(-50%) scale(0.85);
         
         &.mdc-floating-label--float-above {
-          color: var(--primary-color);
+          color: var(--primary);
         }
       }
 
       .mat-mdc-select {
         font-size: 16px;
-        color: var(--text-primary);
+        color: var(--text);
+        font-weight: 500;
       }
 
       .mat-mdc-form-field-hint {
-        color: var(--text-muted);
+        color: var(--text-gray);
         font-size: 0.85rem;
         margin-top: 4px;
+        font-weight: 400;
       }
 
       .mat-mdc-form-field-error {
-        color: var(--error-color);
+        color: var(--error);
         font-size: 0.85rem;
         margin-top: 4px;
+        font-weight: 500;
       }
 
       // Mejorar el outline
@@ -592,7 +600,7 @@
 .settings-section {
   margin-top: var(--spacing-xl);
   padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid var(--border);
 
   h4 {
     margin: 0 0 var(--spacing-lg) 0;
@@ -607,24 +615,36 @@
     gap: var(--spacing-md);
 
     .setting-item {
-      background: var(--surface-variant);
-      border-radius: var(--radius-lg);
+      background: var(--background);
+      border-radius: var(--border-radius-lg);
       padding: var(--spacing-lg);
       transition: all 0.2s ease;
 
-      &:hover {
-        background: var(--border-light);
-      }
+        &:hover {
+          background: var(--btn-bg);
+        }
 
       ::ng-deep .mat-mdc-checkbox {
         width: 100%;
         
         .mdc-checkbox {
           margin-right: var(--spacing-md);
+          --mdc-checkbox-unselected-color: var(--border);
+          --mdc-checkbox-selected-color: var(--primary);
         }
 
         .mat-mdc-checkbox-label {
           width: 100%;
+          color: var(--text);
+        }
+
+        .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+          background-color: var(--primary);
+          border-color: var(--primary);
+        }
+
+        .mdc-checkbox__native-control:enabled:focus ~ .mdc-checkbox__background {
+          background-color: var(--btn-bg);
         }
       }
 
@@ -635,12 +655,12 @@
 
         .setting-label {
           font-weight: 600;
-          color: var(--text-primary);
+          color: var(--text);
           font-size: 0.95rem;
         }
 
         .setting-description {
-          color: var(--text-secondary);
+          color: var(--text-gray);
           font-size: 0.85rem;
           line-height: 1.4;
         }
