@@ -12,6 +12,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
 
 import { BusinessService } from '../../../core/services/business.service';
@@ -34,6 +36,8 @@ import { TicketPreviewComponent } from '../../../shared/components/ticket-previe
     MatTabsModule,
     MatDividerModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
+    MatTooltipModule,
     TicketPreviewComponent
   ],
   templateUrl: './business-config.component.html',
@@ -44,8 +48,10 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   isLoading = false;
   isSaving = false;
   showPreview = false;
+  saveSuccess = false;
   currentConfig: BusinessConfiguration | null = null;
   ticketTemplate: TicketTemplate | null = null;
+  expandedSections: Set<string> = new Set(['company', 'contact', 'tickets', 'labels']);
   private destroy$ = new Subject<void>();
 
   currencies = [
@@ -178,6 +184,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   onSave(): void {
     if (this.businessForm.valid) {
       this.isSaving = true;
+      this.saveSuccess = false;
       
       const formData = this.businessForm.value;
       
@@ -187,16 +194,36 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
           next: (config) => {
             this.toastr.success('Configuración guardada exitosamente');
             this.isSaving = false;
+            this.saveSuccess = true;
+            this.businessForm.markAsPristine();
+            
+            // Ocultar mensaje de éxito después de 3 segundos
+            setTimeout(() => {
+              this.saveSuccess = false;
+            }, 3000);
           },
           error: (error) => {
             console.error('Error saving business configuration:', error);
             this.toastr.error('Error al guardar la configuración');
             this.isSaving = false;
+            this.saveSuccess = false;
           }
         });
     } else {
       this.markFormGroupTouched();
       this.toastr.warning('Por favor, complete todos los campos requeridos');
+    }
+  }
+
+  onRestore(): void {
+    if (confirm('¿Está seguro de que desea restaurar la configuración a los valores por defecto? Esta acción no se puede deshacer.')) {
+      this.businessForm.reset();
+      this.businessService.getConfiguration()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(config => {
+          this.businessForm.patchValue(config);
+          this.toastr.success('Configuración restaurada a los valores por defecto');
+        });
     }
   }
 
@@ -350,5 +377,57 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
         observationsLabel: 'OBSERVACIONES:'
       }
     };
+  }
+
+  // Métodos para el progreso de configuración
+  getCompletionPercentage(): number {
+    const totalFields = Object.keys(this.businessForm.controls).length;
+    const completedFields = Object.values(this.businessForm.controls).filter(control => 
+      control.value && control.value.toString().trim() !== ''
+    ).length;
+    return Math.round((completedFields / totalFields) * 100);
+  }
+
+  getCompletedFields(): number {
+    return Object.values(this.businessForm.controls).filter(control => 
+      control.value && control.value.toString().trim() !== ''
+    ).length;
+  }
+
+  getRemainingFields(): number {
+    const totalFields = Object.keys(this.businessForm.controls).length;
+    return totalFields - this.getCompletedFields();
+  }
+
+  // Métodos para secciones expandibles
+  toggleSection(sectionId: string): void {
+    if (this.expandedSections.has(sectionId)) {
+      this.expandedSections.delete(sectionId);
+    } else {
+      this.expandedSections.add(sectionId);
+    }
+  }
+
+  isSectionExpanded(sectionId: string): boolean {
+    return this.expandedSections.has(sectionId);
+  }
+
+  clearSection(sectionId: string): void {
+    const sectionFields: { [key: string]: string[] } = {
+      'company': ['businessName', 'commercialName', 'taxId', 'registrationNumber', 'economicActivity', 'establishmentName', 'establishmentCode'],
+      'contact': ['address', 'city', 'state', 'country', 'zipCode', 'phone', 'email'],
+      'tickets': ['receiptHeader', 'receiptFooter', 'defaultObservations', 'currency', 'defaultTaxRate', 'logoPath', 'qrCodeUrl', 'allowNegativeStock', 'requireCustomerInfo', 'printLogo', 'printQRCode'],
+      'labels': ['receiptTitle', 'dateLabel', 'generationDateLabel', 'generationCodeLabel', 'receptionSealLabel', 'controlNumberLabel', 'transmissionLabel', 'modelLabel', 'invoiceNumberLabel', 'cashierLabel', 'customerLabel', 'recipientLabel', 'duiLabel', 'addressLabel', 'subtotalLabel', 'taxLabel', 'totalLabel', 'paymentMethodLabel', 'cashReceivedLabel', 'cashReturnedLabel', 'observationsLabel']
+    };
+
+    const fieldsToClear = sectionFields[sectionId];
+    if (fieldsToClear) {
+      fieldsToClear.forEach(fieldName => {
+        if (this.businessForm.get(fieldName)) {
+          this.businessForm.get(fieldName)?.setValue('');
+        }
+      });
+      this.toastr.info(`Sección ${sectionId} limpiada`);
+    }
   }
 }

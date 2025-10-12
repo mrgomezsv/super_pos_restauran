@@ -1,420 +1,487 @@
 <div class="business-config-container">
-  <div class="config-header">
-    <h1>Configuración del Negocio</h1>
-    <p>Configure la información de su empresa que aparecerá en los tickets y documentos</p>
-  </div>
-
-  <div *ngIf="isLoading; else configForm">
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Cargando configuración...</p>
+  <!-- Header moderno con breadcrumb -->
+  <div class="modern-header">
+    <div class="breadcrumb">
+      <span class="breadcrumb-item">Administración</span>
+      <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+      <span class="breadcrumb-item active">Configuración del Negocio</span>
     </div>
-  </div>
-
-  <ng-template #configForm>
-    <!-- Vista Previa del Ticket -->
-    <div *ngIf="showPreview" class="preview-section">
-      <div class="preview-header">
-        <h2>Vista Previa del Ticket</h2>
-        <button mat-icon-button (click)="showPreview = false" class="close-preview">
-          <mat-icon>close</mat-icon>
-        </button>
+    <div class="header-content">
+      <div class="title-section">
+        <div class="icon-wrapper">
+          <mat-icon class="main-icon">settings_business</mat-icon>
+        </div>
+        <div class="title-text">
+          <h1>Configuración del Negocio</h1>
+          <p>Personalice la información de su empresa para tickets y documentos</p>
+        </div>
       </div>
-      <app-ticket-preview 
-        [businessConfig]="currentConfig" 
-        [ticketTemplate]="ticketTemplate">
-      </app-ticket-preview>
-    </div>
+      <div class="header-actions">
+        <!-- Indicador de cambios no guardados -->
+        <div class="save-indicator" *ngIf="businessForm.dirty && !isSaving">
+          <mat-icon class="warning-icon">warning</mat-icon>
+          <span>Cambios sin guardar</span>
+        </div>
 
-    <form [formGroup]="businessForm" (ngSubmit)="onSave()" [style.display]="showPreview ? 'none' : 'block'">
-      <mat-tab-group>
-        <!-- Información de la Empresa -->
-        <mat-tab label="Información de la Empresa">
-          <div class="tab-content">
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>
-                  <mat-icon>business</mat-icon>
-                  Datos de la Empresa
-                </mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre del Negocio *</mat-label>
-                    <input matInput formControlName="businessName" placeholder="Ej: Super POS">
-                    <mat-error>{{ getFieldError('businessName') }}</mat-error>
-                  </mat-form-field>
+        <!-- Indicador de guardado -->
+        <div class="save-indicator saving" *ngIf="isSaving">
+          <mat-spinner diameter="16"></mat-spinner>
+          <span>Guardando...</span>
+        </div>
 
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre Comercial *</mat-label>
-                    <input matInput formControlName="commercialName" placeholder="Ej: Super POS">
-                    <mat-error>{{ getFieldError('commercialName') }}</mat-error>
-                  </mat-form-field>
+        <!-- Indicador de guardado exitoso -->
+        <div class="save-indicator success" *ngIf="saveSuccess && !businessForm.dirty">
+          <mat-icon class="success-icon">check_circle</mat-icon>
+          <span>Guardado exitosamente</span>
+        </div>
 
-                  <mat-form-field appearance="outline">
-                    <mat-label>NIT *</mat-label>
-                    <input matInput formControlName="taxId" 
-                           placeholder="XXXX-XXXXXX-XXX-X"
-                           (input)="formatNIT($event)">
-                    <mat-hint>Formato: XXXX-XXXXXX-XXX-X</mat-hint>
-                    <mat-error>{{ getFieldError('taxId') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>NRC *</mat-label>
-                    <input matInput formControlName="registrationNumber" 
-                           placeholder="XXXXXX-X"
-                           (input)="formatRegistrationNumber($event)">
-                    <mat-hint>Formato: XXXXXX-X</mat-hint>
-                    <mat-error>{{ getFieldError('registrationNumber') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Actividad Económica *</mat-label>
-                    <mat-select formControlName="economicActivity">
-                      <mat-option *ngFor="let activity of economicActivities" [value]="activity">
-                        {{ activity }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-error>{{ getFieldError('economicActivity') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Establecimiento *</mat-label>
-                    <input matInput formControlName="establishmentName" placeholder="Ej: Casa Matriz">
-                    <mat-error>{{ getFieldError('establishmentName') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Código de Establecimiento *</mat-label>
-                    <input matInput formControlName="establishmentCode" placeholder="Ej: 001">
-                    <mat-error>{{ getFieldError('establishmentCode') }}</mat-error>
-                  </mat-form-field>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-
-        <!-- Información de Contacto -->
-        <mat-tab label="Información de Contacto">
-          <div class="tab-content">
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>
-                  <mat-icon>location_on</mat-icon>
-                  Dirección y Contacto
-                </mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Dirección *</mat-label>
-                    <input matInput formControlName="address" placeholder="Calle, número, colonia">
-                    <mat-error>{{ getFieldError('address') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Ciudad *</mat-label>
-                    <input matInput formControlName="city" placeholder="Ej: San Salvador">
-                    <mat-error>{{ getFieldError('city') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Departamento/Estado *</mat-label>
-                    <input matInput formControlName="state" placeholder="Ej: San Salvador">
-                    <mat-error>{{ getFieldError('state') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>País *</mat-label>
-                    <mat-select formControlName="country">
-                      <mat-option *ngFor="let country of countries" [value]="country.value">
-                        {{ country.label }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-error>{{ getFieldError('country') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Código Postal</mat-label>
-                    <input matInput formControlName="zipCode" placeholder="Ej: 1101">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Teléfono *</mat-label>
-                    <input matInput formControlName="phone" 
-                           placeholder="XXXX-XXXX"
-                           (input)="formatPhone($event)">
-                    <mat-hint>Formato: XXXX-XXXX</mat-hint>
-                    <mat-error>{{ getFieldError('phone') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Email *</mat-label>
-                    <input matInput formControlName="email" type="email" placeholder="info@superpos.com">
-                    <mat-error>{{ getFieldError('email') }}</mat-error>
-                  </mat-form-field>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-
-        <!-- Configuración de Tickets -->
-        <mat-tab label="Configuración de Tickets">
-          <div class="tab-content">
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>
-                  <mat-icon>receipt_long</mat-icon>
-                  Personalización de Tickets
-                </mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Encabezado del Ticket</mat-label>
-                    <textarea matInput formControlName="receiptHeader" 
-                              rows="2" 
-                              placeholder="Mensaje que aparece al inicio del ticket">
-                    </textarea>
-                    <mat-hint>Ej: "Gracias por su compra"</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Pie de Página del Ticket</mat-label>
-                    <textarea matInput formControlName="receiptFooter" 
-                              rows="2" 
-                              placeholder="Mensaje que aparece al final del ticket">
-                    </textarea>
-                    <mat-hint>Ej: "¡Vuelva pronto!"</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Observaciones por Defecto</mat-label>
-                    <textarea matInput formControlName="defaultObservations" 
-                              rows="2" 
-                              placeholder="Observaciones que aparecen en cada ticket">
-                    </textarea>
-                    <mat-hint>Ej: "Productos no se devuelven"</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Moneda *</mat-label>
-                    <mat-select formControlName="currency">
-                      <mat-option *ngFor="let currency of currencies" [value]="currency.value">
-                        {{ currency.label }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-error>{{ getFieldError('currency') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Impuesto por Defecto (%) *</mat-label>
-                    <input matInput formControlName="defaultTaxRate" 
-                           type="number" 
-                           min="0" 
-                           max="100" 
-                           step="0.01"
-                           placeholder="15">
-                    <span matSuffix>%</span>
-                    <mat-error>{{ getFieldError('defaultTaxRate') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>URL del Logo</mat-label>
-                    <input matInput formControlName="logoPath" 
-                           placeholder="https://ejemplo.com/logo.png">
-                    <mat-hint>URL completa del logo para mostrar en tickets</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>URL del Código QR</mat-label>
-                    <input matInput formControlName="qrCodeUrl" 
-                           placeholder="https://ejemplo.com/qr">
-                    <mat-hint>URL que se codificará en el código QR</mat-hint>
-                  </mat-form-field>
-                </div>
-
-                <mat-divider class="section-divider"></mat-divider>
-
-                <div class="checkbox-section">
-                  <h3>Configuraciones Adicionales</h3>
-                  <div class="checkbox-grid">
-                    <mat-checkbox formControlName="allowNegativeStock">
-                      Permitir stock negativo
-                    </mat-checkbox>
-                    <mat-checkbox formControlName="requireCustomerInfo">
-                      Requerir información del cliente
-                    </mat-checkbox>
-                    <mat-checkbox formControlName="printLogo">
-                      Imprimir logo en tickets
-                    </mat-checkbox>
-                    <mat-checkbox formControlName="printQRCode">
-                      Imprimir código QR en tickets
-                    </mat-checkbox>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-
-        <!-- Etiquetas del Ticket -->
-        <mat-tab label="Etiquetas del Ticket">
-          <div class="tab-content">
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>
-                  <mat-icon>label</mat-icon>
-                  Personalización de Etiquetas
-                </mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Título del Ticket</mat-label>
-                    <input matInput formControlName="receiptTitle" placeholder="FACTURA">
-                    <mat-hint>Ej: FACTURA, RECIBO, COMPROBANTE</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Fecha</mat-label>
-                    <input matInput formControlName="dateLabel" placeholder="FECHA:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Fecha de Generación</mat-label>
-                    <input matInput formControlName="generationDateLabel" placeholder="FECHA GENERACIÓN:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Código de Generación</mat-label>
-                    <input matInput formControlName="generationCodeLabel" placeholder="CÓDIGO DE GENERACIÓN:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Sello de Recepción</mat-label>
-                    <input matInput formControlName="receptionSealLabel" placeholder="SELLO DE RECEPCIÓN:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Número de Control</mat-label>
-                    <input matInput formControlName="controlNumberLabel" placeholder="NÚMERO DE CONTROL:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Transmisión</mat-label>
-                    <input matInput formControlName="transmissionLabel" placeholder="TRANSMISIÓN:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Modelo</mat-label>
-                    <input matInput formControlName="modelLabel" placeholder="MODELO:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Número de Factura</mat-label>
-                    <input matInput formControlName="invoiceNumberLabel" placeholder="FACTURA N°:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Cajero</mat-label>
-                    <input matInput formControlName="cashierLabel" placeholder="CAJERO:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Cliente</mat-label>
-                    <input matInput formControlName="customerLabel" placeholder="CLIENTE:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Receptor</mat-label>
-                    <input matInput formControlName="recipientLabel" placeholder="RECEPTOR:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de DUI</mat-label>
-                    <input matInput formControlName="duiLabel" placeholder="DUI:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Dirección</mat-label>
-                    <input matInput formControlName="addressLabel" placeholder="DIRECCIÓN:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Subtotal</mat-label>
-                    <input matInput formControlName="subtotalLabel" placeholder="SUBTOTAL:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Impuesto</mat-label>
-                    <input matInput formControlName="taxLabel" placeholder="IVA:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Total</mat-label>
-                    <input matInput formControlName="totalLabel" placeholder="TOTAL:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Método de Pago</mat-label>
-                    <input matInput formControlName="paymentMethodLabel" placeholder="MÉTODO DE PAGO:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Efectivo Recibido</mat-label>
-                    <input matInput formControlName="cashReceivedLabel" placeholder="EFECTIVO RECIBIDO:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Etiqueta de Efectivo Devuelto</mat-label>
-                    <input matInput formControlName="cashReturnedLabel" placeholder="EFECTIVO DEVUELTO:">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Etiqueta de Observaciones</mat-label>
-                    <input matInput formControlName="observationsLabel" placeholder="OBSERVACIONES:">
-                  </mat-form-field>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
-
-      <!-- Botones de Acción -->
-      <div class="action-buttons">
-        <button type="button" 
-                mat-stroked-button 
-                color="primary" 
-                (click)="onReset()"
-                [disabled]="isSaving">
-          <mat-icon>refresh</mat-icon>
+        <button mat-stroked-button (click)="onRestore()" class="action-btn restore-btn" [disabled]="isSaving">
+          <mat-icon>restore</mat-icon>
           Restaurar
         </button>
-
-        <button type="button" 
-                mat-stroked-button 
-                color="accent" 
-                (click)="previewTicket()"
-                [disabled]="isSaving">
-          <mat-icon>{{ showPreview ? 'visibility_off' : 'preview' }}</mat-icon>
+        <button mat-raised-button (click)="previewTicket()" class="action-btn preview-btn" [disabled]="isSaving">
+          <mat-icon>{{ showPreview ? 'visibility_off' : 'visibility' }}</mat-icon>
           {{ showPreview ? 'Ocultar Vista Previa' : 'Vista Previa' }}
         </button>
-
-        <button type="submit" 
-                mat-raised-button 
-                color="primary" 
-                [disabled]="businessForm.invalid || isSaving">
-          <mat-icon *ngIf="isSaving">hourglass_empty</mat-icon>
+        <button mat-raised-button color="primary" (click)="onSave()" class="action-btn save-btn" [disabled]="isSaving || !businessForm.dirty">
           <mat-icon *ngIf="!isSaving">save</mat-icon>
+          <mat-spinner *ngIf="isSaving" diameter="16"></mat-spinner>
           {{ isSaving ? 'Guardando...' : 'Guardar Configuración' }}
         </button>
       </div>
-    </form>
-  </ng-template>
+    </div>
+  </div>
+
+  <!-- Loading state mejorado -->
+  <div *ngIf="isLoading" class="loading-section">
+    <div class="loading-card">
+      <mat-spinner diameter="60"></mat-spinner>
+      <h3>Cargando configuración</h3>
+      <p>Obteniendo la información de su negocio...</p>
+    </div>
+  </div>
+
+  <!-- Vista Previa del Ticket mejorada -->
+  <div *ngIf="showPreview && !isLoading" class="preview-section">
+    <div class="preview-card">
+      <div class="preview-header">
+        <div class="preview-title">
+          <mat-icon>receipt_long</mat-icon>
+          <h2>Vista Previa del Ticket</h2>
+        </div>
+        <button mat-icon-button (click)="showPreview = false" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="preview-content">
+        <app-ticket-preview 
+          [businessConfig]="currentConfig" 
+          [ticketTemplate]="ticketTemplate">
+        </app-ticket-preview>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de progreso de configuración -->
+  <div *ngIf="!isLoading && !showPreview" class="progress-section">
+    <div class="progress-card">
+      <div class="progress-header">
+        <h3>Progreso de Configuración</h3>
+        <span class="progress-percentage">{{ getCompletionPercentage() }}%</span>
+      </div>
+      <mat-progress-bar mode="determinate" [value]="getCompletionPercentage()" class="progress-bar"></mat-progress-bar>
+      <div class="progress-stats">
+        <div class="stat-item">
+          <mat-icon>check_circle</mat-icon>
+          <span>{{ getCompletedFields() }} campos completados</span>
+        </div>
+        <div class="stat-item">
+          <mat-icon>pending</mat-icon>
+          <span>{{ getRemainingFields() }} campos pendientes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario principal con layout moderno -->
+  <form [formGroup]="businessForm" (ngSubmit)="onSave()" [style.display]="showPreview ? 'none' : 'block'" class="main-form">
+    <div class="form-layout">
+      <!-- Panel izquierdo: Información básica -->
+      <div class="form-panel left-panel">
+        <!-- Sección: Información de la Empresa -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon">
+              <mat-icon>business</mat-icon>
+            </div>
+            <div class="section-title">
+              <h3>Información de la Empresa</h3>
+              <p>Datos básicos de su negocio</p>
+            </div>
+            <div class="section-actions">
+              <button mat-icon-button matTooltip="Expandir/Contraer" (click)="toggleSection('company')" class="section-toggle">
+                <mat-icon>{{ isSectionExpanded('company') ? 'expand_less' : 'expand_more' }}</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Limpiar campos" (click)="clearSection('company')" class="section-clear">
+                <mat-icon>clear_all</mat-icon>
+              </button>
+            </div>
+            <div class="section-badge">
+              <span class="badge required">Requerido</span>
+            </div>
+          </div>
+          <div class="section-content">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Nombre del Negocio *</mat-label>
+                <input matInput formControlName="businessName" placeholder="Ej: Super POS">
+                <mat-icon matSuffix matTooltip="Nombre oficial de su empresa registrada" matTooltipPosition="above">help_outline</mat-icon>
+                <mat-error>{{ getFieldError('businessName') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Nombre Comercial *</mat-label>
+                <input matInput formControlName="commercialName" placeholder="Ej: Super POS">
+                <mat-error>{{ getFieldError('commercialName') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>NIT *</mat-label>
+                <input matInput formControlName="taxId" placeholder="XXXX-XXXXXX-XXX-X">
+                <mat-hint>Formato: XXXX-XXXXXX-XXX-X</mat-hint>
+                <mat-error>{{ getFieldError('taxId') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>NRC *</mat-label>
+                <input matInput formControlName="registrationNumber" placeholder="XXXXXX-X">
+                <mat-hint>Formato: XXXXXX-X</mat-hint>
+                <mat-error>{{ getFieldError('registrationNumber') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Actividad Económica *</mat-label>
+                <input matInput formControlName="economicActivity" placeholder="Ej: Venta al por menor">
+                <mat-error>{{ getFieldError('economicActivity') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Establecimiento *</mat-label>
+                <input matInput formControlName="establishmentName" placeholder="Ej: Sucursal Centro">
+                <mat-error>{{ getFieldError('establishmentName') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Código de Establecimiento *</mat-label>
+                <input matInput formControlName="establishmentCode" placeholder="Ej: 001">
+                <mat-error>{{ getFieldError('establishmentCode') }}</mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Información de Contacto -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon">
+              <mat-icon>contact_mail</mat-icon>
+            </div>
+            <div class="section-title">
+              <h3>Información de Contacto</h3>
+              <p>Datos de ubicación y comunicación</p>
+            </div>
+          </div>
+          <div class="section-content">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Dirección Principal *</mat-label>
+                <input matInput formControlName="address" placeholder="Ej: Calle Principal #123">
+                <mat-error>{{ getFieldError('address') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Zona/Barrio</mat-label>
+                <input matInput formControlName="city" placeholder="Ej: Zona Centro">
+                <mat-error>{{ getFieldError('city') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Ciudad *</mat-label>
+                <input matInput formControlName="state" placeholder="Ej: San Salvador">
+                <mat-error>{{ getFieldError('state') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Departamento/Estado *</mat-label>
+                <input matInput formControlName="country" placeholder="Ej: San Salvador">
+                <mat-error>{{ getFieldError('country') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>País *</mat-label>
+                <input matInput formControlName="zipCode" placeholder="Ej: El Salvador">
+                <mat-error>{{ getFieldError('zipCode') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Teléfono *</mat-label>
+                <input matInput formControlName="phone" placeholder="XXXX-XXXX">
+                <mat-hint>Formato: XXXX-XXXX</mat-hint>
+                <mat-error>{{ getFieldError('phone') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Correo Electrónico</mat-label>
+                <input matInput formControlName="email" type="email" placeholder="contacto@empresa.com">
+                <mat-error>{{ getFieldError('email') }}</mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel derecho: Configuración de tickets -->
+      <div class="form-panel right-panel">
+        <!-- Sección: Configuración de Tickets -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon">
+              <mat-icon>receipt</mat-icon>
+            </div>
+            <div class="section-title">
+              <h3>Configuración de Tickets</h3>
+              <p>Personalización de mensajes y formatos</p>
+            </div>
+          </div>
+          <div class="section-content">
+            <div class="form-grid">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Mensaje de Bienvenida del Ticket</mat-label>
+                <textarea matInput formControlName="receiptHeader" 
+                         placeholder="Ej: 'Gracias por su compra'"
+                         rows="2"></textarea>
+                <mat-hint>Ej: 'Gracias por su compra'</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Mensaje de Despedida del Ticket</mat-label>
+                <textarea matInput formControlName="receiptFooter" 
+                         placeholder="Ej: '¡Vuelva pronto!'"
+                         rows="2"></textarea>
+                <mat-hint>Ej: '¡Vuelva pronto!'</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Observaciones por Defecto</mat-label>
+                <textarea matInput formControlName="defaultObservations" 
+                         placeholder="Ej: 'Productos no se devuelven'"
+                         rows="2"></textarea>
+                <mat-hint>Ej: 'Productos no se devuelven'</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Moneda *</mat-label>
+                <mat-select formControlName="currency">
+                  <mat-option value="USD">USD - Dólar Americano</mat-option>
+                  <mat-option value="EUR">EUR - Euro</mat-option>
+                  <mat-option value="SVC">SVC - Colón Salvadoreño</mat-option>
+                </mat-select>
+                <mat-error>{{ getFieldError('currency') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Impuesto por Defecto (%) *</mat-label>
+                <input matInput formControlName="defaultTaxRate" 
+                       type="number" 
+                       min="0" 
+                       max="100" 
+                       step="0.01"
+                       placeholder="15">
+                <span matSuffix>%</span>
+                <mat-error>{{ getFieldError('defaultTaxRate') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>URL del Logo</mat-label>
+                <input matInput formControlName="logoPath" 
+                       placeholder="https://ejemplo.com/logo.png">
+                <mat-hint>URL completa del logo para mostrar en tickets</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>URL del Código QR</mat-label>
+                <input matInput formControlName="qrCodeUrl" 
+                       placeholder="https://ejemplo.com/qr">
+                <mat-hint>URL que se codificará en el código QR</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Configuraciones adicionales -->
+            <div class="settings-section">
+              <h4>Configuraciones Adicionales</h4>
+              <div class="settings-grid">
+                <div class="setting-item">
+                  <mat-checkbox formControlName="allowNegativeStock">
+                    <div class="setting-content">
+                      <span class="setting-label">Permitir stock negativo</span>
+                      <span class="setting-description">Permitir ventas cuando no hay stock disponible</span>
+                    </div>
+                  </mat-checkbox>
+                </div>
+
+                <div class="setting-item">
+                  <mat-checkbox formControlName="requireCustomerInfo">
+                    <div class="setting-content">
+                      <span class="setting-label">Requerir información del cliente</span>
+                      <span class="setting-description">Solicitar datos del cliente en cada venta</span>
+                    </div>
+                  </mat-checkbox>
+                </div>
+
+                <div class="setting-item">
+                  <mat-checkbox formControlName="printLogo">
+                    <div class="setting-content">
+                      <span class="setting-label">Imprimir logo en tickets</span>
+                      <span class="setting-description">Incluir el logo en los tickets impresos</span>
+                    </div>
+                  </mat-checkbox>
+                </div>
+
+                <div class="setting-item">
+                  <mat-checkbox formControlName="printQRCode">
+                    <div class="setting-content">
+                      <span class="setting-label">Imprimir código QR en tickets</span>
+                      <span class="setting-description">Incluir código QR en los tickets impresos</span>
+                    </div>
+                  </mat-checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Etiquetas del Ticket -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon">
+              <mat-icon>label</mat-icon>
+            </div>
+            <div class="section-title">
+              <h3>Etiquetas del Ticket</h3>
+              <p>Personalice las etiquetas que aparecen en los tickets</p>
+            </div>
+          </div>
+          <div class="section-content">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Título del Ticket</mat-label>
+                <input matInput formControlName="receiptTitle" placeholder="FACTURA">
+                <mat-hint>Ej: FACTURA, RECIBO, COMPROBANTE</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Fecha</mat-label>
+                <input matInput formControlName="dateLabel" placeholder="FECHA:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Fecha de Generación</mat-label>
+                <input matInput formControlName="generationDateLabel" placeholder="FECHA GENERACIÓN:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Código de Generación</mat-label>
+                <input matInput formControlName="generationCodeLabel" placeholder="CÓDIGO DE GENERACIÓN:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Sello de Recepción</mat-label>
+                <input matInput formControlName="receptionSealLabel" placeholder="SELLO DE RECEPCIÓN:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Número de Control</mat-label>
+                <input matInput formControlName="controlNumberLabel" placeholder="NÚMERO DE CONTROL:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Transmisión</mat-label>
+                <input matInput formControlName="transmissionLabel" placeholder="TRANSMISIÓN:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Modelo</mat-label>
+                <input matInput formControlName="modelLabel" placeholder="MODELO:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Número de Factura</mat-label>
+                <input matInput formControlName="invoiceNumberLabel" placeholder="FACTURA N°:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Número de Cajero</mat-label>
+                <input matInput formControlName="cashierLabel" placeholder="CAJERO:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Cliente</mat-label>
+                <input matInput formControlName="customerLabel" placeholder="CLIENTE:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Receptor</mat-label>
+                <input matInput formControlName="recipientLabel" placeholder="RECEPTOR:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de DUI</mat-label>
+                <input matInput formControlName="duiLabel">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Dirección</mat-label>
+                <input matInput formControlName="addressLabel" placeholder="DIRECCIÓN:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Subtotal</mat-label>
+                <input matInput formControlName="subtotalLabel" placeholder="SUBTOTAL:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Impuesto</mat-label>
+                <input matInput formControlName="taxLabel" placeholder="IMPUESTO:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Total</mat-label>
+                <input matInput formControlName="totalLabel" placeholder="TOTAL:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Método de Pago</mat-label>
+                <input matInput formControlName="paymentMethodLabel" placeholder="MÉTODO DE PAGO:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Recibido</mat-label>
+                <input matInput formControlName="cashReceivedLabel" placeholder="RECIBIDO:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Devuelto</mat-label>
+                <input matInput formControlName="cashReturnedLabel" placeholder="VUELTO:">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Etiqueta de Observaciones</mat-label>
+                <input matInput formControlName="observationsLabel" placeholder="OBSERVACIONES:">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
 </div>
