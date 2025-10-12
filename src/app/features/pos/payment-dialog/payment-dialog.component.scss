@@ -83,6 +83,8 @@
   position: relative;
   box-shadow: var(--modal-shadow-lg);
   z-index: 1001;
+  display: flex;
+  flex-direction: column;
 }
 
 // Contenedor del modal
@@ -127,6 +129,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 2;
+  flex-shrink: 0; // No se comprime
 
   .header-content {
     display: flex;
@@ -168,6 +171,8 @@
   position: relative;
   z-index: 2;
   padding: var(--spacing-2xl) var(--spacing-xl);
+  max-height: calc(90vh - 200px); // Resta espacio para header y actions
+  scroll-behavior: smooth;
 
   .form-section {
     margin-bottom: var(--spacing-2xl);
@@ -774,6 +779,7 @@
   padding: var(--spacing-xl) var(--spacing-2xl);
   border-top: 1px solid var(--border-color);
   background: var(--surface-alt);
+  flex-shrink: 0; // No se comprime
 
   button {
     min-width: 160px;
