@@ -1,0 +1,145 @@
+<div class="ticket-preview">
+  <div class="ticket-container">
+    <!-- Header del Ticket -->
+    <div class="ticket-header">
+      <div class="business-info">
+        <h2 class="business-name">{{ businessConfig?.businessName || 'Super POS' }}</h2>
+        <p class="commercial-name">{{ businessConfig?.commercialName || 'Super POS' }}</p>
+        <div class="tax-info">
+        <p><strong>NIT:</strong> {{ businessConfig?.taxId || 'N/A' }}</p>
+        <p><strong>NRC:</strong> {{ businessConfig?.registrationNumber || 'N/A' }}</p>
+      </div>
+      <div class="address-info">
+        <p>{{ businessConfig?.address || 'N/A' }}</p>
+        <p>{{ businessConfig?.city || 'N/A' }}, {{ businessConfig?.state || 'N/A' }}</p>
+        <p>{{ businessConfig?.country || 'N/A' }}</p>
+      </div>
+      <div class="contact-info">
+        <p><strong>Tel:</strong> {{ businessConfig?.phone || 'N/A' }}</p>
+        <p><strong>Email:</strong> {{ businessConfig?.email || 'N/A' }}</p>
+        </div>
+      </div>
+      
+      <!-- QR Code Placeholder -->
+      <div class="qr-code">
+        <div class="qr-placeholder">
+          <span>QR Code</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información Fiscal -->
+    <div class="fiscal-info">
+      <p><strong>FECHA GENERACIÓN:</strong> {{ formatDate(sampleSale.createdAt) }}</p>
+      <p><strong>CÓDIGO DE GENERACIÓN:</strong> 96B6CE2C-09F6-4B06-BC54-E18D08F30296</p>
+      <p><strong>SELLO DE RECEPCIÓN:</strong> 2023614B9F1D0B9F0D6B9FCA0E0ECF3F9F64D0F9</p>
+      <p><strong>NÚMERO DE CONTROL:</strong> DTE-01-M001P031-02000000000306</p>
+      <p><strong>TRANSMISIÓN:</strong> NORMAL VERSIÓN JSON: 1</p>
+      <p><strong>MODELO:</strong> PREVIO MONEDA: {{ businessConfig?.currency }}</p>
+    </div>
+
+    <!-- Información del Cliente -->
+    <div class="customer-info">
+      <p><strong>RECEPTOR:</strong> {{ sampleSale.customerName }}</p>
+      <p><strong>DUI:</strong> {{ sampleSale.customerDocument || 'N/A' }}</p>
+      <p><strong>DIRECCIÓN:</strong> San Salvador, San Salvador Centro, San Salvador, El Salvador</p>
+    </div>
+
+    <!-- Detalles de la Venta -->
+    <div class="sale-details">
+      <h3 class="receipt-title">{{ ticketTemplate?.receipt?.title || 'FACTURA' }}</h3>
+      
+      <div class="sale-info">
+        <p><strong>{{ ticketTemplate?.receipt?.dateLabel || 'FECHA:' }}</strong> {{ formatDate(sampleSale.createdAt) }}</p>
+        <p><strong>{{ ticketTemplate?.receipt?.invoiceNumberLabel || 'FACTURA N°:' }}</strong> {{ sampleSale.invoiceNumber }}</p>
+        <p><strong>{{ ticketTemplate?.receipt?.cashierLabel || 'CAJERO:' }}</strong> {{ sampleSale.cashierName }}</p>
+      </div>
+
+      <!-- Tabla de Productos -->
+      <div class="products-table">
+        <div class="table-header">
+          <span class="col-quantity">CANT.</span>
+          <span class="col-description">DESCRIPCIÓN</span>
+          <span class="col-price">PRECIO</span>
+          <span class="col-total">TOTAL</span>
+        </div>
+        
+        <div class="table-body">
+          <div class="product-row" *ngFor="let item of sampleSale.items">
+            <span class="col-quantity">{{ item.quantity }}</span>
+            <span class="col-description">{{ item.productName }}</span>
+            <span class="col-price">{{ formatCurrency(item.unitPrice) }}</span>
+            <span class="col-total">{{ formatCurrency(item.total) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div class="totals-section">
+        <div class="total-row">
+          <span><strong>SUMA DE VENTAS:</strong></span>
+          <span><strong>{{ formatCurrency(sampleSale.subtotal) }}</strong></span>
+        </div>
+        <div class="total-row">
+          <span><strong>SUMATORIA DE VENTAS:</strong></span>
+          <span><strong>{{ formatCurrency(sampleSale.subtotal) }}</strong></span>
+        </div>
+        <div class="total-row">
+          <span>REBAJAS VENTAS NO SUJETAS:</span>
+          <span>{{ formatCurrency(0) }}</span>
+        </div>
+        <div class="total-row">
+          <span>REBAJAS VENTAS EXENTAS:</span>
+          <span>{{ formatCurrency(0) }}</span>
+        </div>
+        <div class="total-row">
+          <span>REBAJAS VENTAS GRAVADAS:</span>
+          <span>{{ formatCurrency(sampleSale.discountAmount) }}</span>
+        </div>
+        <div class="total-row">
+          <span><strong>SUB-TOTAL:</strong></span>
+          <span><strong>{{ formatCurrency(sampleSale.subtotal) }}</strong></span>
+        </div>
+        <div class="total-row">
+          <span>IVA RETENIDO:</span>
+          <span>{{ formatCurrency(0) }}</span>
+        </div>
+        <div class="total-row">
+          <span><strong>MONTO TOTAL OPERACIÓN:</strong></span>
+          <span><strong>{{ formatCurrency(sampleSale.total) }}</strong></span>
+        </div>
+        <div class="total-row highlight">
+          <span><strong>TOTAL A PAGAR:</strong></span>
+          <span><strong>{{ formatCurrency(sampleSale.total) }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Información de Pago -->
+      <div class="payment-info">
+        <p><strong>CONDICIÓN DE LA OPERACIÓN:</strong> {{ sampleSale.paymentMethod === 'cash' ? 'CONTADO' : 'CRÉDITO' }}</p>
+        <div class="payment-details">
+          <div class="payment-row">
+            <span><strong>EFECTIVO RECIBIDO:</strong></span>
+            <span><strong>{{ formatCurrency(sampleSale.paymentAmount) }}</strong></span>
+          </div>
+          <div class="payment-row">
+            <span><strong>EFECTIVO DEVUELTO:</strong></span>
+            <span><strong>{{ formatCurrency(sampleSale.change) }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="observations" *ngIf="businessConfig?.defaultObservations">
+        <p><strong>OBSERVACIONES:</strong></p>
+        <p>{{ businessConfig?.defaultObservations || '' }}</p>
+      </div>
+    </div>
+
+    <!-- Footer del Ticket -->
+    <div class="ticket-footer">
+      <p class="footer-message">{{ businessConfig?.receiptFooter || '¡Gracias por su compra!' }}</p>
+      <p class="thank-you">{{ ticketTemplate?.footer?.thankYouMessage || '¡Vuelva pronto!' }}</p>
+    </div>
+  </div>
+</div>
