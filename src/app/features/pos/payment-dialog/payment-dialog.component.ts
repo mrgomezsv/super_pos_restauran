@@ -8,8 +8,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { CartItem } from '../../../core/models/sale.model';
+import { FiscalDocument } from '../../../core/models/fiscal-document.model';
+import { FiscalDocumentService } from '../../../core/services/fiscal-document.service';
 
 @Component({
   selector: 'app-payment-dialog',
@@ -36,11 +38,14 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
     taxAmount: number;
     total: number;
   };
+  fiscalDocuments: FiscalDocument[] = [];
+  isLoadingDocuments = true;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
+    private fiscalDocumentService: FiscalDocumentService,
     public dialogRef: MatDialogRef<PaymentDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { total: number; items: CartItem[] }
   ) {
@@ -49,6 +54,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cartTotals = this.calculateTotalsFromItems(this.data.items);
+    this.loadFiscalDocuments();
     this.initializeForm();
   }
 
@@ -57,12 +63,48 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private loadFiscalDocuments(): void {
+    this.isLoadingDocuments = true;
+    this.fiscalDocumentService.getFiscalDocuments()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (documents) => {
+          // Filtrar solo documentos activos
+          this.fiscalDocuments = documents.filter(d => d.isActive);
+          this.isLoadingDocuments = false;
+          
+          // Si hay documentos, establecer el primero como predeterminado
+          if (this.fiscalDocuments.length > 0) {
+            this.paymentForm.patchValue({ invoiceType: this.fiscalDocuments[0].code });
+          }
+        },
+        error: (error) => {
+          console.error('Error loading fiscal documents:', error);
+          this.isLoadingDocuments = false;
+          // En caso de error, usar valores predeterminados
+          this.fiscalDocuments = [
+            { 
+              id: 1, 
+              code: 'consumidor_final', 
+              name: 'Consumidor Final', 
+              prefix: 'CF',
+              initialCorrelative: 1,
+              currentCorrelative: 1,
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          ];
+        }
+      });
+  }
+
   private initializeForm(): void {
     this.paymentForm = this.fb.group({
       customerName: [''],
       customerDocument: [''],
       customerEmail: ['', [Validators.email]],
-      invoiceType: ['consumidor_final', Validators.required],
+      invoiceType: ['', Validators.required],
       paymentMethod: ['cash', Validators.required],
       paymentAmount: ['', [Validators.required, Validators.min(0.01)]]
     });

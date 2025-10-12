@@ -16,7 +16,7 @@ export interface Sale {
   customerName?: string;
   customerDocument?: string;
   customerEmail?: string;
-  invoiceType: 'consumidor_final' | 'credito_fiscal';
+  invoiceType: string;  // Código del documento fiscal (dinámico)
   items: CartItem[];
   subtotal: number;
   taxAmount: number;
@@ -46,8 +46,5 @@ export interface SaleSummary {
     transfer: number;
     bitcoin: number;
   };
-  salesByInvoiceType: {
-    consumidor_final: number;
-    credito_fiscal: number;
-  };
+  salesByInvoiceType: { [key: string]: number };  // Dinámico para soportar cualquier tipo de documento
 }

@@ -1,0 +1,153 @@
+<div class="modal-overlay">
+  <div class="modal-container document-modal">
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <div class="header-content">
+        <mat-icon class="header-icon">{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+        <div class="header-text">
+          <h2 class="modal-title">{{ isEdit ? 'Editar Documento Fiscal' : 'Nuevo Documento Fiscal' }}</h2>
+          <p class="modal-subtitle">
+            {{ isEdit ? 'Modifica la información del documento fiscal' : 'Agrega un nuevo tipo de documento fiscal' }}
+          </p>
+        </div>
+      </div>
+      <button mat-icon-button class="close-btn" (click)="onCancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Contenido del Modal -->
+    <div class="modal-content">
+      <form [formGroup]="documentForm" class="document-form">
+        <!-- Información Básica -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>info</mat-icon>
+            Información del Documento
+          </h3>
+          
+          <mat-form-field appearance="outline" class="form-field full-width" [class.mat-form-field-invalid]="documentForm.get('name')?.hasError('required') && documentForm.get('name')?.touched">
+            <mat-label>Nombre del Documento *</mat-label>
+            <input 
+              matInput 
+              formControlName="name" 
+              placeholder="Ej: Consumidor Final, Crédito Fiscal, Factura de Exportación"
+              autocomplete="off"
+              maxlength="100">
+            <mat-hint align="end">{{ documentForm.get('name')?.value?.length || 0 }}/100</mat-hint>
+            <mat-error *ngIf="documentForm.get('name')?.hasError('required') && documentForm.get('name')?.touched">
+              {{ getErrorMessage('name') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width textarea-field">
+            <mat-label>Descripción</mat-label>
+            <textarea 
+              matInput 
+              formControlName="description" 
+              rows="3" 
+              placeholder="Ingrese una descripción del documento (opcional)"
+              autocomplete="off"
+              maxlength="300"></textarea>
+            <mat-hint align="end">{{ documentForm.get('description')?.value?.length || 0 }}/300</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Configuración de Numeración -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>format_list_numbered</mat-icon>
+            Configuración de Numeración
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="documentForm.get('prefix')?.hasError('required') && documentForm.get('prefix')?.touched">
+              <mat-label>Prefijo *</mat-label>
+              <input 
+                matInput 
+                formControlName="prefix" 
+                placeholder="Ej: CF, CCF, FAC"
+                autocomplete="off"
+                maxlength="10"
+                style="text-transform: uppercase;">
+              <mat-icon matSuffix matTooltip="Prefijo que aparecerá en todas las facturas de este tipo" matTooltipPosition="above">
+                info
+              </mat-icon>
+              <mat-hint>Prefijo para la numeración de documentos</mat-hint>
+              <mat-error *ngIf="documentForm.get('prefix')?.hasError('required') && documentForm.get('prefix')?.touched">
+                {{ getErrorMessage('prefix') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field" [class.mat-form-field-invalid]="documentForm.get('initialCorrelative')?.hasError('required') && documentForm.get('initialCorrelative')?.touched">
+              <mat-label>Correlativo Inicial *</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="initialCorrelative" 
+                placeholder="1"
+                min="1"
+                autocomplete="off">
+              <mat-icon matSuffix matTooltip="Número desde el cual comenzará la numeración de este tipo de documento" matTooltipPosition="above">
+                info
+              </mat-icon>
+              <mat-hint *ngIf="!isEdit">Número desde el cual comenzará la numeración</mat-hint>
+              <mat-hint *ngIf="isEdit">El correlativo inicial no puede modificarse</mat-hint>
+              <mat-error *ngIf="documentForm.get('initialCorrelative')?.hasError('required') && documentForm.get('initialCorrelative')?.touched">
+                {{ getErrorMessage('initialCorrelative') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="info-card">
+            <mat-icon>lightbulb</mat-icon>
+            <div class="info-content">
+              <strong>Ejemplo de numeración:</strong>
+              <p>
+                Con el prefijo "{{ documentForm.get('prefix')?.value || 'CF' }}" y correlativo inicial "{{ documentForm.get('initialCorrelative')?.value || '1' }}",
+                el primer documento generado será: 
+                <span class="example-number">{{ documentForm.get('prefix')?.value || 'CF' }}-241012-{{ (documentForm.get('initialCorrelative')?.value || 1).toString().padStart(6, '0') }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>toggle_on</mat-icon>
+            Estado del Documento
+          </h3>
+
+          <div class="checkbox-container">
+            <mat-checkbox formControlName="isActive" class="status-checkbox">
+              <span class="checkbox-label">
+                <mat-icon>check_circle</mat-icon>
+                <span class="checkbox-text">Documento Activo</span>
+              </span>
+            </mat-checkbox>
+            <p class="checkbox-hint">Los documentos inactivos no aparecerán en el punto de venta</p>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Acciones del Modal -->
+    <div class="modal-actions">
+      <button mat-button (click)="onCancel()" class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary"
+        (click)="onSave()"
+        [disabled]="documentForm.invalid || documentForm.pristine"
+        class="save-btn">
+        <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+        {{ isEdit ? 'Actualizar' : 'Crear' }}
+      </button>
+    </div>
+  </div>
+</div>
+

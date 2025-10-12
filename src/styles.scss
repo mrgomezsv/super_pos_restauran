@@ -1,5 +1,47 @@
 /* Super POS - Estilos Globales */
 
+/* Estilos globales para modales de Angular Material */
+.receipt-modal-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  z-index: 10000 !important;
+  max-width: 600px !important;
+  width: 600px !important;
+}
+
+/* Backdrop borroso para el modal del ticket */
+.receipt-modal-backdrop {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* Asegurar que el overlay de Angular Material funcione correctamente */
+::ng-deep .cdk-overlay-backdrop.receipt-modal-backdrop {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
 // Sistema de Diseño Unificado - Basado en Login Moderno
 :root {
   // Colores principales del sistema

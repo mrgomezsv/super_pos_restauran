@@ -107,6 +107,32 @@ class ProductCategoryUpdate(BaseModel):
     description: Optional[str] = Field(None, max_length=300)
     isActive: Optional[bool] = None
 
+# Esquemas de documentos fiscales
+class FiscalDocumentResponse(BaseModel):
+    id: int
+    code: str
+    name: str
+    description: Optional[str] = None
+    prefix: str
+    initialCorrelative: int
+    currentCorrelative: int
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+
+class FiscalDocumentCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    description: Optional[str] = Field(None, max_length=300)
+    prefix: str = Field(..., min_length=1, max_length=10)
+    initialCorrelative: int = Field(1, ge=1)
+    isActive: bool = True
+
+class FiscalDocumentUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    description: Optional[str] = Field(None, max_length=300)
+    prefix: Optional[str] = Field(None, min_length=1, max_length=10)
+    isActive: Optional[bool] = None
+
 # Esquemas de venta
 class CartItem(BaseModel):
     productId: int
@@ -130,7 +156,7 @@ class SaleCreate(BaseModel):
     customerName: Optional[str] = Field(None, max_length=100)
     customerDocument: Optional[str] = Field(None, max_length=20)
     customerEmail: Optional[EmailStr] = None
-    invoiceType: str = Field(..., pattern="^(consumidor_final|credito_fiscal)$")
+    invoiceType: str = Field(..., min_length=1, max_length=100)  # Acepta cualquier código de documento fiscal
     items: List[CartItemCreate]
     subtotal: float = Field(..., ge=0)
     taxAmount: float = Field(..., ge=0)

@@ -954,11 +954,11 @@ export class PosComponent implements OnInit, OnDestroy {
     const change = amount - this.cartTotals.total;
     this.playSound('payment');
     
-    // Crear la venta
+    // Crear la venta (este código parece obsoleto, debería usar el payment dialog)
     const sale: Sale = {
       id: 0, // Se asignará en el backend
       invoiceNumber: '', // Se generará en el backend
-      invoiceType: 'consumidor_final',
+      invoiceType: 'consumidor_final',  // Este valor se obtiene del payment dialog
       items: this.cartItems,
       subtotal: this.cartTotals.subtotal,
       taxAmount: this.cartTotals.taxAmount,
@@ -1104,12 +1104,19 @@ export class PosComponent implements OnInit, OnDestroy {
 
   private showReceiptModal(sale: Sale): void {
     const dialogRef = this.dialog.open(ReceiptModalComponent, {
-      width: '90vw',
-      maxWidth: '800px',
+      width: '600px',
+      maxWidth: '90vw',
       maxHeight: '90vh',
       data: { sale },
       disableClose: false,
-      autoFocus: false
+      autoFocus: false,
+      panelClass: 'receipt-modal-dialog',
+      backdropClass: 'receipt-modal-backdrop',
+      hasBackdrop: true,
+      position: {
+        top: '50%',
+        left: '50%'
+      }
     });
 
     dialogRef.afterClosed().subscribe(() => {

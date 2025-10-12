@@ -8,16 +8,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta
 from typing import List, Optional
-import uuid
 
 # Importar modelos y esquemas
-from models import User, Product, Sale, ProductCategory
+from models import User, Product, Sale, ProductCategory, FiscalDocument
 from schemas import (
     UserLogin, UserResponse, UserCreate, UserUpdate,
     ProductResponse, ProductCreate, ProductUpdate,
     SaleCreate, SaleResponse, SaleSummary,
     LoginResponse, CartItem as CartItemSchema,
-    ProductCategoryCreate
+    ProductCategoryCreate,
+    FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate
 )
 
 # Crear aplicación FastAPI
@@ -142,20 +142,59 @@ categories_db = [
     ProductCategory(id=15, name="Jardín", description="Productos de jardinería", isActive=True)
 ]
 
+fiscal_documents_db = [
+    FiscalDocument(
+        id=1,
+        code="consumidor_final",
+        name="Consumidor Final",
+        description="Factura para consumidor final",
+        prefix="CF",
+        initialCorrelative=1,
+        currentCorrelative=1,
+        isActive=True,
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    ),
+    FiscalDocument(
+        id=2,
+        code="credito_fiscal",
+        name="Crédito Fiscal",
+        description="Comprobante de crédito fiscal",
+        prefix="CCF",
+        initialCorrelative=1,
+        currentCorrelative=1,
+        isActive=True,
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    )
+]
+
 sales_db = []
 next_sale_id = 1
 
 # Funciones auxiliares
-def generate_invoice_number(invoice_type: str) -> str:
-    """Generar número de factura único"""
-    prefix = "CF" if invoice_type == "credito_fiscal" else "CF"
+def generate_invoice_number(document_code: str) -> str:
+    """Generar número de factura único con correlativo"""
+    # Buscar el documento fiscal
+    document = next((d for d in fiscal_documents_db if d.code == document_code and d.isActive), None)
+    
+    if not document:
+        # Fallback si no se encuentra el documento
+        prefix = "DOC"
+        correlative = 1
+    else:
+        prefix = document.prefix
+        correlative = document.currentCorrelative
+        # Incrementar el correlativo para la próxima vez
+        document.currentCorrelative += 1
+        document.updatedAt = datetime.now()
+    
     date = datetime.now()
     year = date.year % 100
     month = date.month
     day = date.day
-    random = uuid.uuid4().hex[:3].upper()
     
-    return f"{prefix}-{year:02d}{month:02d}{day:02d}-{random}"
+    return f"{prefix}-{year:02d}{month:02d}{day:02d}-{correlative:06d}"
 
 def calculate_totals(items: List[CartItemSchema]) -> dict:
     """Calcular totales del carrito"""
@@ -320,6 +359,99 @@ async def create_category(category: ProductCategoryCreate):
     categories_db.append(new_category)
     
     return new_category
+
+# Rutas de documentos fiscales
+@app.get("/api/fiscal-documents", response_model=List[FiscalDocumentResponse])
+async def get_fiscal_documents():
+    """Obtener todos los documentos fiscales"""
+    return [FiscalDocumentResponse.model_validate(d.model_dump()) for d in fiscal_documents_db]
+
+@app.get("/api/fiscal-documents/{document_id}", response_model=FiscalDocumentResponse)
+async def get_fiscal_document(document_id: int):
+    """Obtener documento fiscal por ID"""
+    document = next((d for d in fiscal_documents_db if d.id == document_id), None)
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento fiscal no encontrado")
+    return FiscalDocumentResponse.model_validate(document.model_dump())
+
+@app.post("/api/fiscal-documents", response_model=FiscalDocumentResponse)
+async def create_fiscal_document(document_data: FiscalDocumentCreate):
+    """Crear nuevo documento fiscal"""
+    # Verificar si ya existe un documento con ese nombre o prefijo
+    existing_by_name = next((d for d in fiscal_documents_db if d.name.lower() == document_data.name.lower()), None)
+    if existing_by_name:
+        raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con ese nombre")
+    
+    existing_by_prefix = next((d for d in fiscal_documents_db if d.prefix.upper() == document_data.prefix.upper()), None)
+    if existing_by_prefix:
+        raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con ese prefijo")
+    
+    # Obtener el siguiente ID
+    next_id = max([d.id for d in fiscal_documents_db], default=0) + 1
+    
+    # Generar código interno a partir del nombre (snake_case)
+    code = document_data.name.lower().replace(" ", "_").replace("-", "_")
+    
+    # Crear nuevo documento
+    new_document = FiscalDocument(
+        id=next_id,
+        code=code,
+        name=document_data.name.strip(),
+        description=document_data.description,
+        prefix=document_data.prefix.strip().upper(),
+        initialCorrelative=document_data.initialCorrelative,
+        currentCorrelative=document_data.initialCorrelative,
+        isActive=document_data.isActive,
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    )
+    
+    fiscal_documents_db.append(new_document)
+    
+    return FiscalDocumentResponse.model_validate(new_document.model_dump())
+
+@app.put("/api/fiscal-documents/{document_id}", response_model=FiscalDocumentResponse)
+async def update_fiscal_document(document_id: int, document_data: FiscalDocumentUpdate):
+    """Actualizar documento fiscal"""
+    document = next((d for d in fiscal_documents_db if d.id == document_id), None)
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento fiscal no encontrado")
+    
+    # Verificar si el nuevo nombre ya existe en otro documento
+    if document_data.name:
+        existing = next((d for d in fiscal_documents_db if d.id != document_id and d.name.lower() == document_data.name.lower()), None)
+        if existing:
+            raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con ese nombre")
+    
+    # Verificar si el nuevo prefijo ya existe en otro documento
+    if document_data.prefix:
+        existing = next((d for d in fiscal_documents_db if d.id != document_id and d.prefix.upper() == document_data.prefix.upper()), None)
+        if existing:
+            raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con ese prefijo")
+    
+    # Actualizar campos
+    for field, value in document_data.model_dump(exclude_unset=True).items():
+        if field == 'prefix' and value:
+            setattr(document, field, value.upper())
+        elif field == 'name' and value:
+            setattr(document, field, value.strip())
+            # Actualizar código si cambia el nombre
+            document.code = value.lower().replace(" ", "_").replace("-", "_")
+        else:
+            setattr(document, field, value)
+    
+    document.updatedAt = datetime.now()
+    return FiscalDocumentResponse.model_validate(document.model_dump())
+
+@app.delete("/api/fiscal-documents/{document_id}")
+async def delete_fiscal_document(document_id: int):
+    """Eliminar documento fiscal"""
+    document = next((d for d in fiscal_documents_db if d.id == document_id), None)
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento fiscal no encontrado")
+    
+    fiscal_documents_db.remove(document)
+    return {"message": "Documento fiscal eliminado exitosamente"}
 
 @app.get("/api/products/{product_id}", response_model=ProductResponse)
 async def get_product(product_id: int):

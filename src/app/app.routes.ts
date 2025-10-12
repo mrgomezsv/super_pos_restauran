@@ -44,6 +44,11 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'admin/fiscal-documents',
+    loadComponent: () => import('./features/fiscal-documents/fiscal-documents.component').then(m => m.FiscalDocumentsComponent),
+    canActivate: [adminGuard]
+  },
+  {
     path: '**',
     redirectTo: '/login'
   }

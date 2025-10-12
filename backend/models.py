@@ -42,6 +42,18 @@ class ProductCategory(BaseModel):
     description: Optional[str] = None
     isActive: bool
 
+class FiscalDocument(BaseModel):
+    id: int
+    code: str  # Código interno único
+    name: str  # Nombre del documento (ej: "Consumidor Final", "Crédito Fiscal")
+    description: Optional[str] = None
+    prefix: str  # Prefijo para la numeración (ej: "CF", "CCF")
+    initialCorrelative: int  # Correlativo inicial
+    currentCorrelative: int  # Correlativo actual
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+
 class CartItem(BaseModel):
     productId: int
     productName: str

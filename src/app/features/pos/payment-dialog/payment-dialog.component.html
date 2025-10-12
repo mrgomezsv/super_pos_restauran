@@ -77,12 +77,15 @@
             </mat-form-field>
           </div>
 
-          <!-- Dropdown nativo temporal para testing -->
+          <!-- Dropdown nativo para tipo de documento fiscal -->
           <div class="form-field full-width">
-            <label class="form-label">Tipo de Factura</label>
-            <select formControlName="invoiceType" class="native-select">
-              <option value="consumidor_final">Consumidor Final</option>
-              <option value="credito_fiscal">Crédito Fiscal</option>
+            <label class="form-label">Tipo de Documento Fiscal</label>
+            <select formControlName="invoiceType" class="native-select" [disabled]="isLoadingDocuments">
+              <option value="" disabled *ngIf="isLoadingDocuments">Cargando documentos...</option>
+              <option value="" disabled *ngIf="!isLoadingDocuments && fiscalDocuments.length === 0">No hay documentos disponibles</option>
+              <option *ngFor="let doc of fiscalDocuments" [value]="doc.code">
+                {{ doc.name }} ({{ doc.prefix }})
+              </option>
             </select>
           </div>
         </div>

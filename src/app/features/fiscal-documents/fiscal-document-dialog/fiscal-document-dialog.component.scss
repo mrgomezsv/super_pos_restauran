@@ -1,0 +1,56 @@
+@import '../../../features/products/product-dialog/product-dialog.component.scss';
+
+// Estilos adicionales específicos para el modal de documentos fiscales
+.info-card {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: var(--border-radius-lg);
+  margin-top: var(--spacing-lg);
+
+  mat-icon {
+    color: #1890ff;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .info-content {
+    flex: 1;
+
+    strong {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1890ff;
+      margin-bottom: var(--spacing-xs);
+      display: block;
+    }
+
+    p {
+      margin: var(--spacing-xs) 0 0 0;
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+
+      .example-number {
+        display: inline-block;
+        padding: 4px 12px;
+        background: linear-gradient(135deg, #017E84, #20C997);
+        color: white;
+        border-radius: 4px;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        margin-top: var(--spacing-xs);
+      }
+    }
+  }
+}
+
+// Sobrescribir el contenedor para el modal de documentos
+.document-modal {
+  max-width: 800px;
+}
+

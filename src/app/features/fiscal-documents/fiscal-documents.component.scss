@@ -1,0 +1,313 @@
+.fiscal-documents-container {
+  padding: var(--spacing-xl);
+  max-width: 100%;
+  margin: 0;
+  background: var(--background);
+  min-height: 100vh;
+}
+
+// Header Styles
+.documents-header {
+  margin-bottom: var(--spacing-2xl);
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    
+    .header-info {
+      flex: 1;
+      
+      .page-title {
+        font-size: var(--text-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--text);
+        margin: 0 0 var(--spacing-sm) 0;
+        line-height: var(--leading-tight);
+        font-family: 'Poppins', sans-serif;
+      }
+      
+      .page-subtitle {
+        font-size: var(--text-base);
+        color: var(--text-gray);
+        margin: 0;
+        line-height: var(--leading-relaxed);
+      }
+    }
+    
+    .add-document-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-lg);
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-lg);
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        background: var(--primary-light);
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+      
+      mat-icon {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+// Table Styles
+.documents-table-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  
+  .table-container {
+    overflow-x: auto;
+    
+    .documents-table {
+      width: 100%;
+      min-width: 800px;
+      background: transparent;
+      
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
+        font-size: 16px;
+      }
+    }
+    
+    // Document name with icon
+    .document-name {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      
+      .document-icon {
+        color: var(--primary);
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+    
+    // Prefix badge
+    .prefix-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #017E84, #20C997);
+      color: white;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    
+    // Status badge
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      
+      &.active {
+        background: linear-gradient(135deg, #017E84, #20C997);
+        color: white;
+      }
+      
+      &.inactive {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+    }
+    
+    // Correlatives info
+    .correlatives-info {
+      display: flex;
+      gap: var(--spacing-lg);
+      
+      .correlative-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        
+        .correlative-label {
+          font-size: 12px;
+          color: var(--text-gray);
+          font-weight: 500;
+        }
+        
+        .correlative-value {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--text);
+          font-family: 'JetBrains Mono', 'Fira Code', monospace;
+          
+          &.current {
+            color: #059669;
+          }
+        }
+      }
+    }
+    
+    // Mat chips styling
+    ::ng-deep .mat-mdc-chip {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 20px;
+      
+      &.mat-mdc-chip.mat-primary {
+        background: linear-gradient(135deg, #017E84, #20C997);
+        color: white;
+      }
+      
+      &.mat-mdc-chip.mat-warn {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+    }
+    
+    // Action buttons
+    .mat-mdc-icon-button {
+      width: 36px;
+      height: 36px;
+      margin: 0 4px;
+      
+      .mat-icon {
+        font-size: 20px;
+      }
+      
+      &:first-child {
+        color: #017E84;
+        
+        &:hover {
+          background: rgba(1, 126, 132, 0.1);
+        }
+      }
+      
+      &:last-child {
+        color: #dc2626;
+        
+        &:hover {
+          background: rgba(220, 38, 38, 0.1);
+        }
+      }
+    }
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+}
+
+// Loading States
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #666;
+
+  p {
+    margin-top: 16px;
+    font-size: 16px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .documents-header {
+    .header-content {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--spacing-md);
+      
+      .add-document-btn {
+        align-self: flex-start;
+      }
+    }
+  }
+  
+  .documents-table-card {
+    .table-container {
+      .documents-table {
+        .mat-mdc-header-cell,
+        .mat-mdc-cell {
+          padding: var(--spacing-sm);
+          font-size: var(--text-xs);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .documents-header {
+    .header-content {
+      .header-info {
+        .page-title {
+          font-size: var(--text-2xl);
+        }
+        
+        .page-subtitle {
+          font-size: var(--text-sm);
+        }
+      }
+    }
+  }
+}
+
+// Custom scrollbar for table
+.documents-table-card .table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.documents-table-card .table-container::-webkit-scrollbar-track {
+  background: var(--btn-bg);
+}
+
+.documents-table-card .table-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--border-radius-full);
+}
+
+.documents-table-card .table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-gray);
+}
+
