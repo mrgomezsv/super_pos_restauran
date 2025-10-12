@@ -483,7 +483,8 @@ async def get_sales_summary(
     sales_by_payment_method = {
         "cash": sum(s.total for s in filtered_sales if s.paymentMethod == "cash"),
         "card": sum(s.total for s in filtered_sales if s.paymentMethod == "card"),
-        "transfer": sum(s.total for s in filtered_sales if s.paymentMethod == "transfer")
+        "transfer": sum(s.total for s in filtered_sales if s.paymentMethod == "transfer"),
+        "bitcoin": sum(s.total for s in filtered_sales if s.paymentMethod == "bitcoin")
     }
     
     sales_by_invoice_type = {

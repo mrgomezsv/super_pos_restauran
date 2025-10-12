@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { Overlay } from '@angular/cdk/overlay';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
@@ -91,6 +92,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private saleService: SaleService,
     private authService: AuthService,
     private dialog: MatDialog,
+    private overlay: Overlay,
     private toastr: ToastrService,
     private notificationService: NotificationService,
     private businessService: BusinessService
@@ -1028,6 +1030,7 @@ export class PosComponent implements OnInit, OnDestroy {
         left: '50%'
       },
       panelClass: 'payment-dialog-container',
+      scrollStrategy: this.overlay.scrollStrategies.reposition(),
       data: {
         total: this.cartTotals.total,
         items: this.cartItems

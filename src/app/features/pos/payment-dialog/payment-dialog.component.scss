@@ -45,6 +45,20 @@
     bottom: 0 !important;
     pointer-events: auto !important;
   }
+
+  // Asegurar que los dropdowns aparezcan por encima del modal
+  .mat-mdc-select-panel {
+    z-index: 10002 !important;
+  }
+
+  // Overlay container para dropdowns
+  .cdk-overlay-container {
+    z-index: 10001 !important;
+  }
+
+  .cdk-overlay-pane {
+    z-index: 10002 !important;
+  }
 }
 
 // Estilos para el backdrop personalizado
@@ -267,11 +281,58 @@
 
     .mat-mdc-select-value {
       font-size: var(--font-size-base);
+      color: var(--modal-text);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .mat-mdc-select-placeholder {
+      color: var(--modal-text-gray);
+      font-weight: var(--font-weight-normal);
+    }
+
+    .mat-mdc-form-field-label {
+      color: var(--modal-text-gray);
+      font-weight: var(--font-weight-medium);
+      
+      &.mdc-floating-label--float-above {
+        color: var(--modal-primary);
+      }
+    }
+
+    .mat-mdc-select-arrow-wrapper {
+      .mat-mdc-select-arrow {
+        color: var(--modal-text-gray);
+      }
     }
 
     .mat-mdc-form-field-subscript-wrapper {
       margin-top: 8px;
     }
+
+    // Estilos mínimos para el dropdown
+    .mat-mdc-select-panel {
+      z-index: 10001 !important;
+    }
+  }
+}
+
+// Estilos para opciones personalizadas con iconos
+.invoice-option,
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--modal-primary);
+  }
+  
+  span {
+    font-weight: var(--font-weight-medium);
+    color: var(--modal-text);
   }
 }
 

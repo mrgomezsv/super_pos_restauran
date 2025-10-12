@@ -50,6 +50,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.cartTotals = this.calculateTotalsFromItems(this.data.items);
     this.initializeForm();
+    console.log('PaymentDialog initialized with data:', this.data);
   }
 
   ngOnDestroy(): void {
@@ -82,6 +83,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   onPaymentMethodChange(): void {
     const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
+    console.log('Payment method changed to:', paymentMethod);
     
     if (paymentMethod === 'cash') {
       // Para efectivo, permitir ingresar monto recibido

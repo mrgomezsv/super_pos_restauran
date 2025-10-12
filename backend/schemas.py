@@ -136,7 +136,7 @@ class SaleCreate(BaseModel):
     taxAmount: float = Field(..., ge=0)
     discountAmount: float = Field(0, ge=0)
     total: float = Field(..., gt=0)
-    paymentMethod: str = Field(..., pattern="^(cash|card|transfer)$")
+    paymentMethod: str = Field(..., pattern="^(cash|card|transfer|bitcoin)$")
     paymentAmount: float = Field(..., gt=0)
     change: float = Field(..., ge=0)
     cashierId: int = Field(..., gt=0)
