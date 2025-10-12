@@ -134,6 +134,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
       defaultTaxRate: [15, [Validators.required, Validators.min(0), Validators.max(100)]],
       allowNegativeStock: [false],
       requireCustomerInfo: [false],
+      showPricesWithTax: [false],
       
       // Configuración de impresión
       printLogo: [false],
@@ -479,7 +480,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     const sectionFields: { [key: string]: string[] } = {
       'company': ['businessName', 'commercialName', 'taxId', 'registrationNumber', 'economicActivity', 'establishmentName', 'establishmentCode'],
       'contact': ['address', 'city', 'state', 'country', 'zipCode', 'phone', 'email'],
-      'tickets': ['receiptHeader', 'receiptFooter', 'defaultObservations', 'currency', 'defaultTaxRate', 'logoPath', 'qrCodeUrl', 'allowNegativeStock', 'requireCustomerInfo', 'printLogo', 'printQRCode'],
+      'tickets': ['receiptHeader', 'receiptFooter', 'defaultObservations', 'currency', 'defaultTaxRate', 'logoPath', 'qrCodeUrl', 'allowNegativeStock', 'requireCustomerInfo', 'showPricesWithTax', 'printLogo', 'printQRCode'],
       'labels': ['receiptTitle', 'dateLabel', 'generationDateLabel', 'generationCodeLabel', 'receptionSealLabel', 'controlNumberLabel', 'transmissionLabel', 'modelLabel', 'invoiceNumberLabel', 'cashierLabel', 'customerLabel', 'recipientLabel', 'duiLabel', 'addressLabel', 'subtotalLabel', 'taxLabel', 'totalLabel', 'paymentMethodLabel', 'cashReceivedLabel', 'cashReturnedLabel', 'observationsLabel']
     };
 

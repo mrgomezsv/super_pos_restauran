@@ -296,10 +296,6 @@
         font-weight: 800;
         color: var(--pos-text);
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        background: linear-gradient(135deg, var(--pos-accent), var(--pos-primary-light));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
       }
     }
   }

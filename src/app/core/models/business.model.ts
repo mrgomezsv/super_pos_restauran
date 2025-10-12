@@ -31,6 +31,7 @@ export interface BusinessConfiguration {
   defaultTaxRate: number;
   allowNegativeStock: boolean;
   requireCustomerInfo: boolean;
+  showPricesWithTax: boolean; // Mostrar precios con IVA incluido
   
   // Configuración de impresión
   printerName?: string;
@@ -66,6 +67,7 @@ export interface BusinessConfigurationCreate {
   defaultTaxRate: number;
   allowNegativeStock: boolean;
   requireCustomerInfo: boolean;
+  showPricesWithTax: boolean; // Mostrar precios con IVA incluido
   printerName?: string;
   printLogo: boolean;
   logoPath?: string;
@@ -95,6 +97,7 @@ export interface BusinessConfigurationUpdate {
   defaultTaxRate?: number;
   allowNegativeStock?: boolean;
   requireCustomerInfo?: boolean;
+  showPricesWithTax?: boolean; // Mostrar precios con IVA incluido
   printerName?: string;
   printLogo?: boolean;
   logoPath?: string;

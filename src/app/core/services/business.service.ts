@@ -43,6 +43,7 @@ export class BusinessService {
     defaultTaxRate: 15,
     allowNegativeStock: false,
     requireCustomerInfo: false,
+    showPricesWithTax: false, // Por defecto, mostrar precios sin IVA
     printLogo: false,
     logoPath: '',
     printQRCode: false,

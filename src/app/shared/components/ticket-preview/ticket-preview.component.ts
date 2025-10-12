@@ -89,6 +89,7 @@ export class TicketPreviewComponent implements OnInit {
       defaultTaxRate: 15,
       allowNegativeStock: false,
       requireCustomerInfo: false,
+      showPricesWithTax: false,
       printLogo: false,
       logoPath: '',
       printQRCode: false,
