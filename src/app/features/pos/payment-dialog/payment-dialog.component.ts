@@ -50,7 +50,6 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.cartTotals = this.calculateTotalsFromItems(this.data.items);
     this.initializeForm();
-    console.log('PaymentDialog initialized with data:', this.data);
   }
 
   ngOnDestroy(): void {
@@ -68,11 +67,8 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
       paymentAmount: [this.cartTotals.total, [Validators.required, Validators.min(0.01)]]
     });
 
-    console.log('Form initialized:', this.paymentForm.value);
-
     // Observar cambios en el método de pago
     this.paymentForm.get('paymentMethod')?.valueChanges.subscribe(() => {
-      console.log('Payment method changed in form');
       this.onPaymentMethodChange();
     });
 
@@ -86,7 +82,6 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   onPaymentMethodChange(): void {
     const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
-    console.log('Payment method changed to:', paymentMethod);
     
     if (paymentMethod === 'cash') {
       // Para efectivo, permitir ingresar monto recibido
@@ -152,10 +147,6 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
     this.dialogRef.close(null);
   }
 
-  // Método para debug - verificar si los clicks funcionan
-  testClick(): void {
-    console.log('Click detected on dropdown');
-  }
 
   getAbsChange(): number {
     return Math.abs(this.change);
