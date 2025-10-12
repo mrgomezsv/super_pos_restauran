@@ -201,9 +201,11 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
+      width: '400px', // ← CAMBIAR AQUÍ PARA AJUSTAR EL ANCHO DEL MODAL (ej: '500px', '90vw', etc.)
       data: dialogData,
       disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'confirmation-dialog-backdrop',
       position: {
         top: '50%',
         left: '50%'
@@ -258,9 +260,11 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
+      width: '400px', // ← CAMBIAR AQUÍ PARA AJUSTAR EL ANCHO DEL MODAL (ej: '500px', '90vw', etc.)
       data: dialogData,
       disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'confirmation-dialog-backdrop',
       position: {
         top: '50%',
         left: '50%'
