@@ -14,11 +14,13 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 
 import { BusinessService } from '../../../core/services/business.service';
 import { BusinessConfiguration, TicketTemplate } from '../../../core/models/business.model';
 import { TicketPreviewComponent } from '../../../shared/components/ticket-preview/ticket-preview.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-business-config',
@@ -85,7 +87,8 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private businessService: BusinessService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private dialog: MatDialog
   ) {
     this.businessForm = this.createForm();
   }
@@ -182,49 +185,95 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   }
 
   onSave(): void {
-    if (this.businessForm.valid) {
-      this.isSaving = true;
-      this.saveSuccess = false;
-      
-      const formData = this.businessForm.value;
-      
-      this.businessService.updateConfiguration(formData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (config) => {
-            this.toastr.success('Configuración guardada exitosamente');
-            this.isSaving = false;
-            this.saveSuccess = true;
-            this.businessForm.markAsPristine();
-            
-            // Ocultar mensaje de éxito después de 3 segundos
-            setTimeout(() => {
-              this.saveSuccess = false;
-            }, 3000);
-          },
-          error: (error) => {
-            console.error('Error saving business configuration:', error);
-            this.toastr.error('Error al guardar la configuración');
-            this.isSaving = false;
-            this.saveSuccess = false;
-          }
-        });
-    } else {
+    if (!this.businessForm.valid) {
       this.markFormGroupTouched();
       this.toastr.warning('Por favor, complete todos los campos requeridos');
+      return;
     }
+
+    const dialogData: ConfirmationDialogData = {
+      title: 'Guardar Configuración',
+      message: '¿Está seguro de que desea guardar los cambios realizados en la configuración del negocio? Esta acción actualizará todos los tickets y documentos.',
+      confirmText: 'Guardar',
+      cancelText: 'Cancelar',
+      type: 'info',
+      icon: 'save'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performSave();
+      }
+    });
+  }
+
+  private performSave(): void {
+    this.isSaving = true;
+    this.saveSuccess = false;
+    
+    const formData = this.businessForm.value;
+    
+    this.businessService.updateConfiguration(formData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.toastr.success('Configuración guardada exitosamente');
+          this.isSaving = false;
+          this.saveSuccess = true;
+          this.businessForm.markAsPristine();
+          
+          // Ocultar mensaje de éxito después de 3 segundos
+          setTimeout(() => {
+            this.saveSuccess = false;
+          }, 3000);
+        },
+        error: (error) => {
+          console.error('Error saving business configuration:', error);
+          this.toastr.error('Error al guardar la configuración');
+          this.isSaving = false;
+          this.saveSuccess = false;
+        }
+      });
   }
 
   onRestore(): void {
-    if (confirm('¿Está seguro de que desea restaurar la configuración a los valores por defecto? Esta acción no se puede deshacer.')) {
-      this.businessForm.reset();
-      this.businessService.getConfiguration()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(config => {
-          this.businessForm.patchValue(config);
-          this.toastr.success('Configuración restaurada a los valores por defecto');
-        });
-    }
+    const dialogData: ConfirmationDialogData = {
+      title: 'Restaurar Configuración',
+      message: '¿Está seguro de que desea restaurar la configuración a los valores por defecto? Todos los cambios actuales se perderán y no se podrán recuperar.',
+      confirmText: 'Restaurar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: 'restore'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performRestore();
+      }
+    });
+  }
+
+  private performRestore(): void {
+    this.businessForm.reset();
+    this.businessService.getConfiguration()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(config => {
+        this.businessForm.patchValue(config);
+        this.toastr.success('Configuración restaurada a los valores por defecto');
+        this.businessForm.markAsPristine();
+      });
   }
 
   onReset(): void {
