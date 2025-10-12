@@ -129,7 +129,17 @@ categories_db = [
     ProductCategory(id=2, name="Panadería", description="Productos de panadería", isActive=True),
     ProductCategory(id=3, name="Lácteos", description="Productos lácteos", isActive=True),
     ProductCategory(id=4, name="Carnes", description="Carnes y embutidos", isActive=True),
-    ProductCategory(id=5, name="Frutas y Verduras", description="Frutas y verduras frescas", isActive=True)
+    ProductCategory(id=5, name="Frutas y Verduras", description="Frutas y verduras frescas", isActive=True),
+    ProductCategory(id=6, name="Cereales", description="Cereales y granos", isActive=True),
+    ProductCategory(id=7, name="Congelados", description="Productos congelados", isActive=True),
+    ProductCategory(id=8, name="Snacks", description="Botanas y snacks", isActive=True),
+    ProductCategory(id=9, name="Cuidado Personal", description="Productos de higiene personal", isActive=True),
+    ProductCategory(id=10, name="Limpieza", description="Productos de limpieza del hogar", isActive=True),
+    ProductCategory(id=11, name="Electrodomésticos", description="Electrodomésticos pequeños", isActive=True),
+    ProductCategory(id=12, name="Ropa", description="Ropa y accesorios", isActive=True),
+    ProductCategory(id=13, name="Juguetes", description="Juguetes y entretenimiento", isActive=True),
+    ProductCategory(id=14, name="Farmacia", description="Medicamentos y productos farmacéuticos", isActive=True),
+    ProductCategory(id=15, name="Jardín", description="Productos de jardinería", isActive=True)
 ]
 
 sales_db = []
