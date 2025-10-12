@@ -18,12 +18,22 @@ export class ReceiptComponent implements OnInit {
   @Input() ticketTemplate: TicketTemplate | null = null;
 
   ngOnInit(): void {
+    // Debug: Log de datos recibidos
+    console.log('Receipt Component - Sale data:', this.sale);
+    console.log('Receipt Component - Business Config:', this.businessConfig);
+    console.log('Receipt Component - Ticket Template:', this.ticketTemplate);
+    
     // Si no hay configuración, usar valores por defecto
     if (!this.businessConfig) {
       this.businessConfig = this.getDefaultConfig();
     }
     if (!this.ticketTemplate) {
       this.ticketTemplate = this.getDefaultTemplate();
+    }
+    
+    // Si no hay venta, crear datos de ejemplo para testing
+    if (!this.sale) {
+      this.sale = this.getExampleSale();
     }
   }
 
@@ -144,6 +154,44 @@ export class ReceiptComponent implements OnInit {
     return new Date();
   }
 
+  generateCode(): string {
+    // Generar código único basado en timestamp y random
+    const timestamp = Date.now().toString(16);
+    const random = Math.random().toString(16).substring(2, 8);
+    return `${timestamp.toUpperCase()}-${random.toUpperCase()}`;
+  }
+
+  generateSeal(): string {
+    // Generar sello de recepción simulado
+    const chars = '0123456789ABCDEF';
+    let result = '';
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  generateControlNumber(): string {
+    // Generar número de control basado en fecha y establecimiento
+    const date = new Date();
+    const year = date.getFullYear().toString().substring(2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const establishment = this.businessConfig?.establishmentCode || '001';
+    const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    
+    return `DTE-01-M${establishment}P${year}${month}${day}-${random}`;
+  }
+
+  getCustomerAddress(): string {
+    if (this.sale?.customerAddress) {
+      return this.sale.customerAddress;
+    }
+    
+    // Dirección por defecto basada en la configuración del negocio
+    return `${this.businessConfig?.city || 'San Salvador'}, ${this.businessConfig?.state || 'San Salvador'} Centro, ${this.businessConfig?.state || 'San Salvador'}, ${this.businessConfig?.country || 'El Salvador'}`;
+  }
+
   printReceipt(): void {
     // Crear una ventana nueva para imprimir solo el ticket
     const printContent = document.querySelector('.receipt-paper');
@@ -158,7 +206,7 @@ export class ReceiptComponent implements OnInit {
       return;
     }
 
-    // Contenido HTML para la ventana de impresión
+    // Contenido HTML para la ventana de impresión con formato completo
     const printHTML = `
       <!DOCTYPE html>
       <html>
@@ -183,7 +231,7 @@ export class ReceiptComponent implements OnInit {
               padding: 10px;
               background: white;
             }
-            .receipt-header h2 {
+            .ticket-header h2 {
               font-size: 16px;
               font-weight: bold;
               text-align: center;
@@ -205,6 +253,120 @@ export class ReceiptComponent implements OnInit {
             .tax-info, .address-info, .contact-info {
               font-size: 10px;
               margin-bottom: 3px;
+            }
+            .qr-code {
+              margin-top: 15px;
+              display: flex;
+              justify-content: center;
+            }
+            .qr-placeholder {
+              width: 80px;
+              height: 80px;
+              border: 2px dashed #ccc;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 10px;
+              color: #666;
+            }
+            .fiscal-info {
+              border-bottom: 1px dashed #ccc;
+              padding-bottom: 10px;
+              margin-bottom: 10px;
+              font-size: 10px;
+            }
+            .fiscal-info p {
+              margin: 3px 0;
+              word-break: break-all;
+            }
+            .customer-info {
+              border-bottom: 1px dashed #ccc;
+              padding-bottom: 10px;
+              margin-bottom: 10px;
+              font-size: 10px;
+            }
+            .sale-details {
+              .receipt-title {
+                text-align: center;
+                font-size: 14px;
+                font-weight: bold;
+                margin: 10px 0;
+                text-transform: uppercase;
+                color: #000;
+                letter-spacing: 0.5px;
+                line-height: 1.2;
+              }
+              .sale-info {
+                margin-bottom: 10px;
+                color: #333;
+                font-weight: 400;
+              }
+              .products-table {
+                margin-bottom: 15px;
+              }
+              .table-header {
+                display: flex;
+                border-bottom: 1px solid #333;
+                padding-bottom: 5px;
+                margin-bottom: 5px;
+                font-weight: bold;
+                text-align: center;
+                color: #000;
+                .col-quantity { width: 15%; }
+                .col-description { width: 45%; }
+                .col-price { width: 20%; }
+                .col-total { width: 20%; }
+              }
+              .product-row {
+                display: flex;
+                padding: 3px 0;
+                border-bottom: 1px dotted #ccc;
+                color: #333;
+                font-weight: 400;
+                .col-quantity { width: 15%; text-align: center; }
+                .col-description { width: 45%; padding-left: 5px; }
+                .col-price { width: 20%; text-align: right; }
+                .col-total { width: 20%; text-align: right; }
+              }
+              .totals-section {
+                border-top: 2px solid #333;
+                padding-top: 10px;
+                margin-bottom: 15px;
+                color: #333;
+                font-weight: 400;
+              }
+              .total-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 2px 0;
+                border-bottom: 1px dotted #ccc;
+                color: #333;
+                font-weight: 400;
+                &.highlight {
+                  border-top: 1px solid #333;
+                  border-bottom: 2px solid #333;
+                  padding: 5px 0;
+                  font-weight: bold;
+                  color: #000;
+                }
+              }
+              .payment-info {
+                border-top: 1px dashed #ccc;
+                padding-top: 10px;
+                margin-bottom: 10px;
+                color: #333;
+                font-weight: 400;
+                .payment-details {
+                  margin-top: 10px;
+                  .payment-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 2px 0;
+                    color: #333;
+                    font-weight: 400;
+                  }
+                }
+              }
             }
             .receipt-title {
               text-align: center;
@@ -230,9 +392,9 @@ export class ReceiptComponent implements OnInit {
               padding: 3px 0;
             }
             .col-quantity { width: 15%; }
-            .col-description { width: 50%; }
+            .col-description { width: 45%; }
             .col-price { width: 20%; text-align: right; }
-            .col-total { width: 15%; text-align: right; }
+            .col-total { width: 20%; text-align: right; }
             .product-row {
               display: flex;
               font-size: 10px;
@@ -341,5 +503,57 @@ export class ReceiptComponent implements OnInit {
       document.head.removeChild(printStyles);
       document.title = originalTitle;
     }, 1000);
+  }
+
+  private getExampleSale(): Sale {
+    return {
+      id: 1,
+      invoiceNumber: 'CF-241012-000001',
+      invoiceType: 'consumidor_final',
+      customerName: 'Juan Pérez',
+      customerDocument: '12345678-9',
+      customerEmail: 'juan@email.com',
+      customerAddress: 'Colonia Escalón, San Salvador',
+      items: [
+        {
+          productId: 1,
+          productName: 'Coca Cola 200ml',
+          quantity: 2,
+          unitPrice: 1.25,
+          subtotal: 2.50,
+          tax: 0.38,
+          total: 2.88
+        },
+        {
+          productId: 2,
+          productName: 'Leche Entera 1L',
+          quantity: 1,
+          unitPrice: 1.30,
+          subtotal: 1.30,
+          tax: 0.20,
+          total: 1.50
+        },
+        {
+          productId: 3,
+          productName: 'Pan Integral',
+          quantity: 3,
+          unitPrice: 0.75,
+          subtotal: 2.25,
+          tax: 0.34,
+          total: 2.59
+        }
+      ],
+      subtotal: 6.05,
+      taxAmount: 0.92,
+      discountAmount: 0,
+      total: 6.97,
+      paymentMethod: 'cash',
+      paymentAmount: 10.00,
+      change: 3.03,
+      cashierId: 1,
+      cashierName: 'María García',
+      createdAt: new Date(),
+      status: 'completed'
+    };
   }
 }

@@ -16,6 +16,7 @@ export interface Sale {
   customerName?: string;
   customerDocument?: string;
   customerEmail?: string;
+  customerAddress?: string;
   invoiceType: string;  // Código del documento fiscal (dinámico)
   items: CartItem[];
   subtotal: number;

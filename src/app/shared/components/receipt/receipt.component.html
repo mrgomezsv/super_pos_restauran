@@ -1,7 +1,7 @@
 <div class="receipt-container">
   <div class="receipt-paper">
     <!-- Header del Ticket -->
-    <div class="receipt-header">
+    <div class="ticket-header">
       <div class="business-info">
         <h2 class="business-name">{{ businessConfig?.businessName || 'Super POS' }}</h2>
         <p class="commercial-name">{{ businessConfig?.commercialName || 'Super POS' }}</p>
@@ -19,22 +19,40 @@
           <p><strong>Email:</strong> {{ businessConfig?.email || 'N/A' }}</p>
         </div>
       </div>
+      
+      <!-- QR Code Placeholder -->
+      <div class="qr-code">
+        <div class="qr-placeholder">
+          <span>QR Code</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información Fiscal -->
+    <div class="fiscal-info">
+      <p><strong>FECHA GENERACIÓN:</strong> {{ formatDate(sale?.createdAt ?? getCurrentDate()) }}</p>
+      <p><strong>CÓDIGO DE GENERACIÓN:</strong> {{ generateCode() }}</p>
+      <p><strong>SELLO DE RECEPCIÓN:</strong> {{ generateSeal() }}</p>
+      <p><strong>NÚMERO DE CONTROL:</strong> {{ generateControlNumber() }}</p>
+      <p><strong>TRANSMISIÓN:</strong> NORMAL VERSIÓN JSON: 1</p>
+      <p><strong>MODELO:</strong> PREVIO MONEDA: {{ businessConfig?.currency || 'USD' }}</p>
     </div>
 
     <!-- Información del Cliente -->
-    <div class="customer-info" *ngIf="sale?.customerName">
-      <p><strong>{{ ticketTemplate?.receipt?.customerLabel || 'CLIENTE:' }}</strong> {{ sale?.customerName }}</p>
-      <p *ngIf="sale?.customerDocument"><strong>DUI:</strong> {{ sale?.customerDocument }}</p>
+    <div class="customer-info">
+      <p><strong>RECEPTOR:</strong> {{ sale?.customerName || 'Cliente Varios' }}</p>
+      <p><strong>DUI:</strong> {{ sale?.customerDocument || 'N/A' }}</p>
+      <p><strong>DIRECCIÓN:</strong> {{ getCustomerAddress() }}</p>
     </div>
 
     <!-- Detalles de la Venta -->
     <div class="sale-details">
-      <h3 class="receipt-title">{{ ticketTemplate?.receipt?.title || 'FACTURA' }}</h3>
+      <h3 class="receipt-title">FACTURA</h3>
       
       <div class="sale-info">
-        <p><strong>{{ ticketTemplate?.receipt?.dateLabel || 'FECHA:' }}</strong> {{ formatDate(sale?.createdAt ?? getCurrentDate()) }}</p>
-        <p><strong>{{ ticketTemplate?.receipt?.invoiceNumberLabel || 'FACTURA N°:' }}</strong> {{ sale?.invoiceNumber ?? 'N/A' }}</p>
-        <p><strong>{{ ticketTemplate?.receipt?.cashierLabel || 'CAJERO:' }}</strong> {{ sale?.cashierName ?? 'N/A' }}</p>
+        <p><strong>FECHA:</strong> {{ formatDate(sale?.createdAt ?? getCurrentDate()) }}</p>
+        <p><strong>FACTURA N°:</strong> {{ sale?.invoiceNumber ?? 'N/A' }}</p>
+        <p><strong>CAJERO:</strong> {{ sale?.cashierName ?? 'N/A' }}</p>
       </div>
 
       <!-- Tabla de Productos -->
@@ -59,32 +77,52 @@
       <!-- Totales -->
       <div class="totals-section" *ngIf="sale">
         <div class="total-row">
-          <span><strong>SUBTOTAL:</strong></span>
+          <span><strong>SUMA DE VENTAS:</strong></span>
           <span><strong>{{ formatCurrency(sale.subtotal) }}</strong></span>
         </div>
-        <div class="total-row" *ngIf="sale?.taxAmount && sale.taxAmount > 0">
-          <span><strong>IVA:</strong></span>
-          <span><strong>{{ formatCurrency(sale.taxAmount) }}</strong></span>
+        <div class="total-row">
+          <span><strong>SUMATORIA DE VENTAS:</strong></span>
+          <span><strong>{{ formatCurrency(sale.subtotal) }}</strong></span>
         </div>
-        <div class="total-row" *ngIf="sale?.discountAmount && sale.discountAmount > 0">
-          <span><strong>DESCUENTO:</strong></span>
-          <span><strong>-{{ formatCurrency(sale.discountAmount) }}</strong></span>
+        <div class="total-row">
+          <span>REBAJAS VENTAS NO SUJETAS:</span>
+          <span>{{ formatCurrency(0) }}</span>
+        </div>
+        <div class="total-row">
+          <span>REBAJAS VENTAS EXENTAS:</span>
+          <span>{{ formatCurrency(0) }}</span>
+        </div>
+        <div class="total-row">
+          <span>REBAJAS VENTAS GRAVADAS:</span>
+          <span>{{ formatCurrency(sale.discountAmount) }}</span>
+        </div>
+        <div class="total-row">
+          <span><strong>SUB-TOTAL:</strong></span>
+          <span><strong>{{ formatCurrency(sale.subtotal) }}</strong></span>
+        </div>
+        <div class="total-row">
+          <span>IVA RETENIDO:</span>
+          <span>{{ formatCurrency(0) }}</span>
+        </div>
+        <div class="total-row">
+          <span><strong>MONTO TOTAL OPERACIÓN:</strong></span>
+          <span><strong>{{ formatCurrency(sale.total) }}</strong></span>
         </div>
         <div class="total-row highlight">
-          <span><strong>TOTAL:</strong></span>
+          <span><strong>TOTAL A PAGAR:</strong></span>
           <span><strong>{{ formatCurrency(sale.total) }}</strong></span>
         </div>
       </div>
 
       <!-- Información de Pago -->
       <div class="payment-info" *ngIf="sale">
-        <p><strong>MÉTODO DE PAGO:</strong> {{ getPaymentMethodLabel(sale.paymentMethod) }}</p>
-        <div class="payment-details" *ngIf="sale.paymentMethod === 'cash'">
+        <p><strong>CONDICIÓN DE LA OPERACIÓN:</strong> {{ sale.paymentMethod === 'cash' ? 'CONTADO' : 'CRÉDITO' }}</p>
+        <div class="payment-details">
           <div class="payment-row">
             <span><strong>EFECTIVO RECIBIDO:</strong></span>
             <span><strong>{{ formatCurrency(sale.paymentAmount) }}</strong></span>
           </div>
-          <div class="payment-row" *ngIf="sale?.change && sale.change > 0">
+          <div class="payment-row">
             <span><strong>EFECTIVO DEVUELTO:</strong></span>
             <span><strong>{{ formatCurrency(sale.change) }}</strong></span>
           </div>
@@ -99,7 +137,7 @@
     </div>
 
     <!-- Footer del Ticket -->
-    <div class="receipt-footer">
+    <div class="ticket-footer">
       <p class="footer-message">{{ businessConfig?.receiptFooter || '¡Gracias por su compra!' }}</p>
       <p class="thank-you">{{ ticketTemplate?.footer?.thankYouMessage || '¡Vuelva pronto!' }}</p>
     </div>

@@ -28,7 +28,11 @@ export class ReceiptModalComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<ReceiptModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { sale: Sale },
+    @Inject(MAT_DIALOG_DATA) public data: { 
+      sale: Sale;
+      businessConfig?: BusinessConfiguration;
+      ticketTemplate?: TicketTemplate;
+    },
     private businessService: BusinessService
   ) {}
 
@@ -37,25 +41,33 @@ export class ReceiptModalComponent implements OnInit {
   }
 
   private loadBusinessConfiguration(): void {
-    // Cargar configuración del negocio
-    this.businessService.getConfiguration().subscribe({
-      next: (config) => {
-        this.businessConfig = config;
-      },
-      error: (error) => {
-        console.error('Error loading business configuration:', error);
-      }
-    });
+    // Usar configuración pasada como parámetro o cargar desde el servicio
+    if (this.data.businessConfig) {
+      this.businessConfig = this.data.businessConfig;
+    } else {
+      this.businessService.getConfiguration().subscribe({
+        next: (config) => {
+          this.businessConfig = config;
+        },
+        error: (error) => {
+          console.error('Error loading business configuration:', error);
+        }
+      });
+    }
 
-    // Cargar plantilla de ticket
-    this.businessService.getTicketTemplate().subscribe({
-      next: (template) => {
-        this.ticketTemplate = template;
-      },
-      error: (error) => {
-        console.error('Error loading ticket template:', error);
-      }
-    });
+    // Usar plantilla pasada como parámetro o cargar desde el servicio
+    if (this.data.ticketTemplate) {
+      this.ticketTemplate = this.data.ticketTemplate;
+    } else {
+      this.businessService.getTicketTemplate().subscribe({
+        next: (template) => {
+          this.ticketTemplate = template;
+        },
+        error: (error) => {
+          console.error('Error loading ticket template:', error);
+        }
+      });
+    }
   }
 
   onClose(): void {

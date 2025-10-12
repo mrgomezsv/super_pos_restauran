@@ -1,10 +1,8 @@
 .receipt-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
   padding: 20px;
   background-color: #f5f5f5;
-  min-height: 100vh;
 
   .receipt-paper {
     background: white;
@@ -15,13 +13,13 @@
     font-size: 12px;
     line-height: 1.4;
     
-    // Optimizar renderizado global del recibo
+    // Optimizar renderizado global del ticket
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     color: #000;
 
-    .receipt-header {
+    .ticket-header {
       text-align: center;
       border-bottom: 2px dashed #333;
       padding-bottom: 15px;
@@ -66,6 +64,41 @@
           }
         }
       }
+
+      .qr-code {
+        margin-top: 15px;
+
+        .qr-placeholder {
+          width: 80px;
+          height: 80px;
+          border: 2px dashed #ccc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto;
+          font-size: 10px;
+          color: #666;
+        }
+      }
+    }
+
+    .fiscal-info {
+      border-bottom: 1px dashed #ccc;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      font-size: 10px;
+      color: #333;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+
+      p {
+        margin: 3px 0;
+        color: #333;
+        font-weight: 400;
+        word-break: break-all;
+      }
     }
 
     .customer-info {
@@ -95,6 +128,9 @@
         color: #000;
         letter-spacing: 0.5px;
         line-height: 1.2;
+        border-top: 1px dashed #000;
+        border-bottom: 1px dashed #000;
+        padding: 5px 0;
       }
 
       .sale-info {
@@ -247,7 +283,31 @@
       }
     }
 
-    .receipt-footer {
+    .ticket-footer {
+      border-top: 2px dashed #333;
+      padding-top: 15px;
+      text-align: center;
+      color: #333;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+
+      .footer-message {
+        font-weight: bold;
+        margin: 5px 0;
+        color: #000;
+      }
+
+      .thank-you {
+        font-style: italic;
+        margin: 5px 0;
+        color: #333;
+        font-weight: 400;
+      }
+    }
+
+    .ticket-footer {
       border-top: 2px dashed #333;
       padding-top: 15px;
       text-align: center;
@@ -319,42 +379,19 @@
 
 // Print styles
 @media print {
-  body {
-    margin: 0;
-    padding: 0;
-  }
-  
   .receipt-container {
     background: white;
     padding: 0;
-    min-height: auto;
 
     .receipt-paper {
       box-shadow: none;
       width: 100%;
       max-width: none;
-      margin: 0;
-      padding: 10px;
-      background: white !important;
-      color: black !important;
     }
 
     .receipt-actions {
       display: none;
     }
-  }
-  
-  // Ocultar elementos del modal durante la impresión
-  .modal-header,
-  .modal-actions,
-  .modal-content {
-    display: none !important;
-  }
-  
-  .receipt-modal {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
   }
 }
 

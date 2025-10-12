@@ -213,6 +213,38 @@ export class PosComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           console.error('Error loading business configuration:', error);
+          // Usar configuración por defecto si hay error
+          this.businessConfig = {
+            id: 1,
+            businessName: 'Super POS',
+            commercialName: 'Super POS',
+            taxId: '0000-000000-000-0',
+            registrationNumber: '000000-0',
+            economicActivity: 'Comercio al por menor',
+            address: 'Calle Principal, Zona Centro',
+            city: 'San Salvador',
+            state: 'San Salvador',
+            country: 'El Salvador',
+            zipCode: '0000',
+            phone: '0000-0000',
+            email: 'info@superpos.com',
+            establishmentName: 'Casa Matriz',
+            establishmentCode: '001',
+            receiptHeader: 'Gracias por su compra',
+            receiptFooter: '¡Vuelva pronto!',
+            defaultObservations: '',
+            currency: 'USD',
+            defaultTaxRate: 15,
+            allowNegativeStock: false,
+            requireCustomerInfo: false,
+            showPricesWithTax: false,
+            printLogo: false,
+            logoPath: '',
+            printQRCode: false,
+            qrCodeUrl: '',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
         }
       });
   }
@@ -1107,7 +1139,11 @@ export class PosComponent implements OnInit, OnDestroy {
       width: '600px',
       maxWidth: '90vw',
       maxHeight: '90vh',
-      data: { sale },
+      data: { 
+        sale,
+        businessConfig: this.businessConfig,
+        ticketTemplate: null // Se cargará desde el servicio
+      },
       disableClose: false,
       autoFocus: false,
       panelClass: 'receipt-modal-dialog',
