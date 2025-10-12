@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatIconModule
   ],
   template: `
-    <h2 mat-dialog-title>
+    <h2 mat-dialog-title class="customer-modal">
       <mat-icon>person</mat-icon>
       Información del Cliente
     </h2>
@@ -61,8 +61,9 @@ import { MatIconModule } from '@angular/material/icon';
     .customer-form {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      min-width: 350px;
+      gap: 20px;
+      min-width: 400px;
+      padding: 8px 0;
     }
 
     .full-width {
@@ -72,7 +73,152 @@ import { MatIconModule } from '@angular/material/icon';
     mat-dialog-title {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      color: white;
+      font-size: 24px;
+      font-weight: 700;
+      
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    // Mejorar los campos de formulario específicamente
+    ::ng-deep mat-form-field {
+      .mat-mdc-text-field-wrapper {
+        min-height: 56px !important;
+        padding: 0 12px !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+      }
+      
+      .mat-mdc-form-field-infix {
+        min-height: 48px !important;
+        padding: 12px 0 !important;
+      }
+      
+      .mat-mdc-form-field-label {
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        color: #666 !important;
+      }
+      
+      .mat-mdc-input-element {
+        font-size: 16px !important;
+        color: #333 !important;
+        padding: 4px 0 !important;
+      }
+      
+      &.mat-focused {
+        .mat-mdc-form-field-outline {
+          .mat-mdc-form-field-outline-thick {
+            color: #017E84 !important;
+            border-width: 2px !important;
+          }
+        }
+      }
+      
+      &.mat-form-field-invalid {
+        .mat-mdc-form-field-outline {
+          .mat-mdc-form-field-outline-thick {
+            color: #f44336 !important;
+            border-width: 2px !important;
+          }
+        }
+        
+        .mat-mdc-form-field-label {
+          color: #f44336 !important;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .customer-form {
+        min-width: auto;
+      }
+    }
+
+    // ESTILOS ULTRA ESPECÍFICOS PARA FORZAR LA CORRECCIÓN
+    ::ng-deep .customer-modal {
+      mat-form-field.mat-mdc-form-field {
+        .mat-mdc-form-field-label,
+        .mdc-floating-label,
+        .mat-mdc-form-field-label-wrapper {
+          position: absolute !important;
+          top: -8px !important;
+          left: 12px !important;
+          background: #ffffff !important;
+          padding: 0 4px !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          color: #017E84 !important;
+          z-index: 1 !important;
+          transform: none !important;
+          transform-origin: unset !important;
+          transition: none !important;
+          
+          // Forzar todas las variantes
+          &.mat-mdc-form-field-label-filled,
+          &.mat-mdc-form-field-label-floating,
+          &.mdc-floating-label--float-above,
+          &.mat-form-field-label-filled,
+          &.mat-form-field-label-floating,
+          &.mdc-floating-label {
+            position: absolute !important;
+            top: -8px !important;
+            left: 12px !important;
+            background: #ffffff !important;
+            padding: 0 4px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #017E84 !important;
+            z-index: 1 !important;
+            transform: none !important;
+            transform-origin: unset !important;
+            transition: none !important;
+          }
+        }
+
+        .mat-mdc-text-field-wrapper {
+          background: #ffffff !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 8px !important;
+          padding: 0 !important;
+          min-height: 56px !important;
+          position: relative !important;
+        }
+
+        .mat-mdc-form-field-infix {
+          padding: 16px 12px 8px 12px !important;
+          min-height: auto !important;
+          display: block !important;
+        }
+
+        .mat-mdc-input-element {
+          color: #333 !important;
+          font-size: 16px !important;
+          padding: 4px 0 !important;
+          margin: 0 !important;
+          border: none !important;
+          background: transparent !important;
+          outline: none !important;
+          
+          &::placeholder {
+            color: #a0aec0 !important;
+            font-style: italic !important;
+          }
+        }
+
+        &.mat-focused {
+          .mat-mdc-text-field-wrapper {
+            border-color: #017E84 !important;
+            border-width: 2px !important;
+            box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1) !important;
+          }
+        }
+      }
     }
   `]
 })

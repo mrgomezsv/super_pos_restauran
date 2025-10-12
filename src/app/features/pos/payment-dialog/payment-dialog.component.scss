@@ -799,6 +799,87 @@
 }
 
 // Responsive
+// ESTILOS ULTRA ESPECÍFICOS PARA FORZAR LA CORRECCIÓN
+.payment-modal {
+  ::ng-deep mat-form-field {
+    .mat-mdc-form-field-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label-wrapper {
+      position: absolute !important;
+      top: -8px !important;
+      left: 12px !important;
+      background: #ffffff !important;
+      padding: 0 4px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #017E84 !important;
+      z-index: 1 !important;
+      transform: none !important;
+      transform-origin: unset !important;
+      transition: none !important;
+      
+      // Forzar todas las variantes
+      &.mat-mdc-form-field-label-filled,
+      &.mat-mdc-form-field-label-floating,
+      &.mdc-floating-label--float-above,
+      &.mat-form-field-label-filled,
+      &.mat-form-field-label-floating,
+      &.mdc-floating-label {
+        position: absolute !important;
+        top: -8px !important;
+        left: 12px !important;
+        background: #ffffff !important;
+        padding: 0 4px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: #017E84 !important;
+        z-index: 1 !important;
+        transform: none !important;
+        transform-origin: unset !important;
+        transition: none !important;
+      }
+    }
+
+    .mat-mdc-text-field-wrapper {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 8px !important;
+      padding: 0 !important;
+      min-height: 56px !important;
+      position: relative !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding: 16px 12px 8px 12px !important;
+      min-height: auto !important;
+      display: block !important;
+    }
+
+    .mat-mdc-input-element {
+      color: #333 !important;
+      font-size: 16px !important;
+      padding: 4px 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      background: transparent !important;
+      outline: none !important;
+      
+      &::placeholder {
+        color: #a0aec0 !important;
+        font-style: italic !important;
+      }
+    }
+
+    &.mat-focused {
+      .mat-mdc-text-field-wrapper {
+        border-color: #017E84 !important;
+        border-width: 2px !important;
+        box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1) !important;
+      }
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .modal-container {
     max-width: 95%;

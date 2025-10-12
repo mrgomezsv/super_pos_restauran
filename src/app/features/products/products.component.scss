@@ -273,59 +273,141 @@
       
       // Table headers
       .mat-mdc-header-row {
-        background: var(--btn-bg);
+        background: linear-gradient(135deg, #017E84, #20C997);
         
         .mat-mdc-header-cell {
-          font-weight: var(--font-weight-semibold);
-          color: var(--text);
-          font-size: var(--text-sm);
-          padding: var(--spacing-lg);
-          border-bottom: 2px solid var(--border);
+          font-weight: 600;
+          color: white;
+          font-size: 16px;
+          padding: 20px 16px;
+          border-bottom: none;
+          text-align: left;
           
           &:first-child {
-            padding-left: var(--spacing-xl);
+            padding-left: 24px;
           }
           
           &:last-child {
-            padding-right: var(--spacing-xl);
+            padding-right: 24px;
           }
         }
       }
       
       // Table rows
       .mat-mdc-row {
-        transition: all var(--transition-fast);
+        transition: all 0.3s ease;
         
         &:hover {
-          background: var(--surface-hover);
+          background: #f8f9fa;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        &:nth-child(even) {
+          background: #fafbfc;
         }
         
         .mat-mdc-cell {
-          padding: var(--spacing-lg);
-          border-bottom: 1px solid var(--border);
-          color: var(--text);
-          font-size: var(--text-sm);
+          padding: 16px;
+          border-bottom: 1px solid #e2e8f0;
+          color: #333;
+          font-size: 16px;
+          font-weight: 500;
+          vertical-align: middle;
           
           &:first-child {
-            padding-left: var(--spacing-xl);
+            padding-left: 24px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-weight: 600;
+            color: #017E84;
           }
           
           &:last-child {
-            padding-right: var(--spacing-xl);
+            padding-right: 24px;
+          }
+        }
+      }
+      
+      // Specific column styles
+      .price {
+        font-size: 16px;
+        font-weight: 600;
+        color: #059669;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      }
+      
+      // Mat chips styling
+      ::ng-deep .mat-mdc-chip {
+        font-size: 14px;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 20px;
+        
+        &.mat-mdc-chip.mat-primary {
+          background: linear-gradient(135deg, #017E84, #20C997);
+          color: white;
+        }
+        
+        &.mat-mdc-chip.mat-warn {
+          background: #fef2f2;
+          color: #dc2626;
+          border: 1px solid #fecaca;
+        }
+      }
+      
+      // Stock styling
+      .stock-high {
+        color: #059669;
+        font-weight: 600;
+      }
+      
+      .stock-medium {
+        color: #d97706;
+        font-weight: 600;
+      }
+      
+      .stock-low {
+        color: #dc2626;
+        font-weight: 600;
+      }
+      
+      // Action buttons
+      .mat-mdc-icon-button {
+        width: 36px;
+        height: 36px;
+        margin: 0 4px;
+        
+        .mat-icon {
+          font-size: 20px;
+        }
+        
+        &:first-child {
+          color: #017E84;
+          
+          &:hover {
+            background: rgba(1, 126, 132, 0.1);
+          }
+        }
+        
+        &:last-child {
+          color: #dc2626;
+          
+          &:hover {
+            background: rgba(220, 38, 38, 0.1);
           }
         }
       }
       
       // Specific column styles
       .product-code {
-        font-family: var(--font-family-mono);
-        font-weight: var(--font-weight-semibold);
-        color: var(--primary);
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-weight: 600;
+        color: #017E84;
       }
       
       .product-name {
-        font-weight: var(--font-weight-medium);
-        color: var(--text);
+        font-weight: 500;
+        color: #333;
       }
       
       .product-category {

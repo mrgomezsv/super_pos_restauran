@@ -795,3 +795,320 @@ a {
   border-top: 1px solid #e2e8f0 !important;
   border-radius: 0 0 16px 16px !important;
 }
+
+// ========================================
+// MEJORAS GLOBALES PARA MAT-FORM-FIELD
+// ========================================
+
+// Estilos globales para todos los campos de formulario
+::ng-deep .mat-mdc-form-field {
+  width: 100%;
+  
+  // Wrapper del campo
+  .mat-mdc-text-field-wrapper {
+    min-height: 56px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+  }
+  
+  // Área de contenido del campo
+  .mat-mdc-form-field-infix {
+    min-height: 48px !important;
+    padding: 12px 0 !important;
+  }
+  
+  // Labels mejorados
+  .mat-mdc-form-field-label {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #666 !important;
+    transform: translateY(-106%) scale(0.75) !important;
+    transform-origin: 0 0 !important;
+  }
+  
+  // Inputs mejorados
+  .mat-mdc-input-element {
+    font-size: 16px !important;
+    color: #333 !important;
+    padding: 4px 0 !important;
+  }
+  
+  // Placeholders mejorados
+  .mat-mdc-input-element::placeholder {
+    color: #a0aec0 !important;
+    font-style: italic !important;
+  }
+  
+  // Área de subscripción (hints y errores)
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 4px !important;
+    font-size: 12px !important;
+  }
+  
+  // Iconos de sufijo mejorados
+  .mat-mdc-form-field-suffix {
+    .mat-mdc-icon-button {
+      width: 32px !important;
+      height: 32px !important;
+      padding: 0 !important;
+      
+      .mat-icon {
+        font-size: 20px !important;
+        color: #666 !important;
+      }
+    }
+  }
+  
+  // Select mejorado
+  .mat-mdc-select {
+    font-size: 16px !important;
+    color: #333 !important;
+    
+    .mat-mdc-select-trigger {
+      min-height: 48px !important;
+      padding: 12px 0 !important;
+    }
+    
+    .mat-mdc-select-value {
+      font-size: 16px !important;
+      color: #333 !important;
+    }
+    
+    .mat-mdc-select-arrow {
+      color: #666 !important;
+    }
+  }
+  
+  // Estados de enfoque
+  &.mat-focused {
+    .mat-mdc-form-field-outline {
+      .mat-mdc-form-field-outline-thick {
+        color: #017E84 !important;
+        border-width: 2px !important;
+      }
+    }
+  }
+  
+  // Estados de error
+  &.mat-form-field-invalid {
+    .mat-mdc-form-field-outline {
+      .mat-mdc-form-field-outline-thick {
+        color: #f44336 !important;
+        border-width: 2px !important;
+      }
+    }
+    
+    .mat-mdc-form-field-label {
+      color: #f44336 !important;
+    }
+  }
+}
+
+// Mejorar los botones de formulario globalmente
+::ng-deep .mat-mdc-raised-button {
+  min-height: 48px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  
+  &.mat-primary {
+    background: linear-gradient(135deg, #017E84, #20C997) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(1, 126, 132, 0.3) !important;
+    
+    &:hover {
+      background: linear-gradient(135deg, #015a5e, #017E84) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(1, 126, 132, 0.4) !important;
+    }
+    
+    &:active {
+      transform: translateY(0) !important;
+    }
+  }
+}
+
+// Mejorar botones básicos
+::ng-deep .mat-mdc-button {
+  min-height: 48px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  
+  &:hover {
+    background: rgba(113, 128, 150, 0.1) !important;
+  }
+}
+
+// ========================================
+// ESTILOS GLOBALES PARA TABLAS
+// ========================================
+
+// Estilos globales para todas las tablas del sistema
+::ng-deep .mat-mdc-table {
+  // Headers de tabla
+  .mat-mdc-header-row {
+    background: linear-gradient(135deg, #017E84, #20C997) !important;
+    
+    .mat-mdc-header-cell {
+      font-weight: 600 !important;
+      color: white !important;
+      font-size: 16px !important;
+      padding: 20px 16px !important;
+      border-bottom: none !important;
+      text-align: left !important;
+      
+      &:first-child {
+        padding-left: 24px !important;
+      }
+      
+      &:last-child {
+        padding-right: 24px !important;
+      }
+    }
+  }
+  
+  // Filas de tabla
+  .mat-mdc-row {
+    transition: all 0.3s ease !important;
+    
+    &:hover {
+      background: #f8f9fa !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    &:nth-child(even) {
+      background: #fafbfc !important;
+    }
+    
+    .mat-mdc-cell {
+      padding: 16px !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+      color: #333 !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      vertical-align: middle !important;
+      
+      &:first-child {
+        padding-left: 24px !important;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+        font-weight: 600 !important;
+        color: #017E84 !important;
+      }
+      
+      &:last-child {
+        padding-right: 24px !important;
+      }
+    }
+  }
+}
+
+// Estilos para chips en tablas
+::ng-deep .mat-mdc-chip {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  border-radius: 20px !important;
+  
+  &.mat-mdc-chip.mat-primary {
+    background: linear-gradient(135deg, #017E84, #20C997) !important;
+    color: white !important;
+  }
+  
+  &.mat-mdc-chip.mat-warn {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
+  }
+  
+  &.mat-mdc-chip.mat-accent {
+    background: #f0f9ff !important;
+    color: #0369a1 !important;
+    border: 1px solid #bae6fd !important;
+  }
+}
+
+// Estilos para botones de acción en tablas
+::ng-deep .mat-mdc-table .mat-mdc-icon-button {
+  width: 36px !important;
+  height: 36px !important;
+  margin: 0 4px !important;
+  
+  .mat-icon {
+    font-size: 20px !important;
+  }
+  
+  &[color="primary"] {
+    color: #017E84 !important;
+    
+    &:hover {
+      background: rgba(1, 126, 132, 0.1) !important;
+    }
+  }
+  
+  &[color="warn"] {
+    color: #dc2626 !important;
+    
+    &:hover {
+      background: rgba(220, 38, 38, 0.1) !important;
+    }
+  }
+}
+
+// ========================================
+// ESTILOS GLOBALES PARA DROPDOWN/SELECT
+// ========================================
+
+// Mejorar el posicionamiento y visualización de dropdowns
+::ng-deep .mat-mdc-select-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  padding: 8px !important;
+  margin-top: 4px !important;
+  z-index: 10002 !important;
+  position: absolute !important;
+  
+  .mat-mdc-option {
+    padding: 12px 16px !important;
+    margin: 4px 0 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    min-height: auto !important;
+    line-height: 1.4 !important;
+
+    &:hover {
+      background: rgba(1, 126, 132, 0.1) !important;
+      transform: translateX(4px) !important;
+    }
+
+    &.mat-mdc-option-active {
+      background: rgba(1, 126, 132, 0.15) !important;
+    }
+
+    .mat-mdc-option-text {
+      font-size: 14px !important;
+      color: #333 !important;
+    }
+  }
+}
+
+// Asegurar que el overlay del select se posicione correctamente
+::ng-deep .cdk-overlay-pane {
+  .mat-mdc-select-panel {
+    position: relative !important;
+    z-index: 10002 !important;
+  }
+}
+
+// Mejorar el overlay backdrop para dropdowns
+::ng-deep .cdk-overlay-backdrop {
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(2px) !important;
+}
