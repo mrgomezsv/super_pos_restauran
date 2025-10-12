@@ -61,7 +61,6 @@ export class PosComponent implements OnInit, OnDestroy {
   searchTerm = '';
   selectedCategory = '';
   isLoadingProducts = true;
-  showPaymentDialog = false;
   currentTime = new Date();
   
   // Business configuration
@@ -80,7 +79,8 @@ export class PosComponent implements OnInit, OnDestroy {
   paymentMethods: PaymentMethod[] = [
     { id: 'cash', name: 'Efectivo', icon: 'money' },
     { id: 'card', name: 'Tarjeta', icon: 'credit_card' },
-    { id: 'transfer', name: 'Transferencia', icon: 'account_balance' }
+    { id: 'transfer', name: 'Transferencia', icon: 'account_balance' },
+    { id: 'bitcoin', name: 'Bitcoin', icon: 'currency_bitcoin' }
   ];
   
   private destroy$ = new Subject<void>();
@@ -1016,29 +1016,31 @@ export class PosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Guardar la posición actual del scroll
-    this.scrollYPosition = window.scrollY;
-    
-    // Agregar clase al body para prevenir layout shift
-    document.body.classList.add('modal-open');
-    document.body.style.top = `-${this.scrollYPosition}px`;
-    
-    this.showPaymentDialog = true;
+    const dialogRef = this.dialog.open(PaymentDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      hasBackdrop: true,
+      backdropClass: 'payment-dialog-backdrop',
+      position: {
+        top: '50%',
+        left: '50%'
+      },
+      panelClass: 'payment-dialog-container',
+      data: {
+        total: this.cartTotals.total,
+        items: this.cartItems
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.processPaymentFromDialog(result);
+      }
+    });
   }
 
-  closePaymentDialog(result?: any): void {
-    // Remover clase del body al cerrar el modal
-    document.body.classList.remove('modal-open');
-    document.body.style.top = '';
-    
-    // Restaurar la posición del scroll
-    window.scrollTo(0, this.scrollYPosition);
-    
-    this.showPaymentDialog = false;
-    if (result) {
-      this.processPaymentFromDialog(result);
-    }
-  }
 
   private processPaymentFromDialog(paymentData: any): void {
     const sale: Sale = {
@@ -1053,7 +1055,7 @@ export class PosComponent implements OnInit, OnDestroy {
       taxAmount: this.cartTotals.taxAmount,
       discountAmount: 0,
       total: this.cartTotals.total,
-      paymentMethod: paymentData.method as 'cash' | 'card' | 'transfer',
+      paymentMethod: paymentData.method as 'cash' | 'card' | 'transfer' | 'bitcoin',
       paymentAmount: paymentData.amount,
       change: paymentData.change,
       cashierId: this.currentUser?.id || 0,
@@ -1073,6 +1075,11 @@ export class PosComponent implements OnInit, OnDestroy {
         // Mostrar información del cambio si es efectivo
         if (paymentData.method === 'cash' && paymentData.change > 0) {
           this.notificationService.info(`Cambio: $${paymentData.change.toFixed(2)}`);
+        }
+        
+        // Mostrar mensaje específico para Bitcoin
+        if (paymentData.method === 'bitcoin') {
+          this.notificationService.info('Pago con Bitcoin procesado exitosamente');
         }
         
         // Actualizar la venta con los datos del backend

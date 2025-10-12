@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { CartItem } from '../../../core/models/sale.model';
 
@@ -28,10 +29,6 @@ import { CartItem } from '../../../core/models/sale.model';
   styleUrls: ['./payment-dialog.component.scss']
 })
 export class PaymentDialogComponent implements OnInit, OnDestroy {
-  @Input() total: number = 0;
-  @Input() items: CartItem[] = [];
-  @Output() close = new EventEmitter<any>();
-
   paymentForm!: FormGroup;
   change = 0;
   cartTotals: {
@@ -42,12 +39,16 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<PaymentDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { total: number; items: CartItem[] }
+  ) {
     this.cartTotals = { subtotal: 0, taxAmount: 0, total: 0 };
   }
 
   ngOnInit(): void {
-    this.cartTotals = this.calculateTotalsFromItems(this.items);
+    this.cartTotals = this.calculateTotalsFromItems(this.data.items);
     this.initializeForm();
   }
 
@@ -83,6 +84,10 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
     const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
     
     if (paymentMethod === 'cash') {
+      // Para efectivo, permitir ingresar monto recibido
+      this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
+    } else if (paymentMethod === 'bitcoin') {
+      // Para Bitcoin, el monto es exacto en USD
       this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
     } else {
       // Para tarjeta y transferencia, el monto es exacto
@@ -98,7 +103,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
     if (paymentMethod === 'cash') {
       this.change = paymentAmount - this.cartTotals.total;
     } else {
-      // Para tarjeta y transferencia no hay cambio
+      // Para tarjeta, transferencia y Bitcoin no hay cambio
       this.change = 0;
     }
   }
@@ -110,7 +115,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
     if (paymentMethod === 'cash') {
       return paymentAmount >= this.cartTotals.total && paymentAmount > 0;
     }
-    // Para tarjeta y transferencia, debe ser el monto exacto
+    // Para tarjeta, transferencia y Bitcoin, debe ser el monto exacto
     return Math.abs(paymentAmount - this.cartTotals.total) < 0.01 && paymentAmount > 0;
   }
 
@@ -135,11 +140,11 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
       change: this.change
     };
 
-    this.close.emit(result);
+    this.dialogRef.close(result);
   }
 
   onCancel(): void {
-    this.close.emit(null);
+    this.dialogRef.close(null);
   }
 
   getAbsChange(): number {

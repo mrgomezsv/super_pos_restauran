@@ -1,5 +1,4 @@
-<div class="modal-overlay">
-  <div class="modal-container payment-modal" (click)="$event.stopPropagation()">
+<div class="payment-dialog-container">
     <!-- Header del Modal -->
     <div class="modal-header">
       <div class="header-content">
@@ -125,6 +124,12 @@
                   <span>Transferencia</span>
                 </div>
               </mat-option>
+              <mat-option value="bitcoin">
+                <div class="payment-option">
+                  <mat-icon>currency_bitcoin</mat-icon>
+                  <span>Bitcoin</span>
+                </div>
+              </mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -137,7 +142,11 @@
               formControlName="paymentAmount"
               placeholder="0.00">
             <span matPrefix>$&nbsp;</span>
-            <mat-hint>{{ paymentForm.get('paymentMethod')?.value === 'cash' ? 'Ingrese el monto que recibe del cliente' : 'Monto exacto de la venta' }}</mat-hint>
+            <mat-hint>
+              <span *ngIf="paymentForm.get('paymentMethod')?.value === 'cash'">Ingrese el monto que recibe del cliente</span>
+              <span *ngIf="paymentForm.get('paymentMethod')?.value === 'bitcoin'">Monto en USD para conversión a Bitcoin</span>
+              <span *ngIf="paymentForm.get('paymentMethod')?.value !== 'cash' && paymentForm.get('paymentMethod')?.value !== 'bitcoin'">Monto exacto de la venta</span>
+            </mat-hint>
           </mat-form-field>
           
           <button 
@@ -148,6 +157,22 @@
             <mat-icon>calculate</mat-icon>
             Monto Exacto
           </button>
+
+          <!-- Información de Bitcoin -->
+          <div class="bitcoin-info" *ngIf="paymentForm.get('paymentMethod')?.value === 'bitcoin'">
+            <mat-card class="bitcoin-card">
+              <mat-card-content>
+                <div class="bitcoin-details">
+                  <mat-icon class="bitcoin-icon">currency_bitcoin</mat-icon>
+                  <div class="bitcoin-text">
+                    <h4>Pago con Bitcoin</h4>
+                    <p>El cliente realizará el pago en Bitcoin equivalente a ${{ cartTotals.total | number:'1.2-2' }} USD</p>
+                    <p class="bitcoin-note">* La conversión se realizará al momento del pago</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
         </div>
 
         <!-- Cambio o Alerta -->
@@ -197,6 +222,5 @@
         Confirmar Pago
       </button>
     </div>
-  </div>
 </div>
 

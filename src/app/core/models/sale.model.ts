@@ -22,7 +22,7 @@ export interface Sale {
   taxAmount: number;
   discountAmount: number;
   total: number;
-  paymentMethod: 'cash' | 'card' | 'transfer';
+  paymentMethod: 'cash' | 'card' | 'transfer' | 'bitcoin';
   paymentAmount: number;
   change: number;
   cashierId: number;
@@ -32,7 +32,7 @@ export interface Sale {
 }
 
 export interface PaymentMethod {
-  type: 'cash' | 'card' | 'transfer';
+  type: 'cash' | 'card' | 'transfer' | 'bitcoin';
   amount: number;
 }
 
@@ -44,6 +44,7 @@ export interface SaleSummary {
     cash: number;
     card: number;
     transfer: number;
+    bitcoin: number;
   };
   salesByInvoiceType: {
     consumidor_final: number;
