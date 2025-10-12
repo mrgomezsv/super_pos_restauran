@@ -68,8 +68,11 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
       paymentAmount: [this.cartTotals.total, [Validators.required, Validators.min(0.01)]]
     });
 
+    console.log('Form initialized:', this.paymentForm.value);
+
     // Observar cambios en el método de pago
     this.paymentForm.get('paymentMethod')?.valueChanges.subscribe(() => {
+      console.log('Payment method changed in form');
       this.onPaymentMethodChange();
     });
 
@@ -147,6 +150,11 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     this.dialogRef.close(null);
+  }
+
+  // Método para debug - verificar si los clicks funcionan
+  testClick(): void {
+    console.log('Click detected on dropdown');
   }
 
   getAbsChange(): number {
