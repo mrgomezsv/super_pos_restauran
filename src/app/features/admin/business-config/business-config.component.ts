@@ -127,7 +127,33 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
       requireCustomerInfo: [false],
       
       // Configuración de impresión
-      printLogo: [false]
+      printLogo: [false],
+      logoPath: [''],
+      printQRCode: [false],
+      qrCodeUrl: [''],
+      
+      // Etiquetas del ticket
+      receiptTitle: ['FACTURA'],
+      dateLabel: ['FECHA:'],
+      generationDateLabel: ['FECHA GENERACIÓN:'],
+      generationCodeLabel: ['CÓDIGO DE GENERACIÓN:'],
+      receptionSealLabel: ['SELLO DE RECEPCIÓN:'],
+      controlNumberLabel: ['NÚMERO DE CONTROL:'],
+      transmissionLabel: ['TRANSMISIÓN:'],
+      modelLabel: ['MODELO:'],
+      invoiceNumberLabel: ['FACTURA N°:'],
+      cashierLabel: ['CAJERO:'],
+      customerLabel: ['CLIENTE:'],
+      recipientLabel: ['RECEPTOR:'],
+      duiLabel: ['DUI:'],
+      addressLabel: ['DIRECCIÓN:'],
+      subtotalLabel: ['SUBTOTAL:'],
+      taxLabel: ['IVA:'],
+      totalLabel: ['TOTAL:'],
+      paymentMethodLabel: ['MÉTODO DE PAGO:'],
+      cashReceivedLabel: ['EFECTIVO RECIBIDO:'],
+      cashReturnedLabel: ['EFECTIVO DEVUELTO:'],
+      observationsLabel: ['OBSERVACIONES:']
     });
   }
 
@@ -283,5 +309,46 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
       value = value.substring(0, 8);
     }
     this.businessForm.get('registrationNumber')?.setValue(value, { emitEvent: false });
+  }
+
+  private getDefaultTemplate(): TicketTemplate {
+    return {
+      header: {
+        businessName: 'Super POS',
+        commercialName: 'Super POS',
+        taxId: '0000-000000-000-0',
+        address: 'Calle Principal, Zona Centro',
+        phone: '0000-0000',
+        email: 'info@superpos.com'
+      },
+      footer: {
+        message: '¡Gracias por su compra!',
+        observations: '',
+        thankYouMessage: '¡Vuelva pronto!'
+      },
+      receipt: {
+        title: 'FACTURA',
+        dateLabel: 'FECHA:',
+        generationDateLabel: 'FECHA GENERACIÓN:',
+        generationCodeLabel: 'CÓDIGO DE GENERACIÓN:',
+        receptionSealLabel: 'SELLO DE RECEPCIÓN:',
+        controlNumberLabel: 'NÚMERO DE CONTROL:',
+        transmissionLabel: 'TRANSMISIÓN:',
+        modelLabel: 'MODELO:',
+        cashierLabel: 'CAJERO:',
+        invoiceNumberLabel: 'FACTURA N°:',
+        customerLabel: 'CLIENTE:',
+        recipientLabel: 'RECEPTOR:',
+        duiLabel: 'DUI:',
+        addressLabel: 'DIRECCIÓN:',
+        subtotalLabel: 'SUBTOTAL:',
+        taxLabel: 'IVA:',
+        totalLabel: 'TOTAL:',
+        paymentMethodLabel: 'MÉTODO DE PAGO:',
+        cashReceivedLabel: 'EFECTIVO RECIBIDO:',
+        cashReturnedLabel: 'EFECTIVO DEVUELTO:',
+        observationsLabel: 'OBSERVACIONES:'
+      }
+    };
   }
 }

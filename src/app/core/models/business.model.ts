@@ -36,6 +36,8 @@ export interface BusinessConfiguration {
   printerName?: string;
   printLogo: boolean;
   logoPath?: string;
+  printQRCode: boolean;
+  qrCodeUrl?: string;
   
   // Timestamps
   createdAt: Date;
@@ -67,6 +69,8 @@ export interface BusinessConfigurationCreate {
   printerName?: string;
   printLogo: boolean;
   logoPath?: string;
+  printQRCode: boolean;
+  qrCodeUrl?: string;
 }
 
 export interface BusinessConfigurationUpdate {
@@ -94,6 +98,8 @@ export interface BusinessConfigurationUpdate {
   printerName?: string;
   printLogo?: boolean;
   logoPath?: string;
+  printQRCode?: boolean;
+  qrCodeUrl?: string;
 }
 
 export interface TicketTemplate {
@@ -113,8 +119,24 @@ export interface TicketTemplate {
   receipt: {
     title: string;
     dateLabel: string;
+    generationDateLabel: string;
+    generationCodeLabel: string;
+    receptionSealLabel: string;
+    controlNumberLabel: string;
+    transmissionLabel: string;
+    modelLabel: string;
     cashierLabel: string;
     invoiceNumberLabel: string;
     customerLabel: string;
+    recipientLabel: string;
+    duiLabel: string;
+    addressLabel: string;
+    subtotalLabel: string;
+    taxLabel: string;
+    totalLabel: string;
+    paymentMethodLabel: string;
+    cashReceivedLabel: string;
+    cashReturnedLabel: string;
+    observationsLabel: string;
   };
 }

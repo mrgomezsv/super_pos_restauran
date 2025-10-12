@@ -222,6 +222,20 @@
                     <span matSuffix>%</span>
                     <mat-error>{{ getFieldError('defaultTaxRate') }}</mat-error>
                   </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>URL del Logo</mat-label>
+                    <input matInput formControlName="logoPath" 
+                           placeholder="https://ejemplo.com/logo.png">
+                    <mat-hint>URL completa del logo para mostrar en tickets</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>URL del Código QR</mat-label>
+                    <input matInput formControlName="qrCodeUrl" 
+                           placeholder="https://ejemplo.com/qr">
+                    <mat-hint>URL que se codificará en el código QR</mat-hint>
+                  </mat-form-field>
                 </div>
 
                 <mat-divider class="section-divider"></mat-divider>
@@ -238,7 +252,133 @@
                     <mat-checkbox formControlName="printLogo">
                       Imprimir logo en tickets
                     </mat-checkbox>
+                    <mat-checkbox formControlName="printQRCode">
+                      Imprimir código QR en tickets
+                    </mat-checkbox>
                   </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+        <!-- Etiquetas del Ticket -->
+        <mat-tab label="Etiquetas del Ticket">
+          <div class="tab-content">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>label</mat-icon>
+                  Personalización de Etiquetas
+                </mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Título del Ticket</mat-label>
+                    <input matInput formControlName="receiptTitle" placeholder="FACTURA">
+                    <mat-hint>Ej: FACTURA, RECIBO, COMPROBANTE</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Fecha</mat-label>
+                    <input matInput formControlName="dateLabel" placeholder="FECHA:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Fecha de Generación</mat-label>
+                    <input matInput formControlName="generationDateLabel" placeholder="FECHA GENERACIÓN:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Código de Generación</mat-label>
+                    <input matInput formControlName="generationCodeLabel" placeholder="CÓDIGO DE GENERACIÓN:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Sello de Recepción</mat-label>
+                    <input matInput formControlName="receptionSealLabel" placeholder="SELLO DE RECEPCIÓN:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Número de Control</mat-label>
+                    <input matInput formControlName="controlNumberLabel" placeholder="NÚMERO DE CONTROL:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Transmisión</mat-label>
+                    <input matInput formControlName="transmissionLabel" placeholder="TRANSMISIÓN:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Modelo</mat-label>
+                    <input matInput formControlName="modelLabel" placeholder="MODELO:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Número de Factura</mat-label>
+                    <input matInput formControlName="invoiceNumberLabel" placeholder="FACTURA N°:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Cajero</mat-label>
+                    <input matInput formControlName="cashierLabel" placeholder="CAJERO:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Cliente</mat-label>
+                    <input matInput formControlName="customerLabel" placeholder="CLIENTE:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Receptor</mat-label>
+                    <input matInput formControlName="recipientLabel" placeholder="RECEPTOR:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de DUI</mat-label>
+                    <input matInput formControlName="duiLabel" placeholder="DUI:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Dirección</mat-label>
+                    <input matInput formControlName="addressLabel" placeholder="DIRECCIÓN:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Subtotal</mat-label>
+                    <input matInput formControlName="subtotalLabel" placeholder="SUBTOTAL:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Impuesto</mat-label>
+                    <input matInput formControlName="taxLabel" placeholder="IVA:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Total</mat-label>
+                    <input matInput formControlName="totalLabel" placeholder="TOTAL:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Método de Pago</mat-label>
+                    <input matInput formControlName="paymentMethodLabel" placeholder="MÉTODO DE PAGO:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Efectivo Recibido</mat-label>
+                    <input matInput formControlName="cashReceivedLabel" placeholder="EFECTIVO RECIBIDO:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Etiqueta de Efectivo Devuelto</mat-label>
+                    <input matInput formControlName="cashReturnedLabel" placeholder="EFECTIVO DEVUELTO:">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Etiqueta de Observaciones</mat-label>
+                    <input matInput formControlName="observationsLabel" placeholder="OBSERVACIONES:">
+                  </mat-form-field>
                 </div>
               </mat-card-content>
             </mat-card>
