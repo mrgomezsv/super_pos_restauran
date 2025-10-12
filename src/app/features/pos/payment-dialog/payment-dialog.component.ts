@@ -64,7 +64,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
       customerEmail: ['', [Validators.email]],
       invoiceType: ['consumidor_final', Validators.required],
       paymentMethod: ['cash', Validators.required],
-      paymentAmount: [this.cartTotals.total, [Validators.required, Validators.min(0.01)]]
+      paymentAmount: ['', [Validators.required, Validators.min(0.01)]]
     });
 
     // Observar cambios en el método de pago
@@ -77,15 +77,16 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
       this.calculateChange();
     });
 
-    this.calculateChange();
+    // Inicializar con el método de pago por defecto
+    this.onPaymentMethodChange();
   }
 
   onPaymentMethodChange(): void {
     const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
     
     if (paymentMethod === 'cash') {
-      // Para efectivo, permitir ingresar monto recibido
-      this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
+      // Para efectivo, dejar el campo en blanco para que el usuario ingrese el monto recibido
+      this.paymentForm.patchValue({ paymentAmount: '' });
     } else if (paymentMethod === 'bitcoin') {
       // Para Bitcoin, el monto es exacto en USD
       this.paymentForm.patchValue({ paymentAmount: this.cartTotals.total });
@@ -98,7 +99,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   calculateChange(): void {
     const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
-    const paymentAmount = this.paymentForm.get('paymentAmount')?.value || 0;
+    const paymentAmount = parseFloat(this.paymentForm.get('paymentAmount')?.value) || 0;
 
     if (paymentMethod === 'cash') {
       this.change = paymentAmount - this.cartTotals.total;
@@ -110,7 +111,7 @@ export class PaymentDialogComponent implements OnInit, OnDestroy {
 
   canConfirm(): boolean {
     const paymentMethod = this.paymentForm.get('paymentMethod')?.value;
-    const paymentAmount = this.paymentForm.get('paymentAmount')?.value || 0;
+    const paymentAmount = parseFloat(this.paymentForm.get('paymentAmount')?.value) || 0;
 
     if (paymentMethod === 'cash') {
       return paymentAmount >= this.cartTotals.total && paymentAmount > 0;
