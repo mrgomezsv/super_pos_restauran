@@ -262,8 +262,8 @@
                 color="accent" 
                 (click)="previewTicket()"
                 [disabled]="isSaving">
-          <mat-icon>preview</mat-icon>
-          Vista Previa
+          <mat-icon>{{ showPreview ? 'visibility_off' : 'preview' }}</mat-icon>
+          {{ showPreview ? 'Ocultar Vista Previa' : 'Vista Previa' }}
         </button>
 
         <button type="submit" 

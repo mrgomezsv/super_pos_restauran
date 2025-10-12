@@ -180,8 +180,22 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   }
 
   previewTicket(): void {
-    // Implementar vista previa del ticket
-    this.toastr.info('Vista previa del ticket en desarrollo');
+    if (this.businessForm.valid) {
+      // Actualizar la configuración actual con los datos del formulario
+      this.currentConfig = { ...this.currentConfig, ...this.businessForm.value };
+      
+      // Mostrar/ocultar la vista previa
+      this.showPreview = !this.showPreview;
+      
+      if (this.showPreview) {
+        this.toastr.success('Vista previa del ticket activada');
+      } else {
+        this.toastr.info('Vista previa del ticket oculta');
+      }
+    } else {
+      this.markFormGroupTouched();
+      this.toastr.warning('Por favor, complete todos los campos requeridos antes de ver la vista previa');
+    }
   }
 
   private markFormGroupTouched(): void {
