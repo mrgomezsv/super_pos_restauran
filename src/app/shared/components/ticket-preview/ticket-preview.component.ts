@@ -90,6 +90,9 @@ export class TicketPreviewComponent implements OnInit {
       allowNegativeStock: false,
       requireCustomerInfo: false,
       printLogo: false,
+      logoPath: '',
+      printQRCode: false,
+      qrCodeUrl: '',
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -113,9 +116,25 @@ export class TicketPreviewComponent implements OnInit {
       receipt: {
         title: 'FACTURA',
         dateLabel: 'FECHA:',
+        generationDateLabel: 'FECHA GENERACIÓN:',
+        generationCodeLabel: 'CÓDIGO DE GENERACIÓN:',
+        receptionSealLabel: 'SELLO DE RECEPCIÓN:',
+        controlNumberLabel: 'NÚMERO DE CONTROL:',
+        transmissionLabel: 'TRANSMISIÓN:',
+        modelLabel: 'MODELO:',
         cashierLabel: 'CAJERO:',
         invoiceNumberLabel: 'FACTURA N°:',
-        customerLabel: 'CLIENTE:'
+        customerLabel: 'CLIENTE:',
+        recipientLabel: 'RECEPTOR:',
+        duiLabel: 'DUI:',
+        addressLabel: 'DIRECCIÓN:',
+        subtotalLabel: 'SUBTOTAL:',
+        taxLabel: 'IVA:',
+        totalLabel: 'TOTAL:',
+        paymentMethodLabel: 'MÉTODO DE PAGO:',
+        cashReceivedLabel: 'EFECTIVO RECIBIDO:',
+        cashReturnedLabel: 'EFECTIVO DEVUELTO:',
+        observationsLabel: 'OBSERVACIONES:'
       }
     };
   }
