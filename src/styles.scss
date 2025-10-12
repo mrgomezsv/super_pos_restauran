@@ -744,12 +744,54 @@ a {
 
 // Asegurar que el backdrop cubra toda la pantalla
 ::ng-deep .cdk-overlay-backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background-color: rgba(255, 255, 255, 0.1) !important; // Fondo muy sutil
+  backdrop-filter: blur(3px); // Desenfoque leve
+  pointer-events: all; // Bloquear interacciones fuera del modal
 }
 
 // Estilos para el backdrop personalizado
 ::ng-deep .custom-backdrop {
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
+  background-color: rgba(255, 255, 255, 0.1) !important; // Fondo muy sutil
+  backdrop-filter: blur(3px); // Desenfoque leve
+  pointer-events: all; // Bloquear interacciones fuera del modal
+}
+
+// Mejorar todos los modales de Angular Material
+::ng-deep .mat-mdc-dialog-container {
+  background: #ffffff !important; // Fondo blanco sólido
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden !important;
+  pointer-events: auto !important; // Permitir interacciones dentro del modal
+}
+
+::ng-deep .mat-mdc-dialog-surface {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+// Mejorar los headers de los modales
+::ng-deep .mat-mdc-dialog-title {
+  background: linear-gradient(135deg, #017E84, #20C997) !important;
+  color: white !important;
+  padding: 24px !important;
+  margin: 0 !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+// Mejorar el contenido de los modales
+::ng-deep .mat-mdc-dialog-content {
+  background: #ffffff !important;
+  padding: 24px !important;
+  color: #2d3748 !important;
+}
+
+// Mejorar las acciones de los modales
+::ng-deep .mat-mdc-dialog-actions {
+  background: #f5f7fa !important;
+  padding: 16px 24px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  border-radius: 0 0 16px 16px !important;
 }
