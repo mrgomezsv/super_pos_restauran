@@ -238,14 +238,35 @@ export class PosComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(product => product.category === this.selectedCategory);
     }
     
-    // Filtrar por búsqueda
+    // Filtrar por búsqueda con mejor lógica
     if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(product =>
+      const term = this.searchTerm.toLowerCase().trim();
+      
+      // Priorizar búsquedas por código exacto primero
+      const exactCodeMatches = filtered.filter(product => 
+        product.code.toLowerCase() === term
+      );
+      
+      // Luego búsquedas que empiecen con el término
+      const startsWithMatches = filtered.filter(product =>
+        product.code.toLowerCase().startsWith(term) ||
+        product.name.toLowerCase().startsWith(term)
+      );
+      
+      // Finalmente búsquedas que contengan el término
+      const containsMatches = filtered.filter(product =>
         product.code.toLowerCase().includes(term) ||
         product.name.toLowerCase().includes(term) ||
         (product.barcode && product.barcode.toLowerCase().includes(term)) ||
         (product.description && product.description.toLowerCase().includes(term))
+      );
+      
+      // Combinar resultados manteniendo el orden de prioridad
+      const allMatches = [...exactCodeMatches, ...startsWithMatches, ...containsMatches];
+      
+      // Eliminar duplicados manteniendo el orden
+      filtered = allMatches.filter((product, index, self) => 
+        index === self.findIndex(p => p.id === product.id)
       );
     }
     
@@ -253,7 +274,16 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   onSearchInput(): void {
-    this.searchSubject.next(this.searchTerm);
+    // Búsqueda inmediata sin debounce para mejor experiencia de usuario
+    this.filterProducts();
+  }
+
+  // Método para resaltar coincidencias en el texto
+  highlightMatch(text: string, searchTerm: string): string {
+    if (!searchTerm.trim()) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 
   searchProducts(): void {
@@ -269,20 +299,28 @@ export class PosComponent implements OnInit, OnDestroy {
       if (/^\d{8,}$/.test(searchTerm)) {
         this.searchByBarcode(searchTerm);
       } else {
+        // Para búsquedas normales, simplemente filtrar productos
         this.searchProducts();
       }
     }
   }
 
   private searchByBarcode(barcode: string): void {
-    // Simular búsqueda por código de barras
+    // Buscar por código de barras exacto
     const product = this.products.find(p => p.barcode === barcode);
     if (product) {
       this.addToCart(product);
       this.searchTerm = '';
     } else {
-      this.notificationService.barcodeNotFound(barcode);
-      this.playSound('error');
+      // Si no encuentra por código de barras, buscar por código de producto
+      const productByCode = this.products.find(p => p.code === barcode);
+      if (productByCode) {
+        this.addToCart(productByCode);
+        this.searchTerm = '';
+      } else {
+        // Si no encuentra coincidencia exacta, mostrar búsqueda normal
+        this.searchProducts();
+      }
     }
   }
 

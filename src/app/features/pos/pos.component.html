@@ -107,12 +107,16 @@
               <mat-icon>{{ getProductIcon(product.category) }}</mat-icon>
             </div>
             <div class="product-info">
-              <h4 class="product-name">{{ product.name }}</h4>
-              <p class="product-code">{{ product.code }}</p>
-              <div class="product-price">${{ getDisplayPrice(product) | number:'1.2-2' }}</div>
-              <div class="product-stock" [class]="getStockClass(product.stock, product.minStock)">
-                <mat-icon>{{ getStockIcon(product.stock, product.minStock) }}</mat-icon>
-                <span>{{ product.stock }} unidades</span>
+              <div class="product-header">
+                <h4 class="product-name" [innerHTML]="highlightMatch(product.name, searchTerm)"></h4>
+                <div class="product-code-badge" [innerHTML]="highlightMatch(product.code, searchTerm)"></div>
+              </div>
+              <div class="product-details">
+                <div class="product-price">${{ getDisplayPrice(product) | number:'1.2-2' }}</div>
+                <div class="product-stock" [class]="getStockClass(product.stock, product.minStock)">
+                  <mat-icon>{{ getStockIcon(product.stock, product.minStock) }}</mat-icon>
+                  <span>{{ product.stock }} unidades</span>
+                </div>
               </div>
             </div>
           </div>
@@ -190,7 +194,7 @@
           <span>${{ cartTotals.subtotal | number:'1.2-2' }}</span>
         </div>
         <div class="total-row">
-          <span>Impuestos (13%):</span>
+          <span>IVA (13%):</span>
           <span>${{ cartTotals.taxAmount | number:'1.2-2' }}</span>
         </div>
         <div class="total-row final">
