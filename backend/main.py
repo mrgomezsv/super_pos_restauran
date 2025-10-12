@@ -411,10 +411,16 @@ async def create_sale(sale_data: SaleCreate):
     # Calcular totales
     totals = calculate_totals(sale_data.items)
     
+    # Extraer datos sin los campos que vamos a sobrescribir
+    sale_dict = sale_data.model_dump()
+    sale_dict.pop('subtotal', None)
+    sale_dict.pop('taxAmount', None)
+    sale_dict.pop('total', None)
+    
     new_sale = Sale(
         id=next_sale_id,
         invoiceNumber=generate_invoice_number(sale_data.invoiceType),
-        **sale_data.model_dump(),
+        **sale_dict,
         subtotal=totals["subtotal"],
         taxAmount=totals["taxAmount"],
         total=totals["total"],
