@@ -1,0 +1,115 @@
+<div class="receipt-container">
+  <div class="receipt-paper">
+    <!-- Header del Ticket -->
+    <div class="receipt-header">
+      <div class="business-info">
+        <h2 class="business-name">{{ businessConfig?.businessName || 'Super POS' }}</h2>
+        <p class="commercial-name">{{ businessConfig?.commercialName || 'Super POS' }}</p>
+        <div class="tax-info">
+          <p><strong>NIT:</strong> {{ businessConfig?.taxId || 'N/A' }}</p>
+          <p><strong>NRC:</strong> {{ businessConfig?.registrationNumber || 'N/A' }}</p>
+        </div>
+        <div class="address-info">
+          <p>{{ businessConfig?.address || 'N/A' }}</p>
+          <p>{{ businessConfig?.city || 'N/A' }}, {{ businessConfig?.state || 'N/A' }}</p>
+          <p>{{ businessConfig?.country || 'N/A' }}</p>
+        </div>
+        <div class="contact-info">
+          <p><strong>Tel:</strong> {{ businessConfig?.phone || 'N/A' }}</p>
+          <p><strong>Email:</strong> {{ businessConfig?.email || 'N/A' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información del Cliente -->
+    <div class="customer-info" *ngIf="sale?.customerName">
+      <p><strong>{{ ticketTemplate?.receipt?.customerLabel || 'CLIENTE:' }}</strong> {{ sale?.customerName }}</p>
+      <p *ngIf="sale?.customerDocument"><strong>DUI:</strong> {{ sale?.customerDocument }}</p>
+    </div>
+
+    <!-- Detalles de la Venta -->
+    <div class="sale-details">
+      <h3 class="receipt-title">{{ ticketTemplate?.receipt?.title || 'FACTURA' }}</h3>
+      
+      <div class="sale-info">
+        <p><strong>{{ ticketTemplate?.receipt?.dateLabel || 'FECHA:' }}</strong> {{ formatDate(sale?.createdAt ?? getCurrentDate()) }}</p>
+        <p><strong>{{ ticketTemplate?.receipt?.invoiceNumberLabel || 'FACTURA N°:' }}</strong> {{ sale?.invoiceNumber ?? 'N/A' }}</p>
+        <p><strong>{{ ticketTemplate?.receipt?.cashierLabel || 'CAJERO:' }}</strong> {{ sale?.cashierName ?? 'N/A' }}</p>
+      </div>
+
+      <!-- Tabla de Productos -->
+      <div class="products-table" *ngIf="sale?.items">
+        <div class="table-header">
+          <span class="col-quantity">CANT.</span>
+          <span class="col-description">DESCRIPCIÓN</span>
+          <span class="col-price">PRECIO</span>
+          <span class="col-total">TOTAL</span>
+        </div>
+        
+        <div class="table-body">
+          <div class="product-row" *ngFor="let item of sale?.items">
+            <span class="col-quantity">{{ item.quantity }}</span>
+            <span class="col-description">{{ item.productName }}</span>
+            <span class="col-price">{{ formatCurrency(item.unitPrice) }}</span>
+            <span class="col-total">{{ formatCurrency(item.total) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div class="totals-section" *ngIf="sale">
+        <div class="total-row">
+          <span><strong>SUBTOTAL:</strong></span>
+          <span><strong>{{ formatCurrency(sale.subtotal) }}</strong></span>
+        </div>
+        <div class="total-row" *ngIf="sale?.taxAmount && sale.taxAmount > 0">
+          <span><strong>IVA:</strong></span>
+          <span><strong>{{ formatCurrency(sale.taxAmount) }}</strong></span>
+        </div>
+        <div class="total-row" *ngIf="sale?.discountAmount && sale.discountAmount > 0">
+          <span><strong>DESCUENTO:</strong></span>
+          <span><strong>-{{ formatCurrency(sale.discountAmount) }}</strong></span>
+        </div>
+        <div class="total-row highlight">
+          <span><strong>TOTAL:</strong></span>
+          <span><strong>{{ formatCurrency(sale.total) }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Información de Pago -->
+      <div class="payment-info" *ngIf="sale">
+        <p><strong>MÉTODO DE PAGO:</strong> {{ getPaymentMethodLabel(sale.paymentMethod) }}</p>
+        <div class="payment-details" *ngIf="sale.paymentMethod === 'cash'">
+          <div class="payment-row">
+            <span><strong>EFECTIVO RECIBIDO:</strong></span>
+            <span><strong>{{ formatCurrency(sale.paymentAmount) }}</strong></span>
+          </div>
+          <div class="payment-row" *ngIf="sale?.change && sale.change > 0">
+            <span><strong>EFECTIVO DEVUELTO:</strong></span>
+            <span><strong>{{ formatCurrency(sale.change) }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="observations" *ngIf="businessConfig?.defaultObservations">
+        <p><strong>OBSERVACIONES:</strong></p>
+        <p>{{ businessConfig?.defaultObservations }}</p>
+      </div>
+    </div>
+
+    <!-- Footer del Ticket -->
+    <div class="receipt-footer">
+      <p class="footer-message">{{ businessConfig?.receiptFooter || '¡Gracias por su compra!' }}</p>
+      <p class="thank-you">{{ ticketTemplate?.footer?.thankYouMessage || '¡Vuelva pronto!' }}</p>
+    </div>
+  </div>
+
+  <!-- Botones de acción (solo visibles en pantalla) -->
+  <div class="receipt-actions no-print">
+    <button mat-raised-button color="primary" (click)="printReceipt()">
+      <mat-icon>print</mat-icon>
+      Imprimir Ticket
+    </button>
+  </div>
+</div>

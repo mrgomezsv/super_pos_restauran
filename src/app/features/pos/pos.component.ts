@@ -18,6 +18,7 @@ import { Product } from '../../core/models/product.model';
 import { CartItem, Sale } from '../../core/models/sale.model';
 import { User } from '../../core/models/user.model';
 import { PaymentDialogComponent } from './payment-dialog/payment-dialog.component';
+import { ReceiptModalComponent } from '../../shared/components/receipt-modal/receipt-modal.component';
 
 interface CartTotals {
   subtotal: number;
@@ -984,6 +985,12 @@ export class PosComponent implements OnInit, OnDestroy {
           this.notificationService.info(`Cambio: $${paymentData.change.toFixed(2)}`);
         }
         
+        // Actualizar la venta con los datos del backend
+        const completedSale = { ...sale, ...response };
+        
+        // Mostrar el ticket
+        this.showReceiptModal(completedSale);
+        
         this.clearCart();
         this.loadProducts(); // Recargar productos para actualizar stock
       },
@@ -992,6 +999,21 @@ export class PosComponent implements OnInit, OnDestroy {
         this.notificationService.error('Error al procesar la venta');
         this.playSound('error');
       }
+    });
+  }
+
+  private showReceiptModal(sale: Sale): void {
+    const dialogRef = this.dialog.open(ReceiptModalComponent, {
+      width: '90vw',
+      maxWidth: '800px',
+      maxHeight: '90vh',
+      data: { sale },
+      disableClose: false,
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // El modal se cerró, continuar con el flujo normal
     });
   }
 }
