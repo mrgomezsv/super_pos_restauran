@@ -108,12 +108,87 @@
         <div class="nav-section" *ngIf="currentUser?.role === 'admin'">
           <h3 class="nav-section-title">Administración</h3>
           <ul class="nav-list">
+            <!-- Gestión de Personal -->
             <li class="nav-item">
               <a routerLink="/users" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>people</mat-icon>
                 </div>
                 <span class="nav-text">Usuarios</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <!-- Configuración del Sistema -->
+            <li class="nav-item">
+              <a routerLink="/admin/categories" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>category</mat-icon>
+                </div>
+                <span class="nav-text">Categorías</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <li class="nav-item">
+              <a routerLink="/admin/suppliers" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>local_shipping</mat-icon>
+                </div>
+                <span class="nav-text">Proveedores</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <!-- Gestión Financiera -->
+            <li class="nav-item">
+              <a routerLink="/admin/cash-register" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>account_balance_wallet</mat-icon>
+                </div>
+                <span class="nav-text">Caja Registradora</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <li class="nav-item">
+              <a routerLink="/admin/discounts" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>local_offer</mat-icon>
+                </div>
+                <span class="nav-text">Promociones</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <!-- Control y Monitoreo -->
+            <li class="nav-item">
+              <a routerLink="/admin/inventory-alerts" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>warning</mat-icon>
+                </div>
+                <span class="nav-text">Alertas Stock</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <li class="nav-item">
+              <a routerLink="/admin/audit-logs" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>history</mat-icon>
+                </div>
+                <span class="nav-text">Bitácora</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <!-- Configuración General -->
+            <li class="nav-item">
+              <a routerLink="/admin/settings" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>settings</mat-icon>
+                </div>
+                <span class="nav-text">Configuración</span>
                 <div class="nav-indicator"></div>
               </a>
             </li>
