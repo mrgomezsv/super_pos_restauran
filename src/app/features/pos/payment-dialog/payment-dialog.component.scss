@@ -235,6 +235,304 @@
   }
 }
 
+// Botones de monto rápido
+.quick-amount-section {
+  margin-top: var(--spacing-lg);
+  
+  .quick-amount-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-gray);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .quick-amounts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: var(--spacing-sm);
+    
+    .quick-amount-btn {
+      padding: var(--spacing-md);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      background: var(--surface-color);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: var(--font-size-base);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.2), transparent);
+        transition: left 0.4s ease;
+      }
+      
+      &:hover {
+        border-color: #4caf50;
+        background: rgba(76, 175, 80, 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        
+        &::before {
+          left: 100%;
+        }
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+      
+      &.selected {
+        border-color: #4caf50;
+        background: linear-gradient(135deg, #4caf50, #66bb6a);
+        color: white;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      }
+    }
+  }
+}
+
+// Validaciones visuales
+.validation-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.875rem;
+  margin-top: var(--spacing-sm);
+  animation: slideDown 0.3s ease;
+  
+  &.success {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+    border-left: 3px solid #4caf50;
+    
+    mat-icon {
+      color: #4caf50;
+    }
+  }
+  
+  &.warning {
+    background: rgba(255, 152, 0, 0.1);
+    color: #ff9800;
+    border-left: 3px solid #ff9800;
+    
+    mat-icon {
+      color: #ff9800;
+    }
+  }
+  
+  &.error {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border-left: 3px solid #f44336;
+    
+    mat-icon {
+      color: #f44336;
+    }
+  }
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Indicador de progreso del pago
+.payment-progress {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--surface-alt);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  
+  .progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: var(--spacing-md);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--border-color);
+      z-index: 0;
+    }
+    
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-xs);
+      position: relative;
+      z-index: 1;
+      background: var(--surface-color);
+      padding: 0 var(--spacing-sm);
+      
+      .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--border-color);
+        background: var(--surface-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-gray);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        
+        mat-icon {
+          font-size: 20px;
+        }
+      }
+      
+      .step-label {
+        font-size: 0.75rem;
+        color: var(--text-gray);
+        text-align: center;
+      }
+      
+      &.active {
+        .step-circle {
+          border-color: var(--primary);
+          background: var(--primary);
+          color: white;
+          box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
+        }
+        
+        .step-label {
+          color: var(--primary);
+          font-weight: 600;
+        }
+      }
+      
+      &.completed {
+        .step-circle {
+          border-color: #4caf50;
+          background: #4caf50;
+          color: white;
+        }
+        
+        .step-label {
+          color: #4caf50;
+        }
+      }
+    }
+  }
+}
+
+// Calculadora de propinas (opcional)
+.tip-calculator {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--surface-alt);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+  
+  .tip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    
+    h4 {
+      margin: 0;
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .tip-toggle {
+      cursor: pointer;
+      color: var(--primary);
+      
+      mat-icon {
+        transition: transform 0.3s ease;
+      }
+      
+      &.expanded mat-icon {
+        transform: rotate(180deg);
+      }
+    }
+  }
+  
+  .tip-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    
+    .tip-btn {
+      padding: var(--spacing-md);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius-sm);
+      background: var(--surface-color);
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        border-color: var(--primary);
+        background: rgba(var(--primary-rgb), 0.05);
+      }
+      
+      &.selected {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: white;
+      }
+    }
+  }
+  
+  .tip-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    
+    span {
+      font-weight: 600;
+      
+      &.tip-amount {
+        color: #4caf50;
+        font-size: var(--font-size-xl);
+      }
+    }
+  }
+}
+
 // Sección de Cambio
 .change-section {
   margin-top: var(--spacing-lg);
