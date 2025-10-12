@@ -72,6 +72,13 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   openUserDialog(user?: User): void {
+    // Guardar la posición actual del scroll
+    const scrollY = window.scrollY;
+    
+    // Agregar clase al body para prevenir layout shift
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollY}px`;
+    
     const dialogRef = this.dialog.open(UserDialogComponent, {
       width: '600px',
       maxWidth: '90vw',
@@ -84,6 +91,13 @@ export class UsersComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(result => {
+      // Remover clase del body al cerrar el modal
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      
+      // Restaurar la posición del scroll
+      window.scrollTo(0, scrollY);
+      
       if (result) {
         this.loadUsers();
       }

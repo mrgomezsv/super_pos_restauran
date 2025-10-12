@@ -736,6 +736,32 @@ a {
   }
 }
 
+// SOLUCIÓN DEFINITIVA PARA EL SCROLL JUMPING EN MODALES
+// Mantener el espacio del scrollbar siempre visible
+html {
+  overflow-y: scroll; // Forzar scrollbar siempre visible
+  overflow-x: hidden;
+}
+
+body {
+  // Prevenir que el body agregue padding cuando se abre un modal
+  &.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    padding-right: 0 !important;
+  }
+}
+
+// Prevenir que Angular Material agregue estilos que causen layout shift
+::ng-deep {
+  .cdk-global-scrollblock {
+    position: static !important;
+    width: auto !important;
+    overflow: hidden !important;
+  }
+}
+
 // Centrado del modal en la pantalla - Angular Material lo hace automáticamente
 ::ng-deep .cdk-overlay-pane {
   max-width: 90vw !important;

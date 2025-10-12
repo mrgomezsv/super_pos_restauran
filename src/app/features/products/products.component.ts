@@ -129,13 +129,28 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   showProductDialog = false;
   selectedProduct: Product | null = null;
+  private scrollYPosition = 0;
 
   openProductDialog(product?: Product): void {
+    // Guardar la posición actual del scroll
+    this.scrollYPosition = window.scrollY;
+    
+    // Agregar clase al body para prevenir layout shift
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${this.scrollYPosition}px`;
+    
     this.selectedProduct = product || null;
     this.showProductDialog = true;
   }
 
   closeProductDialog(): void {
+    // Remover clase del body al cerrar el modal
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    
+    // Restaurar la posición del scroll
+    window.scrollTo(0, this.scrollYPosition);
+    
     this.showProductDialog = false;
     this.selectedProduct = null;
   }

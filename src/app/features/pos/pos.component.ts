@@ -917,16 +917,32 @@ export class PosComponent implements OnInit, OnDestroy {
     return paymentMethod?.name || method;
   }
 
+  private scrollYPosition = 0;
+
   openPaymentDialog(): void {
     if (this.cartItems.length === 0) {
       this.toastr.warning('Agrega productos al carrito primero');
       return;
     }
 
+    // Guardar la posición actual del scroll
+    this.scrollYPosition = window.scrollY;
+    
+    // Agregar clase al body para prevenir layout shift
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${this.scrollYPosition}px`;
+    
     this.showPaymentDialog = true;
   }
 
   closePaymentDialog(result?: any): void {
+    // Remover clase del body al cerrar el modal
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    
+    // Restaurar la posición del scroll
+    window.scrollTo(0, this.scrollYPosition);
+    
     this.showPaymentDialog = false;
     if (result) {
       this.processPaymentFromDialog(result);
