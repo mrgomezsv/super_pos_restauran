@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -48,6 +48,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
   isLoading = true;
   filtersForm: FormGroup;
   private destroy$ = new Subject<void>();
+  
+  // Dropdown states
+  isCategoryDropdownOpen = false;
+  isStatusDropdownOpen = false;
 
   constructor(
     private productService: ProductService,
@@ -190,6 +194,58 @@ export class ProductsComponent implements OnInit, OnDestroy {
       return 'stock-normal';
     } else {
       return 'stock-high';
+    }
+  }
+
+  // Dropdown methods for Category
+  toggleCategoryDropdown(): void {
+    this.isCategoryDropdownOpen = !this.isCategoryDropdownOpen;
+    this.isStatusDropdownOpen = false; // Close other dropdown
+  }
+
+  selectCategory(value: string): void {
+    this.filtersForm.get('category')?.setValue(value);
+    this.isCategoryDropdownOpen = false;
+  }
+
+  getCategoryDisplayValue(): string {
+    const category = this.filtersForm.get('category')?.value;
+    if (!category) {
+      return 'Todas las categorías';
+    }
+    return category;
+  }
+
+  // Dropdown methods for Status
+  toggleStatusDropdown(): void {
+    this.isStatusDropdownOpen = !this.isStatusDropdownOpen;
+    this.isCategoryDropdownOpen = false; // Close other dropdown
+  }
+
+  selectStatus(value: string | boolean): void {
+    this.filtersForm.get('isActive')?.setValue(value);
+    this.isStatusDropdownOpen = false;
+  }
+
+  getStatusDisplayValue(): string {
+    const status = this.filtersForm.get('isActive')?.value;
+    if (status === '') {
+      return 'Todos los estados';
+    } else if (status === true) {
+      return 'Productos Activos';
+    } else if (status === false) {
+      return 'Productos Inactivos';
+    }
+    return 'Todos los estados';
+  }
+
+  // Cerrar dropdowns cuando se hace clic fuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select-field')) {
+      this.isCategoryDropdownOpen = false;
+      this.isStatusDropdownOpen = false;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -46,6 +46,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
   isLoading = false;
   filterForm: FormGroup;
   private destroy$ = new Subject<void>();
+  
+  // Dropdown states
+  isPaymentMethodDropdownOpen = false;
 
   constructor(
     private saleService: SaleService,
@@ -138,6 +141,50 @@ export class ReportsComponent implements OnInit, OnDestroy {
         return 'Transferencia';
       default:
         return paymentMethod;
+    }
+  }
+
+
+  getStartDateDisplayValue(): string {
+    const date = this.filterForm.get('startDate')?.value;
+    if (!date) {
+      return 'Seleccionar fecha inicio';
+    }
+    return new Date(date).toLocaleDateString('es-ES');
+  }
+
+  getEndDateDisplayValue(): string {
+    const date = this.filterForm.get('endDate')?.value;
+    if (!date) {
+      return 'Seleccionar fecha fin';
+    }
+    return new Date(date).toLocaleDateString('es-ES');
+  }
+
+  // Payment method dropdown methods
+  togglePaymentMethodDropdown(): void {
+    this.isPaymentMethodDropdownOpen = !this.isPaymentMethodDropdownOpen;
+  }
+
+  selectPaymentMethod(value: string): void {
+    this.filterForm.get('paymentMethod')?.setValue(value);
+    this.isPaymentMethodDropdownOpen = false;
+  }
+
+  getPaymentMethodDisplayValue(): string {
+    const method = this.filterForm.get('paymentMethod')?.value;
+    if (!method) {
+      return 'Todos los métodos';
+    }
+    return this.getPaymentMethodLabel(method);
+  }
+
+  // Cerrar dropdowns cuando se hace clic fuera
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select-field')) {
+      this.isPaymentMethodDropdownOpen = false;
     }
   }
 }

@@ -208,6 +208,195 @@ h1 {
   }
 }
 
+// Estilos para campos de fecha personalizados
+.custom-date-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+
+  .custom-date-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: var(--spacing-sm);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #017E84;
+    }
+  }
+
+  .date-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .custom-date-display {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333;
+    font-size: 16px;
+    min-height: 48px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &:hover {
+      border-color: #017E84;
+      box-shadow: 0 2px 8px rgba(1, 126, 132, 0.1);
+    }
+
+    .date-value {
+      flex: 1;
+      color: #333;
+      font-weight: 500;
+      
+      &:empty::before {
+        content: 'Seleccionar fecha';
+        color: #a0aec0;
+        font-style: italic;
+      }
+    }
+
+    .date-icon {
+      color: #666;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Estilos para dropdown personalizado
+.custom-select-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+
+  .custom-select-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: var(--spacing-sm);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #017E84;
+    }
+  }
+
+  .select-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .custom-select-display {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333;
+    font-size: 16px;
+    min-height: 48px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &:hover {
+      border-color: #017E84;
+      box-shadow: 0 2px 8px rgba(1, 126, 132, 0.1);
+    }
+
+    .select-value {
+      flex: 1;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      font-weight: 500;
+    }
+
+    .select-arrow {
+      color: #666;
+      font-size: 12px;
+      transition: transform 0.3s ease;
+      
+      &.open {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .custom-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 1000;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    margin-top: 4px;
+
+    &.open {
+      max-height: 200px;
+      border: 1px solid #017E84;
+    }
+
+    .dropdown-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      color: #333;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      min-height: 48px;
+
+      &:hover {
+        background: rgba(1, 126, 132, 0.1);
+      }
+
+      &.selected {
+        background: rgba(1, 126, 132, 0.15);
+        color: #017E84;
+        font-weight: 600;
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}
+
 // Botón de generar reporte mejorado
 .generate-btn {
   background: linear-gradient(135deg, #017E84, #20C997) !important;

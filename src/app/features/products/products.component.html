@@ -44,21 +44,32 @@
               <mat-icon>category</mat-icon>
               Categoría
             </label>
-            <div class="select-container">
-              <mat-select formControlName="category" class="category-select">
-                <mat-option value="">
-                  <div class="option-content">
+            <div class="custom-select-field">
+              <div class="select-wrapper">
+                <div 
+                  class="custom-select-display"
+                  (click)="toggleCategoryDropdown()">
+                  <span class="select-value">{{ getCategoryDisplayValue() }}</span>
+                  <span class="select-arrow" [class.open]="isCategoryDropdownOpen">▼</span>
+                </div>
+                <div class="custom-dropdown" [class.open]="isCategoryDropdownOpen">
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('category')?.value === ''"
+                    (click)="selectCategory('')">
                     <mat-icon>apps</mat-icon>
                     <span>Todas las categorías</span>
                   </div>
-                </mat-option>
-                <mat-option *ngFor="let category of categories" [value]="category.name">
-                  <div class="option-content">
+                  <div 
+                    class="dropdown-option" 
+                    *ngFor="let category of categories"
+                    [class.selected]="filtersForm.get('category')?.value === category.name"
+                    (click)="selectCategory(category.name)">
                     <mat-icon>inventory_2</mat-icon>
                     <span>{{ category.name }}</span>
                   </div>
-                </mat-option>
-              </mat-select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -67,27 +78,38 @@
               <mat-icon>toggle_on</mat-icon>
               Estado del Producto
             </label>
-            <div class="select-container">
-              <mat-select formControlName="isActive" class="status-select">
-                <mat-option value="">
-                  <div class="option-content">
+            <div class="custom-select-field">
+              <div class="select-wrapper">
+                <div 
+                  class="custom-select-display"
+                  (click)="toggleStatusDropdown()">
+                  <span class="select-value">{{ getStatusDisplayValue() }}</span>
+                  <span class="select-arrow" [class.open]="isStatusDropdownOpen">▼</span>
+                </div>
+                <div class="custom-dropdown" [class.open]="isStatusDropdownOpen">
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('isActive')?.value === ''"
+                    (click)="selectStatus('')">
                     <mat-icon>help_outline</mat-icon>
                     <span>Todos los estados</span>
                   </div>
-                </mat-option>
-                <mat-option [value]="true">
-                  <div class="option-content">
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('isActive')?.value === true"
+                    (click)="selectStatus(true)">
                     <mat-icon class="status-active">check_circle</mat-icon>
                     <span>Productos Activos</span>
                   </div>
-                </mat-option>
-                <mat-option [value]="false">
-                  <div class="option-content">
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('isActive')?.value === false"
+                    (click)="selectStatus(false)">
                     <mat-icon class="status-inactive">cancel</mat-icon>
                     <span>Productos Inactivos</span>
                   </div>
-                </mat-option>
-              </mat-select>
+                </div>
+              </div>
             </div>
           </div>
         </div>

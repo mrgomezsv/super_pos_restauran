@@ -5,61 +5,92 @@
   <mat-card class="filters-card">
     <mat-card-content>
       <form [formGroup]="filterForm" class="filters-form">
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Fecha Inicio</mat-label>
-          <input 
-            matInput 
-            [matDatepicker]="startPicker" 
-            formControlName="startDate"
-            placeholder="Seleccionar fecha inicio">
-          <mat-datepicker-toggle matSuffix [for]="startPicker">
-            <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
-          </mat-datepicker-toggle>
-          <mat-datepicker #startPicker></mat-datepicker>
-        </mat-form-field>
+        <div class="custom-date-field">
+          <label class="custom-date-label">
+            <mat-icon>calendar_today</mat-icon>
+            Fecha Inicio
+          </label>
+          <div class="date-wrapper">
+            <div 
+              class="custom-date-display"
+              (click)="startPicker.open()">
+              <span class="date-value">{{ getStartDateDisplayValue() }}</span>
+              <mat-icon class="date-icon">calendar_today</mat-icon>
+            </div>
+            <mat-datepicker #startPicker></mat-datepicker>
+            <input 
+              matInput 
+              [matDatepicker]="startPicker" 
+              formControlName="startDate"
+              style="display: none;">
+          </div>
+        </div>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Fecha Fin</mat-label>
-          <input 
-            matInput 
-            [matDatepicker]="endPicker" 
-            formControlName="endDate"
-            placeholder="Seleccionar fecha fin">
-          <mat-datepicker-toggle matSuffix [for]="endPicker">
-            <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
-          </mat-datepicker-toggle>
-          <mat-datepicker #endPicker></mat-datepicker>
-        </mat-form-field>
+        <div class="custom-date-field">
+          <label class="custom-date-label">
+            <mat-icon>calendar_today</mat-icon>
+            Fecha Fin
+          </label>
+          <div class="date-wrapper">
+            <div 
+              class="custom-date-display"
+              (click)="endPicker.open()">
+              <span class="date-value">{{ getEndDateDisplayValue() }}</span>
+              <mat-icon class="date-icon">calendar_today</mat-icon>
+            </div>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <input 
+              matInput 
+              [matDatepicker]="endPicker" 
+              formControlName="endDate"
+              style="display: none;">
+          </div>
+        </div>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Método de Pago</mat-label>
-          <mat-select formControlName="paymentMethod" placeholder="Seleccionar método">
-            <mat-option value="">
-              <div class="payment-option">
+        <div class="custom-select-field">
+          <label class="custom-select-label">
+            <mat-icon>payment</mat-icon>
+            Método de Pago
+          </label>
+          <div class="select-wrapper">
+            <div 
+              class="custom-select-display"
+              (click)="togglePaymentMethodDropdown()">
+              <span class="select-value">{{ getPaymentMethodDisplayValue() }}</span>
+              <span class="select-arrow" [class.open]="isPaymentMethodDropdownOpen">▼</span>
+            </div>
+            <div class="custom-dropdown" [class.open]="isPaymentMethodDropdownOpen">
+              <div 
+                class="dropdown-option" 
+                [class.selected]="filterForm.get('paymentMethod')?.value === ''"
+                (click)="selectPaymentMethod('')">
                 <mat-icon>all_inclusive</mat-icon>
                 <span>Todos los métodos</span>
               </div>
-            </mat-option>
-            <mat-option value="cash">
-              <div class="payment-option">
+              <div 
+                class="dropdown-option" 
+                [class.selected]="filterForm.get('paymentMethod')?.value === 'cash'"
+                (click)="selectPaymentMethod('cash')">
                 <mat-icon>money</mat-icon>
                 <span>Efectivo</span>
               </div>
-            </mat-option>
-            <mat-option value="card">
-              <div class="payment-option">
+              <div 
+                class="dropdown-option" 
+                [class.selected]="filterForm.get('paymentMethod')?.value === 'card'"
+                (click)="selectPaymentMethod('card')">
                 <mat-icon>credit_card</mat-icon>
                 <span>Tarjeta</span>
               </div>
-            </mat-option>
-            <mat-option value="transfer">
-              <div class="payment-option">
+              <div 
+                class="dropdown-option" 
+                [class.selected]="filterForm.get('paymentMethod')?.value === 'transfer'"
+                (click)="selectPaymentMethod('transfer')">
                 <mat-icon>account_balance</mat-icon>
                 <span>Transferencia</span>
               </div>
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+            </div>
+          </div>
+        </div>
 
         <button mat-raised-button color="primary" (click)="generateReport()" class="generate-btn">
           <mat-icon>assessment</mat-icon>
