@@ -203,7 +203,12 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
       data: dialogData,
-      disableClose: true
+      disableClose: true,
+      position: {
+        top: '50%',
+        left: '50%'
+      },
+      panelClass: 'confirmation-dialog-container'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -255,7 +260,12 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
       data: dialogData,
-      disableClose: true
+      disableClose: true,
+      position: {
+        top: '50%',
+        left: '50%'
+      },
+      panelClass: 'confirmation-dialog-container'
     });
 
     dialogRef.afterClosed().subscribe(result => {

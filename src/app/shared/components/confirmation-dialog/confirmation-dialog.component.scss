@@ -9,6 +9,19 @@
   --spacing-xl: 32px;
 }
 
+// Estilos globales para centrar el modal
+::ng-deep .confirmation-dialog-container {
+  .mat-mdc-dialog-container {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    max-width: 400px !important;
+    width: 90vw !important;
+  }
+}
+
 .confirmation-dialog {
   padding: var(--spacing-xl);
   max-width: 400px;
