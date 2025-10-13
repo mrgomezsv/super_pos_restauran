@@ -379,14 +379,32 @@
 
 // Print styles
 @media print {
+  // Configurar página para impresora térmica de 80mm
+  @page {
+    size: 80mm auto; // 80mm de ancho, altura automática según contenido
+    margin: 0; // Sin márgenes
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
   .receipt-container {
     background: white;
     padding: 0;
+    margin: 0;
+    width: 80mm;
+    max-width: 80mm;
 
     .receipt-paper {
       box-shadow: none;
-      width: 100%;
-      max-width: none;
+      width: 80mm;
+      max-width: 80mm;
+      padding: 5mm; // Padding interno del ticket
+      margin: 0;
+      page-break-after: auto;
+      page-break-inside: avoid;
     }
 
     .receipt-actions {
@@ -423,7 +441,17 @@
   
   .receipt-container {
     background: white !important;
-    padding: 10px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
     min-height: auto !important;
+    
+    .receipt-paper {
+      width: 80mm !important;
+      max-width: 80mm !important;
+      padding: 5mm !important;
+      margin: 0 !important;
+    }
   }
 }
