@@ -204,6 +204,67 @@
             </li>
           </ul>
         </div>
+
+        <!-- Contabilidad -->
+        <div class="nav-section" *ngIf="currentUser">
+          <h3 class="nav-section-title">Contabilidad</h3>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a routerLink="/accounting/diario" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>menu_book</mat-icon>
+                </div>
+                <span class="nav-text">Libro Diario</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a routerLink="/accounting/mayor" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>library_books</mat-icon>
+                </div>
+                <span class="nav-text">Libro Mayor</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a routerLink="/accounting/inventarios" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>inventory</mat-icon>
+                </div>
+                <span class="nav-text">Inventarios</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a routerLink="/accounting/vat/ventas" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>receipt_long</mat-icon>
+                </div>
+                <span class="nav-text">Libro de Ventas (IVA)</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a routerLink="/accounting/vat/compras" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>shopping_cart</mat-icon>
+                </div>
+                <span class="nav-text">Libro de Compras (IVA)</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a routerLink="/accounting/trial-balance" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>balance</mat-icon>
+                </div>
+                <span class="nav-text">Balance de Comprobación</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+          </ul>
+        </div>
       </nav>
     </aside>
     
