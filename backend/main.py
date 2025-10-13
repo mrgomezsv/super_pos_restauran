@@ -1433,7 +1433,7 @@ async def get_inventory_movements(
     # Ordenar por fecha descendente
     movements.sort(key=lambda x: x.createdAt, reverse=True)
     
-    return movements
+    return {"movements": movements}
 
 @app.get("/api/accounting/vat/sales")
 async def get_vat_sales(

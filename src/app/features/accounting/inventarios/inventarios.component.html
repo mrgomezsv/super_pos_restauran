@@ -1,0 +1,156 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Libro de Inventarios</h1>
+    <p class="subtitle">Movimientos de inventario y control de existencias</p>
+  </header>
+
+  <div class="page-content">
+    <!-- Resumen de Totales -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-arrow-down"></i>
+        </div>
+        <div class="card-content">
+          <h3>{{ totalEntries }}</h3>
+          <p>Entradas</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-arrow-up"></i>
+        </div>
+        <div class="card-content">
+          <h3>{{ totalExits }}</h3>
+          <p>Salidas</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="card-content">
+          <h3>${{ totalCost | number:'1.2-2' }}</h3>
+          <p>Costo Total</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label for="productFilter">Producto</label>
+          <select id="productFilter" [(ngModel)]="filters.productId" class="form-control">
+            <option value="">Todos los productos</option>
+            <option *ngFor="let product of products" [value]="product.id">
+              {{ product.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="movementTypeFilter">Tipo de Movimiento</label>
+          <select id="movementTypeFilter" [(ngModel)]="filters.movementType" class="form-control">
+            <option value="">Todos los tipos</option>
+            <option value="entrada">Entrada</option>
+            <option value="salida">Salida</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="startDateFilter">Fecha Desde</label>
+          <input 
+            type="date" 
+            id="startDateFilter" 
+            [(ngModel)]="filters.startDate" 
+            class="form-control"
+          >
+        </div>
+
+        <div class="filter-group">
+          <label for="endDateFilter">Fecha Hasta</label>
+          <input 
+            type="date" 
+            id="endDateFilter" 
+            [(ngModel)]="filters.endDate" 
+            class="form-control"
+          >
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button (click)="applyFilters()" class="btn btn-primary">
+          <i class="fas fa-search"></i> Filtrar
+        </button>
+        <button (click)="clearFilters()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla de Movimientos -->
+    <div class="table-section">
+      <div class="table-header">
+        <h3>Movimientos de Inventario</h3>
+        <div class="table-actions">
+          <button class="btn btn-outline-primary" disabled>
+            <i class="fas fa-download"></i> Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando movimientos...</p>
+      </div>
+
+      <div *ngIf="error" class="error-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>{{ error }}</p>
+        <button (click)="loadInventoryMovements()" class="btn btn-primary">
+          Reintentar
+        </button>
+      </div>
+
+      <div *ngIf="!loading && !error && movements.length === 0" class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h3>No hay movimientos</h3>
+        <p>No se encontraron movimientos de inventario con los filtros aplicados.</p>
+      </div>
+
+      <div *ngIf="!loading && !error && movements.length > 0" class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Producto</th>
+              <th>Tipo</th>
+              <th>Cantidad</th>
+              <th>Costo Unit.</th>
+              <th>Costo Total</th>
+              <th>Referencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let movement of movements">
+              <td>{{ formatDate(movement.createdAt) }}</td>
+              <td>{{ getProductName(movement.productId) }}</td>
+              <td>
+                <span class="badge" [ngClass]="getMovementTypeBadgeClass(movement.movementType)">
+                  {{ getMovementTypeLabel(movement.movementType) }}
+                </span>
+              </td>
+              <td class="text-right">{{ movement.quantity }}</td>
+              <td class="text-right">${{ movement.unitCost | number:'1.2-2' }}</td>
+              <td class="text-right">${{ movement.totalCost | number:'1.2-2' }}</td>
+              <td>{{ movement.reference }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

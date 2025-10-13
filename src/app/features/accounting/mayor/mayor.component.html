@@ -1,0 +1,71 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Libro Mayor</h1>
+    <p class="subtitle">Saldos acumulados por cuenta contable</p>
+  </header>
+  
+  <div class="page-content">
+    <!-- Resumen -->
+    <div class="summary-section" *ngIf="ledgerData">
+      <div class="summary-card">
+        <h3>Total Débitos</h3>
+        <p class="amount">${{ totalDebits | number:'1.2-2' }}</p>
+      </div>
+      <div class="summary-card">
+        <h3>Total Créditos</h3>
+        <p class="amount">${{ totalCredits | number:'1.2-2' }}</p>
+      </div>
+      <div class="summary-card" [class.balanced]="isBalanced">
+        <h3>Estado</h3>
+        <p>{{ isBalanced ? 'Balanceado ✓' : 'Desbalanceado ✗' }}</p>
+      </div>
+    </div>
+
+    <!-- Tabla de saldos -->
+    <div class="table-container" *ngIf="!loading">
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre de Cuenta</th>
+            <th>Tipo</th>
+            <th>Naturaleza</th>
+            <th>Total Débitos</th>
+            <th>Total Créditos</th>
+            <th>Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of ledgerItems" [class.has-movement]="hasMovement(item)">
+            <td>{{ item.account.code }}</td>
+            <td>{{ item.account.name }}</td>
+            <td>
+              <span class="type-badge" [class]="'type-' + item.account.accountType">
+                {{ getTypeLabel(item.account.accountType) }}
+              </span>
+            </td>
+            <td>
+              <span class="nature-badge" [class]="'nature-' + item.account.nature">
+                {{ getNatureLabel(item.account.nature) }}
+              </span>
+            </td>
+            <td class="amount">{{ item.debit_total | number:'1.2-2' }}</td>
+            <td class="amount">{{ item.credit_total | number:'1.2-2' }}</td>
+            <td class="amount" [class.positive]="item.balance > 0" [class.negative]="item.balance < 0">
+              ${{ item.balance | number:'1.2-2' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div *ngIf="ledgerItems.length === 0" class="empty-state">
+        <p>No hay movimientos contables para mostrar</p>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <p>Cargando saldos contables...</p>
+    </div>
+  </div>
+</section>

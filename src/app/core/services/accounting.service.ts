@@ -8,7 +8,8 @@ import {
   ArInvoice, 
   LedgerAccount, 
   TrialBalance,
-  AccountingFilters 
+  AccountingFilters,
+  Product
 } from '../models/accounting.models';
 
 @Injectable({
@@ -16,6 +17,7 @@ import {
 })
 export class AccountingService {
   private apiUrl = 'http://localhost:3000/api/accounting';
+  private productsUrl = 'http://localhost:3000/api/products';
 
   constructor(private http: HttpClient) {}
 
@@ -47,7 +49,7 @@ export class AccountingService {
   }
 
   // Movimientos de inventario
-  getInventoryMovements(filters?: AccountingFilters): Observable<InventoryMovement[]> {
+  getInventoryMovements(filters?: any): Observable<{ movements: InventoryMovement[] }> {
     let params = new HttpParams();
     
     if (filters?.productId) {
@@ -59,8 +61,11 @@ export class AccountingService {
     if (filters?.endDate) {
       params = params.set('endDate', filters.endDate);
     }
+    if (filters?.movementType) {
+      params = params.set('movementType', filters.movementType);
+    }
 
-    return this.http.get<InventoryMovement[]>(`${this.apiUrl}/inventory-movements`, { params });
+    return this.http.get<{ movements: InventoryMovement[] }>(`${this.apiUrl}/inventory-movements`, { params });
   }
 
   // Libro de Ventas (IVA)
@@ -80,5 +85,10 @@ export class AccountingService {
   // Balance de Comprobación
   getTrialBalance(): Observable<TrialBalance> {
     return this.http.get<TrialBalance>(`${this.apiUrl}/trial-balance`);
+  }
+
+  // Productos
+  getProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(this.productsUrl);
   }
 }

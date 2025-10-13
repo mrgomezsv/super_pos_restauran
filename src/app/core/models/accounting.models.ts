@@ -54,6 +54,25 @@ export interface InventoryMovement {
   createdAt: string;
 }
 
+export interface Product {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  price?: number;
+  cost?: number;
+  category?: string;
+  brand?: string;
+  stock?: number;
+  minStock?: number;
+  maxStock?: number;
+  barcode?: string;
+  taxRate?: number;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ArInvoice {
   id: number;
   invoiceNumber: string;
