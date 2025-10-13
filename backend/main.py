@@ -803,7 +803,6 @@ def post_sale_to_accounting(sale: Sale) -> dict:
         )
         
         ar_invoices_db.append(ar_invoice)
-        global next_ar_invoice_id
         next_ar_invoice_id += 1
         
         return {
