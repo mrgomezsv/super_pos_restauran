@@ -83,4 +83,79 @@ class Sale(BaseModel):
     createdAt: datetime
     status: str  # completed, cancelled, refunded
 
+# Modelos contables
+class Account(BaseModel):
+    id: int
+    code: str  # Código de cuenta (ej: "1101", "4101")
+    name: str
+    accountType: str  # activo, pasivo, patrimonio, ingreso, gasto
+    nature: str  # deudora, acreedora
+    level: int  # Nivel jerárquico (1-5)
+    parentId: Optional[int] = None
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+
+class JournalEntry(BaseModel):
+    id: int
+    entryNumber: str  # Número de póliza
+    date: datetime
+    source: str  # pos, purchase, payment, adjustment
+    reference: str  # Referencia externa (ej: número de venta)
+    description: str
+    currency: str = "USD"
+    status: str = "draft"  # draft, posted, reversed
+    createdBy: int  # ID del usuario
+    postedBy: Optional[int] = None
+    postedAt: Optional[datetime] = None
+    createdAt: datetime
+    lines: List['JournalLine'] = []
+
+class JournalLine(BaseModel):
+    id: int
+    journalEntryId: int
+    accountId: int
+    description: str
+    debit: float = 0.0
+    credit: float = 0.0
+    costCenter: Optional[str] = None
+    createdAt: datetime
+
+class InventoryMovement(BaseModel):
+    id: int
+    productId: int
+    movementType: str  # entrada, salida
+    quantity: int
+    unitCost: float
+    totalCost: float
+    reference: str  # Referencia a póliza o documento
+    referenceId: Optional[int] = None
+    createdAt: datetime
+
+class ArInvoice(BaseModel):  # Accounts Receivable Invoice
+    id: int
+    invoiceNumber: str
+    customerName: str
+    customerDui: Optional[str] = None
+    subtotal: float
+    taxAmount: float
+    total: float
+    invoiceType: str
+    controlNumber: Optional[str] = None
+    journalEntryId: Optional[int] = None
+    createdAt: datetime
+
+class ApInvoice(BaseModel):  # Accounts Payable Invoice
+    id: int
+    invoiceNumber: str
+    supplierName: str
+    supplierNrc: Optional[str] = None
+    subtotal: float
+    taxAmount: float
+    total: float
+    invoiceType: str
+    controlNumber: Optional[str] = None
+    journalEntryId: Optional[int] = None
+    createdAt: datetime
+
 # Los esquemas de respuesta están definidos en schemas.py

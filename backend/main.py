@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 # Importar modelos y esquemas
-from models import User, Product, Sale, ProductCategory, FiscalDocument
+from models import User, Product, Sale, ProductCategory, FiscalDocument, Account, JournalEntry, JournalLine, InventoryMovement, ArInvoice, ApInvoice
 from schemas import (
     UserLogin, UserResponse, UserCreate, UserUpdate,
     ProductResponse, ProductCreate, ProductUpdate,
@@ -566,6 +566,45 @@ fiscal_documents_db = [
     )
 ]
 
+# Datos contables iniciales
+accounts_db = [
+    # Activos
+    Account(id=1, code="1101", name="Caja", accountType="activo", nature="deudora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=2, code="1102", name="Bancos", accountType="activo", nature="deudora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=3, code="1201", name="Cuentas por Cobrar", accountType="activo", nature="deudora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=4, code="1301", name="Inventarios", accountType="activo", nature="deudora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    
+    # Pasivos
+    Account(id=5, code="2101", name="Cuentas por Pagar", accountType="pasivo", nature="acreedora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=6, code="2201", name="IVA Crédito Fiscal", accountType="pasivo", nature="acreedora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    
+    # Patrimonio
+    Account(id=7, code="3101", name="Capital Social", accountType="patrimonio", nature="acreedora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=8, code="3201", name="Utilidades Retenidas", accountType="patrimonio", nature="acreedora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    
+    # Ingresos
+    Account(id=9, code="4101", name="Ventas", accountType="ingreso", nature="acreedora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=10, code="4201", name="IVA Débito Fiscal", accountType="ingreso", nature="acreedora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    
+    # Gastos
+    Account(id=11, code="5101", name="Costo de Ventas", accountType="gasto", nature="deudora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+    Account(id=12, code="5201", name="Gastos Operativos", accountType="gasto", nature="deudora", level=2, parentId=None, isActive=True, createdAt=datetime.now(), updatedAt=datetime.now()),
+]
+
+# Bases de datos contables
+journal_entries_db = []
+journal_lines_db = []
+inventory_movements_db = []
+ar_invoices_db = []
+ap_invoices_db = []
+
+# Contadores para IDs únicos
+next_journal_entry_id = 1
+next_journal_line_id = 1
+next_inventory_movement_id = 1
+next_ar_invoice_id = 1
+next_ap_invoice_id = 1
+
 sales_db = []
 next_sale_id = 1
 
@@ -604,6 +643,183 @@ def calculate_totals(items: List[CartItemSchema]) -> dict:
         "taxAmount": tax_amount,
         "total": total
     }
+
+def create_journal_entry(source: str, reference: str, description: str, lines_data: List[dict], created_by: int) -> JournalEntry:
+    """Crear póliza contable"""
+    global next_journal_entry_id, next_journal_line_id
+    
+    # Crear póliza
+    journal_entry = JournalEntry(
+        id=next_journal_entry_id,
+        entryNumber=f"POL-{next_journal_entry_id:06d}",
+        date=datetime.now(),
+        source=source,
+        reference=reference,
+        description=description,
+        status="posted",
+        createdBy=created_by,
+        postedBy=created_by,
+        postedAt=datetime.now(),
+        createdAt=datetime.now()
+    )
+    
+    # Crear líneas de la póliza
+    journal_lines = []
+    for line_data in lines_data:
+        journal_line = JournalLine(
+            id=next_journal_line_id,
+            journalEntryId=journal_entry.id,
+            accountId=line_data["accountId"],
+            description=line_data["description"],
+            debit=line_data.get("debit", 0.0),
+            credit=line_data.get("credit", 0.0),
+            costCenter=line_data.get("costCenter"),
+            createdAt=datetime.now()
+        )
+        journal_lines.append(journal_line)
+        journal_lines_db.append(journal_line)
+        next_journal_line_id += 1
+    
+    journal_entry.lines = journal_lines
+    journal_entries_db.append(journal_entry)
+    next_journal_entry_id += 1
+    
+    return journal_entry
+
+def create_inventory_movement(product_id: int, movement_type: str, quantity: int, unit_cost: float, reference: str, reference_id: Optional[int] = None) -> InventoryMovement:
+    """Crear movimiento de inventario"""
+    global next_inventory_movement_id
+    
+    movement = InventoryMovement(
+        id=next_inventory_movement_id,
+        productId=product_id,
+        movementType=movement_type,
+        quantity=quantity,
+        unitCost=unit_cost,
+        totalCost=quantity * unit_cost,
+        reference=reference,
+        referenceId=reference_id,
+        createdAt=datetime.now()
+    )
+    
+    inventory_movements_db.append(movement)
+    next_inventory_movement_id += 1
+    
+    return movement
+
+def post_sale_to_accounting(sale: Sale) -> dict:
+    """Contabilizar venta en libros contables"""
+    global next_ar_invoice_id
+    
+    try:
+        # 1. Crear póliza de ingreso (Ventas + IVA)
+        income_lines = [
+            {
+                "accountId": 1,  # Caja
+                "description": f"Venta {sale.invoiceNumber}",
+                "debit": sale.total,
+                "credit": 0.0
+            },
+            {
+                "accountId": 9,  # Ventas
+                "description": f"Venta {sale.invoiceNumber}",
+                "debit": 0.0,
+                "credit": sale.subtotal
+            },
+            {
+                "accountId": 10,  # IVA Débito Fiscal
+                "description": f"IVA Venta {sale.invoiceNumber}",
+                "debit": 0.0,
+                "credit": sale.taxAmount
+            }
+        ]
+        
+        income_entry = create_journal_entry(
+            source="pos",
+            reference=sale.invoiceNumber,
+            description=f"Venta POS {sale.invoiceNumber}",
+            lines_data=income_lines,
+            created_by=sale.cashierId
+        )
+        
+        # 2. Crear póliza de costo (Costo de Ventas + Inventarios)
+        cost_entry = None
+        total_cost = 0.0
+        
+        for item in sale.items:
+            # Buscar producto para obtener costo
+            product = next((p for p in products_db if p.id == item.productId), None)
+            if product:
+                item_cost = item.quantity * product.cost
+                total_cost += item_cost
+                
+                # Crear movimiento de inventario
+                create_inventory_movement(
+                    product_id=item.productId,
+                    movement_type="salida",
+                    quantity=item.quantity,
+                    unit_cost=product.cost,
+                    reference=sale.invoiceNumber,
+                    reference_id=sale.id
+                )
+        
+        if total_cost > 0:
+            cost_lines = [
+                {
+                    "accountId": 11,  # Costo de Ventas
+                    "description": f"Costo Venta {sale.invoiceNumber}",
+                    "debit": total_cost,
+                    "credit": 0.0
+                },
+                {
+                    "accountId": 4,  # Inventarios
+                    "description": f"Salida Inventario {sale.invoiceNumber}",
+                    "debit": 0.0,
+                    "credit": total_cost
+                }
+            ]
+            
+            cost_entry = create_journal_entry(
+                source="pos",
+                reference=sale.invoiceNumber,
+                description=f"Costo Venta POS {sale.invoiceNumber}",
+                lines_data=cost_lines,
+                created_by=sale.cashierId
+            )
+        
+        # 3. Crear registro de factura AR
+        ar_invoice = ArInvoice(
+            id=next_ar_invoice_id,
+            invoiceNumber=sale.invoiceNumber,
+            customerName=sale.customerName or "Cliente Varios",
+            customerDui=sale.customerDocument,
+            subtotal=sale.subtotal,
+            taxAmount=sale.taxAmount,
+            total=sale.total,
+            invoiceType=sale.invoiceType,
+            controlNumber=f"DTE-{sale.invoiceNumber}",
+            journalEntryId=income_entry.id,
+            createdAt=datetime.now()
+        )
+        
+        ar_invoices_db.append(ar_invoice)
+        global next_ar_invoice_id
+        next_ar_invoice_id += 1
+        
+        return {
+            "success": True,
+            "income_entry_id": income_entry.id,
+            "cost_entry_id": cost_entry.id if cost_entry else None,
+            "ar_invoice_id": ar_invoice.id,
+            "message": "Venta contabilizada exitosamente"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Error al contabilizar la venta"
+        }
 
 def generate_next_sku() -> str:
     """Generar el siguiente SKU disponible de forma secuencial"""
@@ -979,6 +1195,15 @@ async def create_sale(sale_data: SaleCreate):
     sales_db.append(new_sale)
     next_sale_id += 1
     
+    # Contabilizar la venta en libros contables
+    accounting_result = post_sale_to_accounting(new_sale)
+    
+    # Log del resultado de contabilización (opcional)
+    if accounting_result["success"]:
+        print(f"Venta {new_sale.invoiceNumber} contabilizada exitosamente")
+    else:
+        print(f"Error al contabilizar venta {new_sale.invoiceNumber}: {accounting_result['error']}")
+    
     return SaleResponse.model_validate(new_sale.model_dump())
 
 @app.get("/api/sales", response_model=List[SaleResponse])
@@ -1099,6 +1324,176 @@ async def delete_user(user_id: int):
     
     users_db.remove(user)
     return {"message": "Usuario eliminado exitosamente"}
+
+# Endpoints contables
+@app.get("/api/accounting/accounts")
+async def get_accounts():
+    """Obtener catálogo de cuentas"""
+    return accounts_db
+
+@app.get("/api/accounting/journal-entries")
+async def get_journal_entries(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    source: Optional[str] = None
+):
+    """Obtener pólizas contables (Libro Diario)"""
+    entries = journal_entries_db.copy()
+    
+    # Filtrar por fecha si se proporciona
+    if startDate or endDate:
+        filtered_entries = []
+        for entry in entries:
+            entry_date = entry.date.date()
+            
+            if startDate:
+                start = datetime.strptime(startDate, "%Y-%m-%d").date()
+                if entry_date < start:
+                    continue
+            
+            if endDate:
+                end = datetime.strptime(endDate, "%Y-%m-%d").date()
+                if entry_date > end:
+                    continue
+            
+            filtered_entries.append(entry)
+        entries = filtered_entries
+    
+    # Filtrar por fuente si se proporciona
+    if source:
+        entries = [e for e in entries if e.source == source]
+    
+    # Ordenar por fecha descendente
+    entries.sort(key=lambda x: x.date, reverse=True)
+    
+    return entries
+
+@app.get("/api/accounting/ledger")
+async def get_ledger():
+    """Obtener Libro Mayor (saldos por cuenta)"""
+    ledger = {}
+    
+    # Inicializar saldos por cuenta
+    for account in accounts_db:
+        ledger[account.id] = {
+            "account": account,
+            "debit_total": 0.0,
+            "credit_total": 0.0,
+            "balance": 0.0
+        }
+    
+    # Calcular totales de débitos y créditos
+    for line in journal_lines_db:
+        if line.journalEntryId in [je.id for je in journal_entries_db if je.status == "posted"]:
+            if line.accountId in ledger:
+                ledger[line.accountId]["debit_total"] += line.debit
+                ledger[line.accountId]["credit_total"] += line.credit
+    
+    # Calcular saldos
+    for account_id, data in ledger.items():
+        account = data["account"]
+        if account.nature == "deudora":
+            data["balance"] = data["debit_total"] - data["credit_total"]
+        else:  # acreedora
+            data["balance"] = data["credit_total"] - data["debit_total"]
+    
+    return ledger
+
+@app.get("/api/accounting/inventory-movements")
+async def get_inventory_movements(
+    productId: Optional[int] = None,
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None
+):
+    """Obtener movimientos de inventario"""
+    movements = inventory_movements_db.copy()
+    
+    # Filtrar por producto
+    if productId:
+        movements = [m for m in movements if m.productId == productId]
+    
+    # Filtrar por fecha
+    if startDate or endDate:
+        filtered_movements = []
+        for movement in movements:
+            movement_date = movement.createdAt.date()
+            
+            if startDate:
+                start = datetime.strptime(startDate, "%Y-%m-%d").date()
+                if movement_date < start:
+                    continue
+            
+            if endDate:
+                end = datetime.strptime(endDate, "%Y-%m-%d").date()
+                if movement_date > end:
+                    continue
+            
+            filtered_movements.append(movement)
+        movements = filtered_movements
+    
+    # Ordenar por fecha descendente
+    movements.sort(key=lambda x: x.createdAt, reverse=True)
+    
+    return movements
+
+@app.get("/api/accounting/vat/sales")
+async def get_vat_sales(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None
+):
+    """Obtener Libro de Ventas (IVA)"""
+    invoices = ar_invoices_db.copy()
+    
+    # Filtrar por fecha
+    if startDate or endDate:
+        filtered_invoices = []
+        for invoice in invoices:
+            invoice_date = invoice.createdAt.date()
+            
+            if startDate:
+                start = datetime.strptime(startDate, "%Y-%m-%d").date()
+                if invoice_date < start:
+                    continue
+            
+            if endDate:
+                end = datetime.strptime(endDate, "%Y-%m-%d").date()
+                if invoice_date > end:
+                    continue
+            
+            filtered_invoices.append(invoice)
+        invoices = filtered_invoices
+    
+    # Ordenar por fecha descendente
+    invoices.sort(key=lambda x: x.createdAt, reverse=True)
+    
+    return invoices
+
+@app.get("/api/accounting/trial-balance")
+async def get_trial_balance():
+    """Obtener Balance de Comprobación"""
+    ledger = await get_ledger()
+    
+    trial_balance = []
+    total_debits = 0.0
+    total_credits = 0.0
+    
+    for account_id, data in ledger.items():
+        if data["debit_total"] > 0 or data["credit_total"] > 0:  # Solo cuentas con movimiento
+            trial_balance.append({
+                "account": data["account"],
+                "debit_total": data["debit_total"],
+                "credit_total": data["credit_total"],
+                "balance": data["balance"]
+            })
+            total_debits += data["debit_total"]
+            total_credits += data["credit_total"]
+    
+    return {
+        "accounts": trial_balance,
+        "total_debits": total_debits,
+        "total_credits": total_credits,
+        "is_balanced": abs(total_debits - total_credits) < 0.01
+    }
 
 # Ruta de salud
 @app.get("/health")
