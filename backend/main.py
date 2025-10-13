@@ -537,11 +537,31 @@ async def delete_product(product_id: int):
 # Rutas de ventas
 @app.post("/api/sales", response_model=SaleResponse)
 async def create_sale(sale_data: SaleCreate):
-    """Crear nueva venta"""
+    """Crear nueva venta y actualizar inventario"""
     global next_sale_id
     
     # Calcular totales
     totals = calculate_totals(sale_data.items)
+    
+    # Actualizar inventario de productos antes de crear la venta
+    for item in sale_data.items:
+        product = next((p for p in products_db if p.id == item.productId), None)
+        if product:
+            # Verificar que hay suficiente stock
+            if product.stock < item.quantity:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Stock insuficiente para {product.name}. Stock disponible: {product.stock}, Cantidad solicitada: {item.quantity}"
+                )
+            
+            # Descontar del inventario
+            product.stock -= item.quantity
+            product.updatedAt = datetime.now()
+        else:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Producto con ID {item.productId} no encontrado"
+            )
     
     # Extraer datos sin los campos que vamos a sobrescribir
     sale_dict = sale_data.model_dump()
