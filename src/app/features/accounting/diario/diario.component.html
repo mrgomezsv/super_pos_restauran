@@ -1,0 +1,137 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Libro Diario</h1>
+    <p class="subtitle">Pólizas contables ordenadas cronológicamente</p>
+  </header>
+  
+  <div class="page-content">
+    <!-- Filtros -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="startDate">Fecha Desde:</label>
+        <input 
+          type="date" 
+          id="startDate" 
+          [(ngModel)]="filters.startDate"
+          (change)="loadJournalEntries()"
+        >
+      </div>
+      
+      <div class="filter-group">
+        <label for="endDate">Fecha Hasta:</label>
+        <input 
+          type="date" 
+          id="endDate" 
+          [(ngModel)]="filters.endDate"
+          (change)="loadJournalEntries()"
+        >
+      </div>
+      
+      <div class="filter-group">
+        <label for="source">Origen:</label>
+        <select id="source" [(ngModel)]="filters.source" (change)="loadJournalEntries()">
+          <option value="">Todos</option>
+          <option value="pos">POS</option>
+          <option value="purchase">Compras</option>
+          <option value="payment">Pagos</option>
+          <option value="adjustment">Ajustes</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-primary" (click)="clearFilters()">
+        Limpiar Filtros
+      </button>
+    </div>
+
+    <!-- Tabla de pólizas -->
+    <div class="table-container" *ngIf="!loading">
+      <table class="accounting-table">
+        <thead>
+          <tr>
+            <th>Póliza</th>
+            <th>Fecha</th>
+            <th>Origen</th>
+            <th>Referencia</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of journalEntries">
+            <td>{{ entry.entryNumber }}</td>
+            <td>{{ formatDate(entry.date) }}</td>
+            <td>
+              <span class="source-badge" [class]="'source-' + entry.source">
+                {{ getSourceLabel(entry.source) }}
+              </span>
+            </td>
+            <td>{{ entry.reference }}</td>
+            <td>{{ entry.description }}</td>
+            <td>
+              <span class="status-badge" [class]="'status-' + entry.status">
+                {{ getStatusLabel(entry.status) }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline" (click)="viewEntryDetails(entry)">
+                Ver Detalles
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div *ngIf="journalEntries.length === 0" class="empty-state">
+        <p>No hay pólizas contables para mostrar</p>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <p>Cargando pólizas contables...</p>
+    </div>
+
+    <!-- Modal de detalles -->
+    <div *ngIf="selectedEntry" class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Detalles de Póliza: {{ selectedEntry.entryNumber }}</h3>
+          <button class="close-btn" (click)="closeModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="entry-info">
+            <p><strong>Fecha:</strong> {{ formatDate(selectedEntry.date) }}</p>
+            <p><strong>Origen:</strong> {{ getSourceLabel(selectedEntry.source) }}</p>
+            <p><strong>Referencia:</strong> {{ selectedEntry.reference }}</p>
+            <p><strong>Descripción:</strong> {{ selectedEntry.description }}</p>
+            <p><strong>Estado:</strong> {{ getStatusLabel(selectedEntry.status) }}</p>
+          </div>
+          
+          <h4>Partidas:</h4>
+          <table class="lines-table">
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Descripción</th>
+                <th>Débito</th>
+                <th>Crédito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let line of selectedEntry.lines">
+                <td>{{ line.accountId }}</td>
+                <td>{{ line.description }}</td>
+                <td class="amount" *ngIf="line.debit > 0">${{ line.debit | number:'1.2-2' }}</td>
+                <td class="amount" *ngIf="line.debit === 0">-</td>
+                <td class="amount" *ngIf="line.credit > 0">${{ line.credit | number:'1.2-2' }}</td>
+                <td class="amount" *ngIf="line.credit === 0">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
