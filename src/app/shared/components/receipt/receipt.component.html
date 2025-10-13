@@ -56,7 +56,7 @@
       </div>
 
       <!-- Tabla de Productos -->
-      <div class="products-table" *ngIf="sale?.items">
+      <div class="products-table">
         <div class="table-header">
           <span class="col-quantity">CANT.</span>
           <span class="col-description">DESCRIPCIÓN</span>
@@ -65,11 +65,18 @@
         </div>
         
         <div class="table-body">
-          <div class="product-row" *ngFor="let item of sale?.items">
+          <div class="product-row" *ngFor="let item of sale?.items; trackBy: trackByItem">
             <span class="col-quantity">{{ item.quantity }}</span>
             <span class="col-description">{{ item.productName }}</span>
             <span class="col-price">{{ formatCurrency(item.unitPrice) }}</span>
             <span class="col-total">{{ formatCurrency(item.total) }}</span>
+          </div>
+          <!-- Debug: Mostrar información si no hay items -->
+          <div *ngIf="!sale || !sale.items || sale.items.length === 0" class="debug-info" style="background: yellow; padding: 10px; margin: 10px 0;">
+            <p><strong>DEBUG: No hay items en la venta</strong></p>
+            <p>Sale object: {{ sale ? 'EXISTS' : 'NULL' }}</p>
+            <p>Items count: {{ sale?.items?.length || 0 }}</p>
+            <p>Sale data: {{ sale | json }}</p>
           </div>
         </div>
       </div>

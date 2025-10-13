@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +23,8 @@ import { BusinessConfiguration, TicketTemplate } from '../../../core/models/busi
   styleUrls: ['./receipt-modal.component.scss']
 })
 export class ReceiptModalComponent implements OnInit {
+  @ViewChild(ReceiptComponent) receiptComponent!: ReceiptComponent;
+  
   businessConfig: BusinessConfiguration | null = null;
   ticketTemplate: TicketTemplate | null = null;
 
@@ -72,6 +74,13 @@ export class ReceiptModalComponent implements OnInit {
 
   onClose(): void {
     this.dialogRef.close();
+  }
+
+  onPrint(): void {
+    // Llamar al método de impresión del componente receipt
+    if (this.receiptComponent) {
+      this.receiptComponent.printReceipt();
+    }
   }
 
 }

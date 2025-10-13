@@ -20,20 +20,28 @@ export class ReceiptComponent implements OnInit {
   ngOnInit(): void {
     // Debug: Log de datos recibidos
     console.log('Receipt Component - Sale data:', this.sale);
+    console.log('Receipt Component - Sale items:', this.sale?.items);
     console.log('Receipt Component - Business Config:', this.businessConfig);
     console.log('Receipt Component - Ticket Template:', this.ticketTemplate);
     
     // Si no hay configuración, usar valores por defecto
     if (!this.businessConfig) {
       this.businessConfig = this.getDefaultConfig();
+      console.log('Using default business config');
     }
     if (!this.ticketTemplate) {
       this.ticketTemplate = this.getDefaultTemplate();
+      console.log('Using default ticket template');
     }
     
-    // Si no hay venta, crear datos de ejemplo para testing
-    if (!this.sale) {
+    // Si no hay venta o no tiene items, usar datos de ejemplo para testing
+    if (!this.sale || !this.sale.items || this.sale.items.length === 0) {
       this.sale = this.getExampleSale();
+      console.log('Using example sale data:', this.sale);
+      console.log('Example sale items:', this.sale.items);
+    } else {
+      console.log('Using real sale data:', this.sale);
+      console.log('Real sale items:', this.sale.items);
     }
   }
 
@@ -121,7 +129,26 @@ export class ReceiptComponent implements OnInit {
     }).format(amount);
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: any): string {
+    // Convertir a Date si no lo es
+    let dateObj: Date;
+    
+    if (!date) {
+      dateObj = new Date();
+    } else if (typeof date === 'string') {
+      dateObj = new Date(date);
+    } else if (date instanceof Date) {
+      dateObj = date;
+    } else {
+      // Intentar convertir cualquier otro tipo
+      dateObj = new Date(date);
+    }
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      dateObj = new Date(); // Usar fecha actual como fallback
+    }
+    
     return new Intl.DateTimeFormat('es-SV', {
       year: 'numeric',
       month: '2-digit',
@@ -129,7 +156,7 @@ export class ReceiptComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    }).format(date);
+    }).format(dateObj);
   }
 
   getTotalItems(): number {
@@ -151,7 +178,16 @@ export class ReceiptComponent implements OnInit {
   }
 
   getCurrentDate(): Date {
-    return new Date();
+    const now = new Date();
+    // Verificar que la fecha sea válida
+    if (isNaN(now.getTime())) {
+      return new Date(2024, 0, 1); // Fecha por defecto si hay problemas
+    }
+    return now;
+  }
+
+  trackByItem(index: number, item: any): any {
+    return item.productId || index;
   }
 
   generateCode(): string {
@@ -510,48 +546,39 @@ export class ReceiptComponent implements OnInit {
       id: 1,
       invoiceNumber: 'CF-241012-000001',
       invoiceType: 'consumidor_final',
-      customerName: 'Juan Pérez',
-      customerDocument: '12345678-9',
-      customerEmail: 'juan@email.com',
-      customerAddress: 'Colonia Escalón, San Salvador',
+      customerName: 'Cliente Varios',
+      customerDocument: '',
+      customerEmail: '',
+      customerAddress: 'San Salvador, San Salvador Centro, San Salvador, El Salvador',
       items: [
         {
           productId: 1,
-          productName: 'Coca Cola 200ml',
+          productName: 'Coca Cola 350ml',
           quantity: 2,
           unitPrice: 1.25,
           subtotal: 2.50,
-          tax: 0.38,
-          total: 2.88
+          tax: 0.375,
+          total: 2.875
         },
         {
           productId: 2,
-          productName: 'Leche Entera 1L',
-          quantity: 1,
-          unitPrice: 1.30,
-          subtotal: 1.30,
-          tax: 0.20,
-          total: 1.50
-        },
-        {
-          productId: 3,
           productName: 'Pan Integral',
-          quantity: 3,
-          unitPrice: 0.75,
-          subtotal: 2.25,
-          tax: 0.34,
-          total: 2.59
+          quantity: 1,
+          unitPrice: 2.50,
+          subtotal: 2.50,
+          tax: 0.375,
+          total: 2.875
         }
       ],
-      subtotal: 6.05,
-      taxAmount: 0.92,
+      subtotal: 5.00,
+      taxAmount: 0.75,
       discountAmount: 0,
-      total: 6.97,
+      total: 5.75,
       paymentMethod: 'cash',
       paymentAmount: 10.00,
-      change: 3.03,
+      change: 4.25,
       cashierId: 1,
-      cashierName: 'María García',
+      cashierName: 'Admin',
       createdAt: new Date(),
       status: 'completed'
     };
