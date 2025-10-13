@@ -80,6 +80,11 @@ export class ReceiptModalComponent implements OnInit {
     // Llamar al método de impresión del componente receipt
     if (this.receiptComponent) {
       this.receiptComponent.printReceipt();
+      
+      // Cerrar el modal después de un breve delay para que se muestre el diálogo de impresión
+      setTimeout(() => {
+        this.dialogRef.close();
+      }, 500);
     }
   }
 
