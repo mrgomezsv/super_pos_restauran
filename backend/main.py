@@ -17,7 +17,8 @@ from database import (
     User as DBUser, Product as DBProduct, Sale as DBSale, SaleItem as DBSaleItem,
     ProductCategory as DBProductCategory, FiscalDocument as DBFiscalDocument,
     Account as DBAccount, JournalEntry as DBJournalEntry, JournalLine as DBJournalLine,
-    InventoryMovement as DBInventoryMovement, ArInvoice as DBArInvoice, ApInvoice as DBApInvoice
+    InventoryMovement as DBInventoryMovement, ArInvoice as DBArInvoice, ApInvoice as DBApInvoice,
+    Supplier as DBSupplier
 )
 
 # Importar modelos Pydantic para requests/responses
@@ -30,7 +31,8 @@ from schemas import (
     ProductCategoryCreate,
     FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate,
     CompanyResponse, CompanyWithAdminCreate, CompanyUpdate, CompanyStatusUpdate, 
-    CompanyCreationResponse, CompanyContext
+    CompanyCreationResponse, CompanyContext,
+    SupplierResponse, SupplierCreate, SupplierUpdate
 )
 
 # Importar servicio de compañías
@@ -1324,6 +1326,65 @@ async def health_check():
         "database": "SQLite",
         "timestamp": datetime.now().isoformat()
     }
+
+# -----------------------------
+# Suppliers (Proveedores)
+# -----------------------------
+@app.get("/api/suppliers", response_model=List[SupplierResponse])
+async def get_suppliers(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    query = db.query(DBSupplier)
+    query = context_service.apply_company_filter(query, DBSupplier, context)
+    rows = query.order_by(DBSupplier.createdAt.desc()).all()
+    return [SupplierResponse(
+        id=r.id, company_id=r.company_id, name=r.name, taxId=r.taxId, email=r.email,
+        phone=r.phone, address=r.address, isActive=r.isActive, createdAt=r.createdAt
+    ) for r in rows]
+
+@app.post("/api/suppliers", response_model=SupplierResponse)
+async def create_supplier(payload: SupplierCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    new_sup = DBSupplier(
+        company_id=company_id,
+        name=payload.name.strip(), taxId=(payload.taxId or '').strip() or None,
+        email=(payload.email or '').strip() or None, phone=(payload.phone or '').strip() or None,
+        address=(payload.address or '').strip() or None, isActive=payload.isActive,
+        createdAt=datetime.now()
+    )
+    db.add(new_sup); db.commit(); db.refresh(new_sup)
+    return SupplierResponse(
+        id=new_sup.id, company_id=new_sup.company_id, name=new_sup.name, taxId=new_sup.taxId,
+        email=new_sup.email, phone=new_sup.phone, address=new_sup.address,
+        isActive=new_sup.isActive, createdAt=new_sup.createdAt
+    )
+
+@app.put("/api/suppliers/{supplier_id}", response_model=SupplierResponse)
+async def update_supplier(supplier_id: int, payload: SupplierUpdate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    sup = db.query(DBSupplier).filter(DBSupplier.id == supplier_id).first()
+    if not sup:
+        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+    # Validar acceso por compañía
+    if not context_service.validate_company_access(context, sup.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(sup, field, value)
+    db.commit(); db.refresh(sup)
+    return SupplierResponse(
+        id=sup.id, company_id=sup.company_id, name=sup.name, taxId=sup.taxId,
+        email=sup.email, phone=sup.phone, address=sup.address,
+        isActive=sup.isActive, createdAt=sup.createdAt
+    )
+
+@app.delete("/api/suppliers/{supplier_id}")
+async def delete_supplier(supplier_id: int, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    sup = db.query(DBSupplier).filter(DBSupplier.id == supplier_id).first()
+    if not sup:
+        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+    if not context_service.validate_company_access(context, sup.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    db.delete(sup); db.commit()
+    return {"message": "Proveedor eliminado"}
 
 if __name__ == "__main__":
     import uvicorn

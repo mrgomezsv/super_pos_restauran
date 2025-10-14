@@ -343,6 +343,25 @@ class ApInvoice(Base):
     company = relationship("Company", backref="ap_invoices")
     journal_entry = relationship("JournalEntry", backref="ap_invoices")
 
+# Proveedores
+class Supplier(Base):
+    __tablename__ = "suppliers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    name = Column(String(200), nullable=False)
+    taxId = Column(String(50), nullable=True)  # NRC/NIT
+    email = Column(String(120), nullable=True)
+    phone = Column(String(30), nullable=True)
+    address = Column(Text, nullable=True)
+    isActive = Column(Boolean, default=True)
+    createdAt = Column(DateTime, default=func.now())
+
+    company = relationship("Company", backref="suppliers")
+    __table_args__ = (
+        UniqueConstraint('name', 'company_id', name='unique_supplier_name_per_company'),
+    )
+
 # Función para crear todas las tablas
 def create_tables():
     """Crear todas las tablas en la base de datos"""

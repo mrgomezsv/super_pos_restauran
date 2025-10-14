@@ -197,6 +197,34 @@ class SaleSummary(BaseModel):
     salesByPaymentMethod: dict
     salesByInvoiceType: dict
 
+# Proveedores
+class SupplierResponse(BaseModel):
+    id: int
+    company_id: Optional[int] = None
+    name: str
+    taxId: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    isActive: bool
+    createdAt: datetime
+
+class SupplierCreate(BaseModel):
+    name: str
+    taxId: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    isActive: bool = True
+
+class SupplierUpdate(BaseModel):
+    name: Optional[str] = None
+    taxId: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    isActive: Optional[bool] = None
+
 # Esquemas de compañía (multi-tenant)
 class CompanyResponse(BaseModel):
     id: int
