@@ -1,6 +1,6 @@
 <div class="app-container">
   <!-- Navigation Bar -->
-  <header class="app-header" *ngIf="isLoggedIn">
+  <header class="app-header" *ngIf="isLoggedIn && !isLoginRoute">
     <div class="header-content">
       <div class="header-left">
         <button class="menu-toggle" (click)="sidenav.toggle()" mat-icon-button>
@@ -122,7 +122,7 @@
   </header>
 
   <!-- Main Layout -->
-  <div class="app-layout" *ngIf="isLoggedIn">
+  <div class="app-layout" *ngIf="isLoggedIn && !isLoginRoute">
     <!-- Sidebar -->
     <aside class="sidebar" #sidenav>
       <nav class="sidebar-nav">

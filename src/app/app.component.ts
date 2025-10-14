@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
-import { Router, RouterOutlet, RouterModule } from '@angular/router';
+import { Router, RouterOutlet, RouterModule, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -41,6 +41,7 @@ export class AppComponent implements OnInit {
   isLoggedIn = false;
   currentUser: User | null = null;
   isUserMenuOpen = false;
+  isLoginRoute = false;
   
   // Propiedades del selector de compañía
   availableCompanies: AvailableCompany[] = [];
@@ -54,6 +55,22 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Estado inicial de la ruta actual
+    this.isLoginRoute = this.router.url.startsWith('/login');
+
+    // Escuchar cambios de ruta para ocultar sidebar/header en /login
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.isLoginRoute = event.urlAfterRedirects.startsWith('/login');
+        // Toggle class on body for CSS hooks if needed
+        if (this.isLoginRoute) {
+          document.body.classList.add('login-route');
+        } else {
+          document.body.classList.remove('login-route');
+        }
+      }
+    });
+
     this.authService.isAuthenticated$.subscribe(isAuth => {
       this.isLoggedIn = isAuth;
     });
