@@ -359,7 +359,7 @@
   </div>
 
   <!-- Auth Content -->
-  <div class="auth-container" *ngIf="!isLoggedIn">
+  <div class="auth-container" *ngIf="isLoginRoute || !isLoggedIn">
     <router-outlet></router-outlet>
   </div>
 </div>
