@@ -353,6 +353,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         token=token,
         user=UserResponse(
             id=user.id,
+            company_id=user.company_id,
             username=user.username,
             name=user.name,
             email=user.email,
@@ -898,6 +899,7 @@ async def get_users(db: Session = Depends(get_db)):
     users = db.query(DBUser).all()
     return [UserResponse(
         id=user.id,
+        company_id=user.company_id,
         username=user.username,
         name=user.name,
         email=user.email,
@@ -931,6 +933,7 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     
     return UserResponse(
         id=new_user.id,
+        company_id=new_user.company_id,
         username=new_user.username,
         name=new_user.name,
         email=new_user.email,

@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, EmailStr
 # Esquemas de usuario
 class UserResponse(BaseModel):
     id: int
+    company_id: int | None = None
     username: str
     name: str
     email: str
