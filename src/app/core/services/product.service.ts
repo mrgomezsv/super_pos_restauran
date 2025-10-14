@@ -2,14 +2,19 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Product, ProductCategory, ProductSearchFilters } from '../models/product.model';
+import { CompanyContextService } from './company-context.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  private readonly API_URL = 'http://localhost:3000/api';
+  private readonly API_URL = environment.apiUrl || 'http://localhost:3000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private companyContextService: CompanyContextService
+  ) {}
 
   getProducts(filters?: ProductSearchFilters): Observable<Product[]> {
     let params = new HttpParams();
@@ -72,6 +77,65 @@ export class ProductService {
 
   getNextSKU(): Observable<{ nextSKU: string }> {
     return this.http.get<{ nextSKU: string }>(`${this.API_URL}/products/next-sku`);
+  }
+
+  // Métodos relacionados con contexto de compañía
+  
+  /**
+   * Verificar si se pueden agregar más productos según los límites de suscripción
+   */
+  canAddMoreProducts(currentProductCount?: number): Observable<boolean> {
+    return new Observable(observer => {
+      // Si no se proporciona el count actual, obtenerlo
+      if (currentProductCount === undefined) {
+        this.getProducts().subscribe(products => {
+          const count = products.length;
+          const canAdd = this.companyContextService.canAddMoreProducts(count);
+          observer.next(canAdd);
+          observer.complete();
+        });
+      } else {
+        const canAdd = this.companyContextService.canAddMoreProducts(currentProductCount);
+        observer.next(canAdd);
+        observer.complete();
+      }
+    });
+  }
+
+  /**
+   * Obtener información de límites de productos
+   */
+  getProductLimits() {
+    const limits = this.companyContextService.getSubscriptionLimits();
+    return {
+      maxProducts: limits?.maxProducts || Infinity,
+      hasLimits: !!limits
+    };
+  }
+
+  /**
+   * Verificar si el usuario tiene permisos para gestionar productos
+   */
+  canManageProducts(): boolean {
+    return this.companyContextService.canAccess([
+      'products.create',
+      'products.update',
+      'products.delete'
+    ]);
+  }
+
+  /**
+   * Verificar si el usuario puede ver productos
+   */
+  canViewProducts(): boolean {
+    return this.companyContextService.hasPermission('products.read');
+  }
+
+  /**
+   * Obtener contexto actual de compañía (útil para debugging)
+   */
+  getCurrentCompanyContext() {
+    return this.companyContextService.getCurrentContext();
   }
 
 }

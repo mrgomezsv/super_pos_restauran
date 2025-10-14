@@ -35,6 +35,7 @@ from schemas import (
 
 # Importar servicio de compañías
 from company_service import company_service
+from context_service import get_current_context
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -370,10 +371,15 @@ async def get_products(
     category: Optional[str] = None,
     brand: Optional[str] = None,
     isActive: Optional[bool] = None,
+    context: dict = Depends(get_current_context),
     db: Session = Depends(get_db)
 ):
     """Obtener lista de productos con filtros"""
     query = db.query(DBProduct)
+    
+    # Aplicar filtro automático por compañía usando el context_service
+    from context_service import context_service
+    query = context_service.apply_company_filter(query, DBProduct, context)
     
     if search:
         search_lower = f"%{search.lower()}%"
@@ -594,8 +600,15 @@ async def delete_product(product_id: int, db: Session = Depends(get_db)):
 
 # Rutas de ventas
 @app.post("/api/sales", response_model=SaleResponse)
-async def create_sale(sale_data: SaleCreate, db: Session = Depends(get_db)):
+async def create_sale(
+    sale_data: SaleCreate, 
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
     """Crear nueva venta y actualizar inventario"""
+    
+    # Verificar acceso a la compañía
+    context_service.ensure_company_access(context, context["company"]["id"] if context.get("company") else -1)
     
     # Calcular totales
     totals = calculate_totals(sale_data.items)
@@ -623,8 +636,14 @@ async def create_sale(sale_data: SaleCreate, db: Session = Depends(get_db)):
     # Generar número de factura
     invoice_number = generate_invoice_number(sale_data.invoiceType, db)
     
+    # Obtener company_id del contexto
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
     # Crear venta
     new_sale = DBSale(
+        company_id=company_id,
         invoiceNumber=invoice_number,
         customerName=sale_data.customerName,
         customerDocument=sale_data.customerDocument,
@@ -710,10 +729,14 @@ async def get_sales(
     cashierId: Optional[int] = None,
     invoiceType: Optional[str] = None,
     sale_status: Optional[str] = None,
+    context: dict = Depends(get_current_context),
     db: Session = Depends(get_db)
 ):
     """Obtener lista de ventas con filtros"""
     query = db.query(DBSale).options(joinedload(DBSale.items))
+    
+    # Aplicar filtro automático por compañía
+    query = context_service.apply_company_filter(query, DBSale, context)
     
     if startDate:
         start = datetime.fromisoformat(startDate)
