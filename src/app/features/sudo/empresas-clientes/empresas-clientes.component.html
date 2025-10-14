@@ -1,0 +1,263 @@
+<div class="empresas-clientes-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">business_center</mat-icon>
+          Empresas Clientes
+        </h1>
+        <p class="page-subtitle">Gestión de empresas y clientes corporativos</p>
+      </div>
+      
+      <div class="header-actions">
+        <button mat-raised-button color="primary" (click)="nuevaEmpresa()">
+          <mat-icon>add_business</mat-icon>
+          Nueva Empresa
+        </button>
+        
+        <button mat-stroked-button (click)="generarReporte()">
+          <mat-icon>assessment</mat-icon>
+          Reportes
+        </button>
+        
+        <button mat-stroked-button (click)="exportarDatos()">
+          <mat-icon>file_download</mat-icon>
+          Exportar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <mat-card class="filters-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>filter_list</mat-icon>
+        Filtros de Búsqueda
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="searchForm" class="filters-form">
+        <div class="filter-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Buscar empresa</mat-label>
+            <input matInput formControlName="search" 
+                   placeholder="Nombre, razón social, NIT o email">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de Empresa</mat-label>
+            <mat-select formControlName="tipoEmpresa">
+              <mat-option value="">Todos</mat-option>
+              <mat-option *ngFor="let tipo of tiposEmpresa" [value]="tipo.value">
+                {{tipo.label}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Estado</mat-label>
+            <mat-select formControlName="estado">
+              <mat-option value="">Todos</mat-option>
+              <mat-option *ngFor="let estado of estados" [value]="estado.value">
+                {{estado.label}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card total">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <div class="stat-number">{{filteredEmpresas.length}}</div>
+            <div class="stat-label">Total Empresas</div>
+          </div>
+          <div class="stat-icon">
+            <mat-icon>business</mat-icon>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card active">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <div class="stat-number">{{empresasActivas}}</div>
+            <div class="stat-label">Empresas Activas</div>
+          </div>
+          <div class="stat-icon">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card revenue">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <div class="stat-number">$125K</div>
+            <div class="stat-label">Crédito Total</div>
+          </div>
+          <div class="stat-icon">
+            <mat-icon>attach_money</mat-icon>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card pending">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-info">
+            <div class="stat-number">$45K</div>
+            <div class="stat-label">Saldo Pendiente</div>
+          </div>
+          <div class="stat-icon">
+            <mat-icon>schedule</mat-icon>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Companies Table -->
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>list</mat-icon>
+        Lista de Empresas Clientes
+      </mat-card-title>
+      <div class="card-actions">
+        <span class="results-count">
+          {{filteredEmpresas.length}} empresas encontradas
+        </span>
+      </div>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="table-container" *ngIf="!isLoading; else loadingTemplate">
+        <table mat-table [dataSource]="filteredEmpresas" class="companies-table">
+          
+          <!-- Nombre Column -->
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Empresa</th>
+            <td mat-cell *matCellDef="let empresa" class="empresa-cell">
+              <div class="empresa-info">
+                <div class="empresa-name">{{empresa.nombre}}</div>
+                <div class="empresa-type">{{getTipoEmpresaLabel(empresa.tipoEmpresa)}}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Razón Social Column -->
+          <ng-container matColumnDef="razonSocial">
+            <th mat-header-cell *matHeaderCellDef>Razón Social</th>
+            <td mat-cell *matCellDef="let empresa" class="razon-social-cell">
+              <div class="razon-social">{{empresa.razonSocial}}</div>
+              <div class="nit-info">NIT: {{empresa.nit}}</div>
+            </td>
+          </ng-container>
+
+          <!-- NIT Column -->
+          <ng-container matColumnDef="nit">
+            <th mat-header-cell *matHeaderCellDef>Identificación</th>
+            <td mat-cell *matCellDef="let empresa" class="id-cell">
+              <div class="id-info">
+                <div class="nit">{{empresa.nit}}</div>
+                <div class="dui">DUI: {{empresa.dui}}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Contacto Column -->
+          <ng-container matColumnDef="contacto">
+            <th mat-header-cell *matHeaderCellDef>Contacto</th>
+            <td mat-cell *matCellDef="let empresa" class="contacto-cell">
+              <div class="contacto-info">
+                <div class="contacto-nombre">{{empresa.contactoPrincipal}}</div>
+                <div class="contacto-details">
+                  <div class="telefono">📞 {{empresa.telefono}}</div>
+                  <div class="email">✉️ {{empresa.email}}</div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Estado Column -->
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let empresa" class="estado-cell">
+              <mat-chip-set>
+                <mat-chip [color]="getEstadoColor(empresa.estado)" selected>
+                  {{empresa.estado | titlecase}}
+                </mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <!-- Saldo Column -->
+          <ng-container matColumnDef="saldo">
+            <th mat-header-cell *matHeaderCellDef>Crédito</th>
+            <td mat-cell *matCellDef="let empresa" class="saldo-cell">
+              <div class="saldo-info">
+                <div class="limite-credito">Límite: {{formatCurrency(empresa.limiteCredito)}}</div>
+                <div class="saldo-actual" 
+                     [class.alto]="isSaldoAlto(empresa)"
+                     [class.medio]="isSaldoMedio(empresa)">
+                  Saldo: {{formatCurrency(empresa.saldoActual)}}
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let empresa" class="actions-cell">
+              <div class="action-buttons">
+                <button mat-icon-button (click)="verDetalle(empresa)" 
+                        matTooltip="Ver detalle">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                
+                <button mat-icon-button (click)="editarEmpresa(empresa)" 
+                        matTooltip="Editar empresa">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                
+                <button mat-icon-button (click)="cambiarEstado(empresa)" 
+                        matTooltip="Cambiar estado"
+                        [color]="getButtonColor(empresa)">
+                  <mat-icon>{{getPlayIcon(empresa)}}</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+              class="table-row" 
+              [class.suspended]="isEstadoSuspendida(row.estado)"></tr>
+        </table>
+      </div>
+      
+      <ng-template #loadingTemplate>
+        <div class="loading-container">
+          <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+          <p>Cargando empresas clientes...</p>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+</div>

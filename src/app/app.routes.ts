@@ -79,6 +79,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/fiscal-documents/fiscal-documents.component').then(m => m.FiscalDocumentsComponent),
     canActivate: [adminGuard]
   },
+  // SUDO routes
+  {
+    path: 'sudo/empresas-clientes',
+    loadComponent: () => import('./features/sudo/empresas-clientes/empresas-clientes.component').then(m => m.EmpresasClientesComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'sudo/usuario-sudo',
+    loadComponent: () => import('./features/sudo/usuario-sudo/usuario-sudo.component').then(m => m.UsuarioSudoComponent),
+    canActivate: [adminGuard]
+  },
   {
     path: '**',
     redirectTo: '/login'

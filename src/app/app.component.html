@@ -265,6 +265,32 @@
             </li>
           </ul>
         </div>
+
+        <!-- SUDO Section -->
+        <div class="nav-section" *ngIf="currentUser?.role === 'admin'">
+          <h3 class="nav-section-title">SUDO</h3>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a routerLink="/sudo/empresas-clientes" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>business_center</mat-icon>
+                </div>
+                <span class="nav-text">Empresas Clientes</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <li class="nav-item">
+              <a routerLink="/sudo/usuario-sudo" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>admin_panel_settings</mat-icon>
+                </div>
+                <span class="nav-text">Usuario Sudo</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+          </ul>
+        </div>
       </nav>
     </aside>
     

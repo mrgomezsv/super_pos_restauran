@@ -1,0 +1,473 @@
+<div class="usuario-sudo-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">admin_panel_settings</mat-icon>
+          Usuario SUDO
+        </h1>
+        <p class="page-subtitle">Gestión de usuarios con privilegios administrativos</p>
+      </div>
+      
+      <div class="header-actions">
+        <button mat-raised-button color="warn" (click)="generarReporteSeguridad()">
+          <mat-icon>security</mat-icon>
+          Reporte de Seguridad
+        </button>
+        
+        <button mat-stroked-button (click)="exportarLogs()">
+          <mat-icon>file_download</mat-icon>
+          Exportar Logs
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Alert -->
+  <mat-card class="security-alert">
+    <mat-card-content>
+      <div class="alert-content">
+        <mat-icon class="alert-icon">warning</mat-icon>
+        <div class="alert-text">
+          <h3>Zona de Seguridad Crítica</h3>
+          <p>Esta sección maneja usuarios con privilegios administrativos máximos. 
+             Todos los cambios son registrados y monitoreados.</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Tabs Navigation -->
+  <mat-tab-group class="sudo-tabs" animationDuration="300ms">
+    
+    <!-- Usuarios SUDO Tab -->
+    <mat-tab label="Usuarios SUDO">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          
+          <!-- Stats Cards -->
+          <div class="stats-grid">
+            <mat-card class="stat-card active-users">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-info">
+                    <div class="stat-number">{{usuariosSudo.length}}</div>
+                    <div class="stat-label">Usuarios SUDO</div>
+                  </div>
+                  <div class="stat-icon">
+                    <mat-icon>admin_panel_settings</mat-icon>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stat-card active-sessions">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-info">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Sesiones Activas</div>
+                  </div>
+                  <div class="stat-icon">
+                    <mat-icon>people</mat-icon>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stat-card failed-attempts">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-info">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Intentos Fallidos (24h)</div>
+                  </div>
+                  <div class="stat-icon">
+                    <mat-icon>security</mat-icon>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stat-card last-activity">
+              <mat-card-content>
+                <div class="stat-content">
+                  <div class="stat-info">
+                    <div class="stat-number">22:30</div>
+                    <div class="stat-label">Última Actividad</div>
+                  </div>
+                  <div class="stat-icon">
+                    <mat-icon>access_time</mat-icon>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Create User Form -->
+          <mat-card class="create-user-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>person_add</mat-icon>
+                Crear Usuario SUDO
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <form [formGroup]="usuarioForm" (ngSubmit)="crearUsuarioSudo()" class="user-form">
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Username</mat-label>
+                    <input matInput formControlName="username" placeholder="sudo.username">
+                    <mat-icon matSuffix>account_circle</mat-icon>
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" type="email" placeholder="sudo@example.com">
+                    <mat-icon matSuffix>email</mat-icon>
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput formControlName="nombre">
+                    <mat-icon matSuffix>person</mat-icon>
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Apellido</mat-label>
+                    <input matInput formControlName="apellido">
+                    <mat-icon matSuffix>person</mat-icon>
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput formControlName="telefono" placeholder="0000-0000">
+                    <mat-icon matSuffix>phone</mat-icon>
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Permisos</mat-label>
+                    <mat-select formControlName="permisos" multiple>
+                      <mat-option *ngFor="let permiso of permisosCriticos" [value]="permiso.id">
+                        {{permiso.nombre}}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matSuffix>security</mat-icon>
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-actions">
+                  <button mat-raised-button color="primary" type="submit" [disabled]="usuarioForm.invalid">
+                    <mat-icon>add</mat-icon>
+                    Crear Usuario SUDO
+                  </button>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Users Table -->
+          <mat-card class="users-table-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>list</mat-icon>
+                Usuarios SUDO Existentes
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="table-container" *ngIf="!isLoading; else loadingTemplate">
+                <table mat-table [dataSource]="usuariosSudo" class="sudo-users-table">
+                  
+                  <!-- Usuario Column -->
+                  <ng-container matColumnDef="usuario">
+                    <th mat-header-cell *matHeaderCellDef>Usuario</th>
+                    <td mat-cell *matCellDef="let usuario" class="usuario-cell">
+                      <div class="usuario-info">
+                        <div class="username">{{usuario.username}}</div>
+                        <div class="email">{{usuario.email}}</div>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Nombre Column -->
+                  <ng-container matColumnDef="nombre">
+                    <th mat-header-cell *matHeaderCellDef>Información Personal</th>
+                    <td mat-cell *matCellDef="let usuario" class="nombre-cell">
+                      <div class="personal-info">
+                        <div class="full-name">{{usuario.nombre}} {{usuario.apellido}}</div>
+                        <div class="contact-info">
+                          <div class="telefono">📞 {{usuario.telefono}}</div>
+                          <div class="system-info">🖥️ {{usuario.sistemaOperativo}} | {{usuario.navegador}}</div>
+                        </div>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Permisos Column -->
+                  <ng-container matColumnDef="permisos">
+                    <th mat-header-cell *matHeaderCellDef>Permisos</th>
+                    <td mat-cell *matCellDef="let usuario" class="permisos-cell">
+                      <div class="permisos-list">
+                        <mat-chip-set>
+                          <mat-chip *ngFor="let permiso of usuario.permisos.slice(0, 3)"
+                                   [color]="getPermisoColor(getPermisoNivel(permiso))"
+                                   selected>
+                            {{permiso}}
+                          </mat-chip>
+                          <mat-chip *ngIf="usuario.permisos.length > 3" 
+                                   color="accent"
+                                   matTooltip="{{usuario.permisos.slice(3).join(', ')}}">
+                            +{{usuario.permisos.length - 3}}
+                          </mat-chip>
+                        </mat-chip-set>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Último Acceso Column -->
+                  <ng-container matColumnDef="ultimoAcceso">
+                    <th mat-header-cell *matHeaderCellDef>Actividad</th>
+                    <td mat-cell *matCellDef="let usuario" class="acceso-cell">
+                      <div class="access-info">
+                        <div class="last-access">{{formatDateTime(usuario.ultimoAcceso)}}</div>
+                        <div class="ip-info">IP: {{usuario.ip}}</div>
+                        <div class="attempts" 
+                             [class.warning]="usuario.intentosLogin > 0">
+                          Intentos fallidos: {{usuario.intentosLogin}}
+                        </div>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Estado Column -->
+                  <ng-container matColumnDef="estado">
+                    <th mat-header-cell *matHeaderCellDef>Estado</th>
+                    <td mat-cell *matCellDef="let usuario" class="estado-cell">
+                      <mat-chip-set>
+                        <mat-chip [color]="usuario.estado === 'activo' ? 'primary' : 'warn'" selected>
+                          {{usuario.estado | titlecase}}
+                        </mat-chip>
+                      </mat-chip-set>
+                    </td>
+                  </ng-container>
+
+                  <!-- Acciones Column -->
+                  <ng-container matColumnDef="acciones">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let usuario" class="actions-cell">
+                      <div class="action-buttons">
+                        <button mat-icon-button (click)="editarUsuario(usuario)" 
+                                matTooltip="Editar usuario">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        
+                        <button mat-icon-button (click)="resetearPassword(usuario)" 
+                                matTooltip="Resetear password"
+                                color="accent">
+                          <mat-icon>lock_reset</mat-icon>
+                        </button>
+                        
+                        <button mat-icon-button (click)="revocarPermisos(usuario)" 
+                                matTooltip="Revocar permisos"
+                                color="warn">
+                          <mat-icon>remove_circle</mat-icon>
+                        </button>
+                        
+                        <button mat-icon-button (click)="cambiarEstadoUsuario(usuario)" 
+                                matTooltip="Cambiar estado"
+                                [color]="usuario.estado === 'activo' ? 'warn' : 'primary'">
+                          <mat-icon>{{usuario.estado === 'activo' ? 'pause' : 'play_arrow'}}</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsUsuarios"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsUsuarios;" 
+                      class="table-row"
+                      [class.inactive]="row.estado !== 'activo'"></tr>
+                </table>
+              </div>
+              
+              <ng-template #loadingTemplate>
+                <div class="loading-container">
+                  <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+                  <p>Cargando usuarios SUDO...</p>
+                </div>
+              </ng-template>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Permisos Críticos Tab -->
+    <mat-tab label="Permisos Críticos">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <mat-card class="permissions-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>security</mat-icon>
+                Configuración de Permisos Críticos
+              </mat-card-title>
+              <mat-card-subtitle>
+                Administre los permisos disponibles para usuarios SUDO
+              </mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <mat-accordion class="permissions-accordion">
+                <mat-expansion-panel *ngFor="let permiso of permisosCriticos" 
+                                   class="permission-panel"
+                                   [class]="'level-' + permiso.nivel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <div class="permission-header">
+                        <mat-icon class="permission-icon">{{permiso.activo ? 'check_circle' : 'cancel'}}</mat-icon>
+                        <span class="permission-name">{{permiso.nombre}}</span>
+                        <mat-chip [color]="getPermisoColor(permiso.nivel)" selected>
+                          {{permiso.nivel | titlecase}}
+                        </mat-chip>
+                      </div>
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  
+                  <div class="permission-content">
+                    <p class="permission-description">{{permiso.descripcion}}</p>
+                    
+                    <div class="permission-details">
+                      <div class="detail-item">
+                        <strong>ID:</strong> {{permiso.id}}
+                      </div>
+                      <div class="detail-item">
+                        <strong>Categoría:</strong> {{permiso.categoria}}
+                      </div>
+                      <div class="detail-item">
+                        <strong>Nivel de Riesgo:</strong> {{permiso.nivel | titlecase}}
+                      </div>
+                    </div>
+                    
+                    <div class="permission-actions">
+                      <mat-slide-toggle 
+                        [checked]="permiso.activo"
+                        (change)="togglePermiso(permiso)"
+                        [color]="permiso.nivel === 'critico' ? 'warn' : 'primary'">
+                        {{permiso.activo ? 'Activo' : 'Inactivo'}}
+                      </mat-slide-toggle>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Actividad Reciente Tab -->
+    <mat-tab label="Log de Actividad">
+      <ng-template matTabContent>
+        <div class="tab-content">
+          <mat-card class="activity-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>history</mat-icon>
+                Actividad Reciente de Usuarios SUDO
+              </mat-card-title>
+              <div class="card-actions">
+                <button mat-icon-button (click)="exportarLogs()" matTooltip="Exportar logs">
+                  <mat-icon>file_download</mat-icon>
+                </button>
+              </div>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="table-container">
+                <table mat-table [dataSource]="actividadReciente" class="activity-table">
+                  
+                  <!-- Fecha Column -->
+                  <ng-container matColumnDef="fecha">
+                    <th mat-header-cell *matHeaderCellDef>Fecha/Hora</th>
+                    <td mat-cell *matCellDef="let actividad" class="fecha-cell">
+                      {{formatDateTime(actividad.fecha)}}
+                    </td>
+                  </ng-container>
+
+                  <!-- Usuario Column -->
+                  <ng-container matColumnDef="usuario">
+                    <th mat-header-cell *matHeaderCellDef>Usuario</th>
+                    <td mat-cell *matCellDef="let actividad" class="usuario-activity-cell">
+                      {{actividad.usuario}}
+                    </td>
+                  </ng-container>
+
+                  <!-- Acción Column -->
+                  <ng-container matColumnDef="accion">
+                    <th mat-header-cell *matHeaderCellDef>Acción</th>
+                    <td mat-cell *matCellDef="let actividad" class="accion-cell">
+                      <div class="action-info">
+                        <div class="action-name">{{actividad.accion}}</div>
+                        <div class="action-detail">{{actividad.detalle}}</div>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Módulo Column -->
+                  <ng-container matColumnDef="modulo">
+                    <th mat-header-cell *matHeaderCellDef>Módulo</th>
+                    <td mat-cell *matCellDef="let actividad" class="modulo-cell">
+                      {{actividad.modulo}}
+                    </td>
+                  </ng-container>
+
+                  <!-- IP Column -->
+                  <ng-container matColumnDef="ip">
+                    <th mat-header-cell *matHeaderCellDef>IP</th>
+                    <td mat-cell *matCellDef="let actividad" class="ip-cell">
+                      <div class="ip-info">
+                        {{actividad.ip}}
+                        <button mat-icon-button *ngIf="actividad.resultado === 'bloqueado'"
+                                (click)="bloquearIP(actividad.ip)"
+                                matTooltip="Bloquear IP"
+                                color="warn">
+                          <mat-icon>block</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Resultado Column -->
+                  <ng-container matColumnDef="resultado">
+                    <th mat-header-cell *matHeaderCellDef>Resultado</th>
+                    <td mat-cell *matCellDef="let actividad" class="resultado-cell">
+                      <mat-chip-set>
+                        <mat-chip [color]="getResultadoColor(actividad.resultado)" selected>
+                          <mat-icon class="result-icon">{{getResultadoIcon(actividad.resultado)}}</mat-icon>
+                          {{actividad.resultado | titlecase}}
+                        </mat-chip>
+                      </mat-chip-set>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsActividad"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsActividad;" 
+                      class="activity-row"
+                      [class.blocked]="row.resultado === 'bloqueado'"
+                      [class.failed]="row.resultado === 'fallido'"></tr>
+                </table>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>
