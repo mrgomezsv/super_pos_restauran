@@ -13,7 +13,7 @@
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 20000; /* asegura que cualquier popover del header quede por encima del contenido */
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95);
   
@@ -179,7 +179,7 @@
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
   background: var(--surface-color);
-  z-index: 10000; /* asegurar que el dropdown quede por encima del resto */
+  z-index: 30000; /* sobre cualquier overlay del POS */
   overflow: hidden;
   animation: popoverSlideIn 0.2s ease-out;
   
