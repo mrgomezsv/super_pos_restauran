@@ -866,110 +866,297 @@ body {
 
 // ========================================
 // MEJORAS GLOBALES PARA MAT-FORM-FIELD
+// Basados en el modal "Nuevo Producto"
 // ========================================
 
 // Estilos globales para todos los campos de formulario
 ::ng-deep .mat-mdc-form-field {
   width: 100%;
+  min-width: 200px;
   
-  // Wrapper del campo
+  // Wrapper principal del campo - Estilo del modal Nuevo Producto
   .mat-mdc-text-field-wrapper {
-    min-height: 56px !important;
-    padding: 0 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
+    padding: 0 !important;
+    min-height: 56px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    
+    &:hover {
+      border-color: #017E84 !important;
+      box-shadow: 0 2px 8px rgba(1, 126, 132, 0.1) !important;
+    }
   }
-  
+
   // Área de contenido del campo
   .mat-mdc-form-field-infix {
-    min-height: 48px !important;
-    padding: 12px 0 !important;
+    padding: 16px 12px 8px 12px !important;
+    min-height: auto !important;
+    display: block !important;
   }
-  
-  // Labels mejorados
+
+  // Label mejorado - FORZAR POSICIÓN CORRECTA (estilo del modal)
   .mat-mdc-form-field-label {
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: #666 !important;
-    transform: translateY(-106%) scale(0.75) !important;
-    transform-origin: 0 0 !important;
-  }
-  
-  // Inputs mejorados
-  .mat-mdc-input-element {
-    font-size: 16px !important;
-    color: #333 !important;
-    padding: 4px 0 !important;
-  }
-  
-  // Placeholders mejorados
-  .mat-mdc-input-element::placeholder {
-    color: #a0aec0 !important;
-    font-style: italic !important;
-  }
-  
-  // Área de subscripción (hints y errores)
-  .mat-mdc-form-field-subscript-wrapper {
-    margin-top: 4px !important;
+    position: absolute !important;
+    top: -8px !important;
+    left: 12px !important;
+    background: #ffffff !important;
+    padding: 0 4px !important;
     font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #017E84 !important;
+    z-index: 1 !important;
+    transition: all 0.3s ease !important;
+    transform: none !important;
+    transform-origin: unset !important;
+    
+    // Forzar que el label siempre esté en posición flotante
+    &.mat-mdc-form-field-label-filled,
+    &.mat-mdc-form-field-label-floating,
+    &.mdc-floating-label--float-above {
+      position: absolute !important;
+      top: -8px !important;
+      left: 12px !important;
+      background: #ffffff !important;
+      padding: 0 4px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #017E84 !important;
+      z-index: 1 !important;
+      transform: none !important;
+    }
   }
-  
-  // Iconos de sufijo mejorados
+
+  // Input mejorado
+  .mat-mdc-input-element {
+    color: #333 !important;
+    font-size: 16px !important;
+    padding: 4px 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    
+    &::placeholder {
+      color: #a0aec0 !important;
+      font-style: italic !important;
+    }
+  }
+
+  // Select mejorado
+  .mat-mdc-select {
+    .mat-mdc-select-trigger {
+      padding: 4px 0 !important;
+      min-height: auto !important;
+    }
+    
+    .mat-mdc-select-value {
+      color: #333 !important;
+      font-size: 16px !important;
+    }
+    
+    .mat-mdc-select-placeholder {
+      color: #a0aec0 !important;
+      font-style: italic !important;
+    }
+  }
+
+  // Estados de enfoque
+  &.mat-focused .mat-mdc-text-field-wrapper {
+    border-color: #017E84 !important;
+    border-width: 2px !important;
+    box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1) !important;
+  }
+
+  // Estados de error
+  &.mat-form-field-invalid .mat-mdc-text-field-wrapper {
+    border-color: #f44336 !important;
+    border-width: 2px !important;
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1) !important;
+  }
+
+  // Iconos de sufijo
   .mat-mdc-form-field-suffix {
+    padding-right: 12px !important;
+    
     .mat-mdc-icon-button {
-      width: 32px !important;
-      height: 32px !important;
+      width: 24px !important;
+      height: 24px !important;
       padding: 0 !important;
       
       .mat-icon {
-        font-size: 20px !important;
+        font-size: 18px !important;
         color: #666 !important;
       }
     }
   }
-  
-  // Select mejorado
-  .mat-mdc-select {
-    font-size: 16px !important;
+
+  // Área de hints y errores
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 4px !important;
+    padding: 0 12px !important;
+    
+    .mat-mdc-form-field-hint-wrapper,
+    .mat-mdc-form-field-error-wrapper {
+      font-size: 12px !important;
+    }
+  }
+}
+
+// Estilos adicionales para campos de textarea
+::ng-deep .mat-mdc-form-field.textarea-field {
+  .mat-mdc-text-field-wrapper {
+    min-height: 120px !important;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-form-field-infix {
+    padding: 16px 12px 8px 12px !important;
+    min-height: auto !important;
+    display: block !important;
+  }
+
+  .mat-mdc-input-element {
+    min-height: 80px !important;
+    padding: 4px 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    line-height: 1.6 !important;
+    resize: vertical !important;
+    
+    &::placeholder {
+      color: #a0aec0 !important;
+      font-style: italic !important;
+    }
+  }
+
+  .mat-mdc-form-field-label {
+    position: absolute !important;
+    top: -8px !important;
+    left: 12px !important;
+    background: #ffffff !important;
+    padding: 0 4px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #017E84 !important;
+    z-index: 1 !important;
+  }
+}
+
+// ========================================
+// ESTILOS ESPECÍFICOS PARA FORZAR APLICACIÓN
+// ========================================
+
+// Forzar aplicación de estilos en todos los componentes
+::ng-deep mat-form-field.mat-mdc-form-field {
+  .mat-mdc-form-field-label,
+  .mdc-floating-label,
+  .mat-mdc-form-field-label-wrapper {
+    position: absolute !important;
+    top: -8px !important;
+    left: 12px !important;
+    background: #ffffff !important;
+    padding: 0 4px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #017E84 !important;
+    z-index: 1 !important;
+    transform: none !important;
+    transform-origin: unset !important;
+    transition: none !important;
+    
+    // Forzar todas las variantes
+    &.mat-mdc-form-field-label-filled,
+    &.mat-mdc-form-field-label-floating,
+    &.mdc-floating-label--float-above,
+    &.mat-form-field-label-filled,
+    &.mat-form-field-label-floating,
+    &.mdc-floating-label {
+      position: absolute !important;
+      top: -8px !important;
+      left: 12px !important;
+      background: #ffffff !important;
+      padding: 0 4px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #017E84 !important;
+      z-index: 1 !important;
+      transform: none !important;
+      transform-origin: unset !important;
+      transition: none !important;
+    }
+  }
+
+  .mat-mdc-text-field-wrapper {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+    min-height: 56px !important;
+    position: relative !important;
+  }
+
+  .mat-mdc-form-field-infix {
+    padding: 16px 12px 8px 12px !important;
+    min-height: auto !important;
+    display: block !important;
+  }
+
+  .mat-mdc-input-element {
     color: #333 !important;
+    font-size: 16px !important;
+    padding: 4px 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
     
-    .mat-mdc-select-trigger {
-      min-height: 48px !important;
-      padding: 12px 0 !important;
-    }
-    
-    .mat-mdc-select-value {
-      font-size: 16px !important;
-      color: #333 !important;
-    }
-    
-    .mat-mdc-select-arrow {
-      color: #666 !important;
+    &::placeholder {
+      color: #a0aec0 !important;
+      font-style: italic !important;
     }
   }
-  
-  // Estados de enfoque
+
   &.mat-focused {
-    .mat-mdc-form-field-outline {
-      .mat-mdc-form-field-outline-thick {
-        color: #017E84 !important;
-        border-width: 2px !important;
-      }
+    .mat-mdc-text-field-wrapper {
+      border-color: #017E84 !important;
+      border-width: 2px !important;
+      box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1) !important;
     }
   }
-  
-  // Estados de error
-  &.mat-form-field-invalid {
-    .mat-mdc-form-field-outline {
-      .mat-mdc-form-field-outline-thick {
-        color: #f44336 !important;
-        border-width: 2px !important;
-      }
-    }
-    
-    .mat-mdc-form-field-label {
-      color: #f44336 !important;
-    }
-  }
+}
+
+// ========================================
+// ESTILOS PARA FORMULARIOS ESPECÍFICOS
+// ========================================
+
+// Aplicar estilos a formularios de login
+::ng-deep .login-form mat-form-field {
+  @extend .mat-mdc-form-field;
+}
+
+// Aplicar estilos a formularios de productos
+::ng-deep .product-form mat-form-field {
+  @extend .mat-mdc-form-field;
+}
+
+// Aplicar estilos a formularios de usuarios
+::ng-deep .user-form mat-form-field {
+  @extend .mat-mdc-form-field;
+}
+
+// Aplicar estilos a formularios de empresas
+::ng-deep .empresa-form mat-form-field {
+  @extend .mat-mdc-form-field;
+}
+
+// Aplicar estilos a formularios de documentos fiscales
+::ng-deep .fiscal-form mat-form-field {
+  @extend .mat-mdc-form-field;
 }
 
 // Mejorar los botones de formulario globalmente
