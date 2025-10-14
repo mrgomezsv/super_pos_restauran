@@ -329,7 +329,7 @@
 .app-layout {
   display: flex;
   flex: 1;
-  min-height: calc(100vh - 80px);
+  height: calc(100vh - 80px); /* fija el alto del layout para scrolls independientes */
 }
 
 // Sidebar Styles
@@ -339,7 +339,9 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: relative;
+  position: sticky; /* sidebar fijo */
+  top: 0;
+  height: calc(100vh - 80px); /* su propio alto para permitir scroll interno */
   transition: all var(--transition-normal);
   
   .sidebar-nav {
