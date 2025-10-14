@@ -179,7 +179,7 @@
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
   background: var(--surface-color);
-  z-index: 1000;
+  z-index: 10000; /* asegurar que el dropdown quede por encima del resto */
   overflow: hidden;
   animation: popoverSlideIn 0.2s ease-out;
   
