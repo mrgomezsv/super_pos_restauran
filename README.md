@@ -15,9 +15,17 @@ Sistema completo de punto de ventas desarrollado en Angular para supermercados, 
 ### 📄 **Facturación**
 - **Consumidor Final**: Para ventas al por menor
 - **Crédito Fiscal**: Con datos del cliente para facturación formal
-- Números de factura automáticos
+- Números de factura automáticos con correlativos
 - Impresión de tickets (funcionalidad preparada)
-- Historial completo de ventas
+- Historial completo de ventas con persistencia real
+
+### 🔒 **Persistencia y Contabilidad**
+- **SQLite**: Base de datos real con persistencia completa
+- **Pólizas automáticas**: Cada venta genera asientos contables
+- **Movimientos de inventario**: Actualizaciones automáticas de stock
+- **Libro diario**: Registro completo de todas las transacciones
+- **Balance de comprobación**: Informes contables automáticos
+- **Datos seguros**: Todo persiste después de reiniciar el servidor
 
 ### 👥 **Gestión de Usuarios**
 - Sistema de autenticación seguro
@@ -43,16 +51,21 @@ Sistema completo de punto de ventas desarrollado en Angular para supermercados, 
 
 - **Frontend**: Angular 18, Angular Material, TypeScript
 - **Estilos**: SCSS, Material Design
-- **Backend**: Node.js + Express (Mock para desarrollo)
-- **Base de Datos**: JSON (simulada, fácil migración a DB real)
+- **Backend**: FastAPI + Python (con SQLite)
+- **Base de Datos**: SQLite con SQLAlchemy (persistencia real)
 - **Autenticación**: JWT (simulado)
 - **UI/UX**: Material Design, Responsive Design
 
 ## 📋 Requisitos del Sistema
 
-- Node.js 18+ 
-- npm 9+
-- Angular CLI 18+
+- **Frontend**:
+  - Node.js 18+ 
+  - npm 9+
+  - Angular CLI 18+
+
+- **Backend**:
+  - Python 3.9+
+  - pip (gestor de paquetes Python)
 
 ## 🚀 Instalación y Configuración
 
@@ -62,28 +75,50 @@ git clone <url-del-repositorio>
 cd super-pos
 ```
 
-### 2. Instalar dependencias
+### 2. Configurar el Backend (FastAPI + SQLite)
+
 ```bash
+# Ir al directorio del backend
+cd backend
+
+# Instalar dependencias de Python
+pip install -r requirements.txt
+
+# Inicializar la base de datos (solo la primera vez)
+python init_db.py
+```
+
+### 3. Iniciar el backend
+```bash
+# En el directorio backend
+python main.py
+
+# El servidor iniciará en: http://localhost:3000
+```
+
+### 4. Configurar el Frontend
+
+```bash
+# En otra terminal, volver al directorio raíz
+cd ..
+
+# Instalar dependencias de Node.js
 npm install
 ```
 
-### 3. Iniciar el backend simulado
+### 5. Iniciar el frontend
 ```bash
-# En una terminal separada
-node mock-backend.js
-```
-
-### 4. Iniciar el frontend
-```bash
-# En otra terminal
 npm start
 # o
 ng serve
 ```
 
-### 5. Acceder a la aplicación
+### 6. Acceder a la aplicación
 - **Frontend**: http://localhost:4200
 - **Backend API**: http://localhost:3000/api
+- **Documentación API**: http://localhost:3000/docs (Swagger UI automático)
+
+> 🔥 **¡IMPORTANTE!** Ahora todas las transacciones se guardan en `backend/superpos.db` y **persisten después de reiniciar**
 
 ## 👤 Usuarios de Prueba
 
@@ -136,7 +171,7 @@ ng serve
 
 ```
 super-pos/
-├── src/
+├── src/                        # 🎨 FRONTEND (Angular)
 │   ├── app/
 │   │   ├── core/                 # Servicios y modelos compartidos
 │   │   │   ├── guards/          # Guards de autenticación
@@ -148,13 +183,23 @@ super-pos/
 │   │   │   ├── products/       # Gestión de productos
 │   │   │   ├── users/          # Gestión de usuarios
 │   │   │   ├── reports/        # Reportes
+│   │   │   ├── accounting/     # Módulos contables
 │   │   │   └── dashboard/      # Dashboard principal
 │   │   ├── app.component.ts    # Componente principal
 │   │   ├── app.routes.ts       # Rutas de la aplicación
 │   │   └── app.config.ts       # Configuración global
 │   └── styles.scss             # Estilos globales
-├── mock-backend.js             # Backend simulado
-└── package.json               # Dependencias
+├── backend/                    # 🔧 BACKEND (FastAPI + SQLite)
+│   ├── main.py                 # Servidor principal FastAPI
+│   ├── database.py             # Configuración SQLAlchemy + modelos
+│   ├── init_db.py              # Inicialización de BD con datos semilla
+│   ├── models.py               # Modelos Pydantic (requests/responses)
+│   ├── schemas.py              # Esquemas de validación
+│   ├── requirements.txt        # Dependencias Python
+│   ├── superpos.db            # 📊 Base de datos SQLite (auto-generada)
+│   └── test_*.py              # Scripts de pruebas
+├── package.json               # Dependencias Node.js
+└── README.md                  # Este archivo
 ```
 
 ## 🎨 Personalización
@@ -178,15 +223,18 @@ Los impuestos se configuran por producto en la sección de gestión de productos
 - `POST /api/auth/login` - Iniciar sesión
 
 ### Productos
-- `GET /api/products` - Listar productos
-- `POST /api/products` - Crear producto
+- `GET /api/products` - Listar productos con filtros
+- `POST /api/products` - Crear producto (SKU automático)
 - `PUT /api/products/:id` - Actualizar producto
 - `DELETE /api/products/:id` - Eliminar producto
 - `GET /api/products/categories` - Listar categorías
+- `GET /api/products/next-sku` - Obtener siguiente SKU disponible
+- `GET /api/products/code/:code` - Buscar por código
+- `GET /api/products/barcode/:barcode` - Buscar por código de barras
 
-### Ventas
-- `POST /api/sales` - Crear venta
-- `GET /api/sales` - Listar ventas
+### Ventas (con persistencia SQLite)
+- `POST /api/sales` - Crear venta (genera pólizas automáticas)
+- `GET /api/sales` - Listar ventas con filtros
 - `GET /api/sales/summary` - Resumen de ventas
 
 ### Usuarios
@@ -194,21 +242,65 @@ Los impuestos se configuran por producto en la sección de gestión de productos
 - `POST /api/users` - Crear usuario
 - `PUT /api/users/:id` - Actualizar usuario
 
+### Contabilidad (nuevos endpoints)
+- `GET /api/accounting/accounts` - Catálogo de cuentas
+- `GET /api/accounting/journal-entries` - Libro diario
+- `GET /api/accounting/ledger` - Libro mayor
+- `GET /api/accounting/trial-balance` - Balance de comprobación
+- `GET /api/accounting/inventory-movements` - Movimientos de inventario
+- `GET /api/accounting/vat/sales` - Libro de ventas (IVA)
+
+### Documentos Fiscales
+- `GET /api/fiscal-documents` - Listar documentos fiscales
+- `POST /api/fiscal-documents` - Crear documento fiscal
+- `PUT /api/fiscal-documents/:id` - Actualizar documento
+
+### Utilidades
+- `GET /health` - Health check del API
+- `GET /docs` - Documentación automática (Swagger UI)
+
 ## 🚀 Despliegue en Producción
 
-### 1. Build del proyecto
+### 1. Build del frontend
 ```bash
+# Construir para producción
 ng build --configuration production
 ```
 
-### 2. Configurar backend real
-Reemplazar `mock-backend.js` con un backend real (Node.js + Express, Python + Django, etc.)
+### 2. Preparar el backend
+```bash
+# En el directorio backend
+pip install -r requirements.txt
 
-### 3. Configurar base de datos
-Migrar de JSON a base de datos real (PostgreSQL, MySQL, MongoDB)
+# Inicializar la base de datos en producción
+python init_db.py
 
-### 4. Configurar autenticación JWT
-Implementar JWT real en lugar del mock
+# El archivo superpos.db será creado automáticamente
+```
+
+### 3. Configurar servidor web
+- **Nginx**: Para servir el frontend estático
+- **Gunicorn + FastAPI**: Para el backend
+- **Supervisor**: Para mantener el proceso corriendo
+
+### 4. Configuración de producción recomendada
+```bash
+# Instalar Gunicorn
+pip install gunicorn
+
+# Ejecutar en producción
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:3000
+```
+
+### 5. Respaldos automáticos
+```bash
+# Script simple para respaldo diario
+cp backend/superpos.db backups/superpos_$(date +%Y%m%d).db
+```
+
+> ✅ **Ventaja**: Con SQLite no necesitas configurar servidor de BD separado
+> ✅ **Portabilidad**: Un solo archivo `superpos.db` contiene todo
+> ✅ **Escalabilidad**: SQLite maneja miles de transacciones concurrentes
 
 ## 🔒 Seguridad
 
@@ -218,17 +310,30 @@ Implementar JWT real en lugar del mock
 - Sanitización de inputs
 - Control de acceso por roles
 
-## 📈 Próximas Funcionalidades
+## 📈 Funcionalidades Completadas y Próximas
 
+### ✅ **Recién Implementado (v2.0 - SQLite)**
+- [x] **Persistencia real con SQLite**
+- [x] **Sistema contable completo**
+- [x] **Pólizas automáticas para cada venta**  
+- [x] **Movimientos de inventario**
+- [x] **Libro diario y mayor**
+- [x] **Balance de comprobación**
+- [x] **API con documentación automática (Swagger)**
+
+### 🎯 **Próximas Funcionalidades**
 - [ ] Integración con impresoras térmicas
 - [ ] Códigos QR para productos
-- [ ] Inventario en tiempo real
-- [ ] Integración con sistemas de pago
+- [ ] Integración con sistemas de pago externos
 - [ ] App móvil (React Native/Flutter)
-- [ ] Reportes en PDF
-- [ ] Backup automático
-- [ ] Multi-idioma
-- [ ] Modo offline
+- [ ] Reportes en PDF automáticos
+- [ ] Backup automático programado
+- [ ] Multi-idioma (ES/EN)
+- [ ] Modo offline (PWA)
+- [ ] Dashboard con gráficos en tiempo real
+- [ ] Integración con balanzas electrónicas
+- [ ] Sistema de descuentos avanzado
+- [ ] Programa de fidelidad de clientes
 
 ## 🤝 Contribución
 
