@@ -195,3 +195,98 @@ class SaleSummary(BaseModel):
     averageTicket: float
     salesByPaymentMethod: dict
     salesByInvoiceType: dict
+
+# Esquemas de compañía (multi-tenant)
+class CompanyResponse(BaseModel):
+    id: int
+    nombre: str
+    razonSocial: str
+    nit: str
+    dui: Optional[str] = None
+    telefono: Optional[str] = None
+    email: str
+    direccion: Optional[str] = None
+    ciudad: Optional[str] = None
+    pais: str
+    tipoEmpresa: str
+    estado: str
+    fechaRegistro: datetime
+    contactoPrincipal: Optional[str] = None
+    limiteCredito: float
+    saldoActual: float
+    adminUserId: Optional[int] = None
+    subscriptionPlan: str
+    maxUsers: int
+    maxProducts: int
+    maxSalesPerMonth: int
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+
+class CompanyCreate(BaseModel):
+    nombre: str = Field(..., min_length=2, max_length=200)
+    razonSocial: str = Field(..., min_length=2, max_length=200)
+    nit: str = Field(..., min_length=5, max_length=50)
+    dui: Optional[str] = Field(None, max_length=20)
+    telefono: Optional[str] = Field(None, max_length=20)
+    email: EmailStr
+    direccion: Optional[str] = Field(None, max_length=500)
+    ciudad: Optional[str] = Field("San Salvador", max_length=100)
+    pais: str = Field("El Salvador", max_length=50)
+    tipoEmpresa: str = Field(..., pattern="^(retail|manufacturing|services|restaurant|other)$")
+    contactoPrincipal: Optional[str] = Field(None, max_length=200)
+    limiteCredito: Optional[float] = Field(0.0, ge=0)
+    subscriptionPlan: Optional[str] = Field("basic", pattern="^(basic|premium|enterprise)$")
+    maxUsers: Optional[int] = Field(5, ge=1, le=100)
+    maxProducts: Optional[int] = Field(1000, ge=1, le=50000)
+    maxSalesPerMonth: Optional[int] = Field(500, ge=1, le=100000)
+
+class CompanyWithAdminCreate(BaseModel):
+    """Esquema para crear compañía junto con usuario administrador"""
+    # Datos de compañía
+    company: CompanyCreate
+    # Datos de usuario administrador
+    admin_username: str = Field(..., min_length=3, max_length=50)
+    admin_name: str = Field(..., min_length=2, max_length=100)
+    admin_email: EmailStr
+    admin_password: str = Field(..., min_length=6, max_length=100)
+
+class CompanyUpdate(BaseModel):
+    nombre: Optional[str] = Field(None, min_length=2, max_length=200)
+    razonSocial: Optional[str] = Field(None, min_length=2, max_length=200)
+    telefono: Optional[str] = Field(None, max_length=20)
+    email: Optional[EmailStr] = None
+    direccion: Optional[str] = Field(None, max_length=500)
+    ciudad: Optional[str] = Field(None, max_length=100)
+    contactoPrincipal: Optional[str] = Field(None, max_length=200)
+    limiteCredito: Optional[float] = Field(None, ge=0)
+    estado: Optional[str] = Field(None, pattern="^(activa|inactiva|suspendida)$")
+    subscriptionPlan: Optional[str] = Field(None, pattern="^(basic|premium|enterprise)$")
+    maxUsers: Optional[int] = Field(None, ge=1, le=100)
+    maxProducts: Optional[int] = Field(None, ge=1, le=50000)
+    maxSalesPerMonth: Optional[int] = Field(None, ge=1, le=100000)
+
+class CompanyStatusUpdate(BaseModel):
+    estado: str = Field(..., pattern="^(activa|inactiva|suspendida)$")
+
+class CompanyCreationResponse(BaseModel):
+    success: bool
+    message: str
+    company_id: Optional[int] = None
+    admin_user_id: Optional[int] = None
+    accounts_created: Optional[int] = None
+    fiscal_docs_created: Optional[int] = None
+    categories_created: Optional[int] = None
+    products_created: Optional[int] = None
+    error: Optional[str] = None
+
+# Esquemas de contexto de compañía
+class CompanyContext(BaseModel):
+    """Contexto actual de compañía para el usuario"""
+    user_id: int
+    username: str
+    company_id: Optional[int] = None
+    company_name: Optional[str] = None
+    user_role: str
+    is_sudo: bool = False
+    permissions: List[str] = []

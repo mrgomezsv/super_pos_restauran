@@ -21,15 +21,20 @@ from database import (
 )
 
 # Importar modelos Pydantic para requests/responses
-from models import User, Product, Sale, ProductCategory, FiscalDocument, Account, JournalEntry, JournalLine, InventoryMovement, ArInvoice, ApInvoice
+from models import User, Product, Sale, ProductCategory, FiscalDocument, Account, JournalEntry, JournalLine, InventoryMovement, ArInvoice, ApInvoice, Company
 from schemas import (
     UserLogin, UserResponse, UserCreate, UserUpdate,
     ProductResponse, ProductCreate, ProductUpdate,
     SaleCreate, SaleResponse, SaleSummary,
     LoginResponse, CartItem as CartItemSchema,
     ProductCategoryCreate,
-    FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate
+    FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate,
+    CompanyResponse, CompanyWithAdminCreate, CompanyUpdate, CompanyStatusUpdate, 
+    CompanyCreationResponse, CompanyContext
 )
+
+# Importar servicio de compañías
+from company_service import company_service
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -1129,6 +1134,159 @@ async def get_trial_balance(db: Session = Depends(get_db)):
         "total_credits": total_credits,
         "is_balanced": abs(total_debits - total_credits) < 0.01
     }
+
+# Rutas de compañías (multi-tenant)
+@app.post("/api/companies", response_model=CompanyCreationResponse)
+async def create_company_with_admin(
+    company_data: CompanyWithAdminCreate, 
+    db: Session = Depends(get_db)
+):
+    """Crear nueva compañía con usuario administrador y configuración base"""
+    
+    # Preparar datos de compañía
+    company_dict = company_data.company.model_dump()
+    
+    # Preparar datos de usuario administrador
+    admin_dict = {
+        "username": company_data.admin_username,
+        "name": company_data.admin_name,
+        "email": company_data.admin_email,
+        "password": company_data.admin_password
+    }
+    
+    # Crear compañía usando el servicio
+    result = company_service.create_company(
+        company_data=company_dict,
+        admin_user_data=admin_dict,
+        db=db
+    )
+    
+    return CompanyCreationResponse(**result)
+
+@app.get("/api/companies", response_model=List[CompanyResponse])
+async def get_companies(
+    active_only: bool = True,
+    db: Session = Depends(get_db)
+):
+    """Obtener lista de compañías"""
+    companies = company_service.get_companies_list(active_only=active_only, db=db)
+    
+    return [CompanyResponse(
+        id=company.id,
+        nombre=company.nombre,
+        razonSocial=company.razonSocial,
+        nit=company.nit,
+        dui=company.dui,
+        telefono=company.telefono,
+        email=company.email,
+        direccion=company.direccion,
+        ciudad=company.ciudad,
+        pais=company.pais,
+        tipoEmpresa=company.tipoEmpresa,
+        estado=company.estado,
+        fechaRegistro=company.fechaRegistro,
+        contactoPrincipal=company.contactoPrincipal,
+        limiteCredito=company.limiteCredito,
+        saldoActual=company.saldoActual,
+        adminUserId=company.adminUserId,
+        subscriptionPlan=company.subscriptionPlan,
+        maxUsers=company.maxUsers,
+        maxProducts=company.maxProducts,
+        maxSalesPerMonth=company.maxSalesPerMonth,
+        isActive=company.isActive,
+        createdAt=company.createdAt,
+        updatedAt=company.updatedAt
+    ) for company in companies]
+
+@app.get("/api/companies/{company_id}", response_model=CompanyResponse)
+async def get_company(
+    company_id: int,
+    db: Session = Depends(get_db)
+):
+    """Obtener compañía por ID"""
+    company = company_service.get_company_by_id(company_id, db=db)
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Compañía no encontrada")
+    
+    return CompanyResponse(
+        id=company.id,
+        nombre=company.nombre,
+        razonSocial=company.razonSocial,
+        nit=company.nit,
+        dui=company.dui,
+        telefono=company.telefono,
+        email=company.email,
+        direccion=company.direccion,
+        ciudad=company.ciudad,
+        pais=company.pais,
+        tipoEmpresa=company.tipoEmpresa,
+        estado=company.estado,
+        fechaRegistro=company.fechaRegistro,
+        contactoPrincipal=company.contactoPrincipal,
+        limiteCredito=company.limiteCredito,
+        saldoActual=company.saldoActual,
+        adminUserId=company.adminUserId,
+        subscriptionPlan=company.subscriptionPlan,
+        maxUsers=company.maxUsers,
+        maxProducts=company.maxProducts,
+        maxSalesPerMonth=company.maxSalesPerMonth,
+        isActive=company.isActive,
+        createdAt=company.createdAt,
+        updatedAt=company.updatedAt
+    )
+
+@app.put("/api/companies/{company_id}/status")
+async def update_company_status(
+    company_id: int,
+    status_data: CompanyStatusUpdate,
+    db: Session = Depends(get_db)
+):
+    """Actualizar estado de compañía"""
+    result = company_service.update_company_status(
+        company_id=company_id,
+        new_status=status_data.estado,
+        db=db
+    )
+    
+    if not result["success"]:
+        raise HTTPException(
+            status_code=400 if "no encontrada" in result["error"] else 500,
+            detail=result["error"]
+        )
+    
+    return {"message": result["message"]}
+
+@app.get("/api/companies/{company_id}/context", response_model=CompanyContext)
+async def get_company_context(
+    company_id: int,
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Obtener contexto de compañía para un usuario específico"""
+    # Verificar que la compañía existe
+    company = company_service.get_company_by_id(company_id, db=db)
+    if not company:
+        raise HTTPException(status_code=404, detail="Compañía no encontrada")
+    
+    # Obtener usuario
+    user = db.query(DBUser).filter(DBUser.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Verificar que el usuario pertenece a la compañía o es SUDO
+    if user.company_id != company_id and user.role != "sudo":
+        raise HTTPException(status_code=403, detail="Usuario no autorizado para esta compañía")
+    
+    return CompanyContext(
+        user_id=user.id,
+        username=user.username,
+        company_id=company.id,
+        company_name=company.nombre,
+        user_role=user.role,
+        is_sudo=(user.role == "sudo"),
+        permissions=[]  # Aquí se pueden agregar permisos específicos más adelante
+    )
 
 # Ruta de salud
 @app.get("/health")
