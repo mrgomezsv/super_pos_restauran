@@ -21,6 +21,62 @@
         </div>
       </div>
       
+      <!-- Selector de Compañía -->
+      <div class="header-center" *ngIf="isLoggedIn && canChangeCompany()">
+        <div class="company-selector" (click)="toggleCompanySelector()" [class.active]="isCompanySelectorOpen">
+          <div class="company-icon">
+            <mat-icon>business</mat-icon>
+          </div>
+          <div class="company-details">
+            <span class="company-name">{{ getCompanyDisplayName(selectedCompany) }}</span>
+            <span class="company-subtitle" *ngIf="selectedCompany">{{ selectedCompany.razonSocial }}</span>
+          </div>
+          <div class="company-arrow">
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </div>
+        </div>
+
+        <!-- Popover del selector de compañía -->
+        <div class="company-popover" *ngIf="isCompanySelectorOpen">
+          <div class="popover-arrow"></div>
+          <div class="popover-content">
+            <div class="company-header">
+              <mat-icon>business</mat-icon>
+              <span>Seleccionar Compañía</span>
+            </div>
+            <div class="company-divider"></div>
+            
+            <div class="company-list" *ngIf="availableCompanies.length > 0">
+              <button 
+                *ngFor="let company of availableCompanies" 
+                (click)="selectCompany(company)" 
+                class="company-item"
+                [class.active]="selectedCompany?.id === company.id">
+                <div class="company-item-icon">
+                  <mat-icon>business</mat-icon>
+                </div>
+                <div class="company-item-details">
+                  <span class="company-item-name">{{ company.nombre }}</span>
+                  <span class="company-item-nit">NIT: {{ company.nit }}</span>
+                </div>
+                <div class="company-status">
+                  <div 
+                    class="status-indicator" 
+                    [style.background-color]="getCompanyStatusColor(company.estado)">
+                  </div>
+                  <span class="status-text">{{ company.estado | titlecase }}</span>
+                </div>
+              </button>
+            </div>
+
+            <div class="no-companies" *ngIf="availableCompanies.length === 0">
+              <mat-icon>info</mat-icon>
+              <span>No hay compañías disponibles</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div class="header-right">
         <div class="user-info" (click)="toggleUserMenu()" [class.active]="isUserMenuOpen">
           <div class="user-avatar">
