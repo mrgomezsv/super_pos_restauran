@@ -22,7 +22,7 @@
           margin: 0 0 8px 0;
           font-size: 2rem;
           font-weight: 600;
-          color: var(--text-primary);
+          color: #1a1a1a; // Color más oscuro para mejor contraste
 
           .title-icon {
             font-size: 2.2rem;
@@ -34,7 +34,7 @@
 
         .page-subtitle {
           margin: 0;
-          color: var(--text-secondary);
+          color: #4a5568; // Color gris más oscuro para mejor legibilidad
           font-size: 1.1rem;
         }
       }
@@ -107,8 +107,9 @@
           }
 
           .stat-label {
-            color: var(--text-secondary);
+            color: #4a5568; // Mejor contraste para etiquetas
             font-size: 0.9rem;
+            font-weight: 500;
           }
         }
 
@@ -157,8 +158,9 @@
       
       .card-actions {
         .results-count {
-          color: var(--text-secondary);
+          color: #2d3748; // Texto más oscuro para mejor visibilidad
           font-size: 0.9rem;
+          font-weight: 500;
         }
       }
     }
@@ -172,10 +174,10 @@
 
         // Header styles
         .mat-mdc-header-cell {
-          background-color: var(--surface-variant);
+          background-color: #e2e8f0;
           font-weight: 600;
-          color: var(--text-primary);
-          border-bottom: 2px solid var(--border-color);
+          color: #1a202c; // Color más oscuro para encabezados de tabla
+          border-bottom: 2px solid #cbd5e0;
         }
 
         // Row styles
@@ -201,14 +203,14 @@
           .empresa-info {
             .empresa-name {
               font-weight: 600;
-              color: var(--text-primary);
+              color: #1a202c; // Nombre de empresa más visible
               margin-bottom: 4px;
             }
 
             .empresa-type {
               font-size: 0.8rem;
-              color: var(--text-secondary);
-              background-color: var(--surface-variant);
+              color: #4a5568; // Tipo más legible
+              background-color: #f7fafc;
               padding: 2px 8px;
               border-radius: 12px;
               display: inline-block;
@@ -225,7 +227,7 @@
 
           .nit-info {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: #4a5568; // Mejor contraste para información NIT
           }
         }
 
@@ -240,7 +242,7 @@
 
             .dui {
               font-size: 0.8rem;
-              color: var(--text-secondary);
+              color: #4a5568; // DUI más legible
               font-family: 'Courier New', monospace;
             }
           }
@@ -257,7 +259,7 @@
             .contacto-details {
               .telefono, .email {
                 font-size: 0.8rem;
-                color: var(--text-secondary);
+                color: #4a5568; // Contacto más legible
                 margin-bottom: 2px;
               }
             }
@@ -279,7 +281,7 @@
           .saldo-info {
             .limite-credito {
               font-size: 0.8rem;
-              color: var(--text-secondary);
+              color: #4a5568; // Límite de crédito más visible
               margin-bottom: 4px;
             }
 
@@ -324,7 +326,7 @@
       align-items: center;
       justify-content: center;
       padding: 60px;
-      color: var(--text-secondary);
+      color: #4a5568; // Loading más visible
 
       p {
         margin-top: 16px;
@@ -354,35 +356,36 @@
   }
 }
 
-// Dark theme support
+// Light theme support (removed dark colors)
 @media (prefers-color-scheme: dark) {
   .empresas-clientes-container {
-    background-color: #303030;
-    color: #fff;
+    background-color: #f8f9fa;
+    color: #333;
 
     mat-card {
-      background-color: #424242;
-      color: #fff;
+      background-color: #ffffff;
+      color: #333;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
 
     .page-title {
-      color: #64b5f6 !important;
+      color: #1a202c !important; // Título más oscuro y visible
     }
 
     .companies-table {
       .mat-mdc-header-cell {
-        background-color: #424242;
-        color: #fff;
-        border-bottom-color: #666;
+        background-color: #e2e8f0;
+        color: #1a202c; // Header más contrastante
+        border-bottom-color: #cbd5e0;
       }
 
       .mat-mdc-row:hover {
-        background-color: #616161;
+        background-color: #f0f8ff;
       }
 
       .mat-mdc-cell {
-        border-bottom-color: #666;
-        color: #fff;
+        border-bottom-color: #cbd5e0;
+        color: #1a202c; // Celdas más contrastantes
       }
     }
   }

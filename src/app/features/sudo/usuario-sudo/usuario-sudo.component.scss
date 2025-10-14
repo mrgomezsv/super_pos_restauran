@@ -34,7 +34,7 @@
 
         .page-subtitle {
           margin: 0;
-          color: var(--text-secondary);
+          color: #4a5568; // Color gris más oscuro para mejor legibilidad
           font-size: 1.1rem;
         }
       }
@@ -80,7 +80,7 @@
 
         p {
           margin: 0;
-          color: var(--text-secondary);
+          color: #4a5568; // Texto de alerta más legible
         }
       }
     }
@@ -123,8 +123,9 @@
           }
 
           .stat-label {
-            color: var(--text-secondary);
+            color: #4a5568; // Mejor contraste para etiquetas
             font-size: 0.9rem;
+            font-weight: 500;
           }
         }
 
@@ -202,10 +203,10 @@
 
       // Header styles
       .mat-mdc-header-cell {
-        background-color: var(--surface-variant);
+        background-color: #e2e8f0;
         font-weight: 600;
-        color: var(--text-primary);
-        border-bottom: 2px solid var(--border-color);
+        color: #1a202c; // Color más oscuro para encabezados de tabla
+        border-bottom: 2px solid #cbd5e0;
       }
 
       // Row styles
@@ -235,14 +236,14 @@
         .usuario-info {
           .username {
             font-weight: 600;
-            color: var(--text-primary);
+            color: #1a202c; // Usuario más visible
             margin-bottom: 4px;
             font-family: 'Courier New', monospace;
           }
 
           .email {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: #4a5568; // Email más legible
           }
         }
       }
@@ -258,7 +259,7 @@
           .contact-info {
             .telefono, .system-info {
               font-size: 0.8rem;
-              color: var(--text-secondary);
+              color: #4a5568; // Información de contacto más legible
               margin-bottom: 2px;
             }
           }
@@ -290,14 +291,14 @@
 
           .ip-info {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: #4a5568; // IP más legible
             font-family: 'Courier New', monospace;
             margin-bottom: 4px;
           }
 
           .attempts {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: #4a5568; // Intentos más legibles
 
             &.warning {
               color: var(--warn-color);
@@ -342,7 +343,7 @@
 
           .action-detail {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: #4a5568; // Detalles de acción más legibles
           }
         }
       }
@@ -378,7 +379,7 @@
       align-items: center;
       justify-content: center;
       padding: 60px;
-      color: var(--text-secondary);
+      color: #4a5568; // Loading más visible
 
       p {
         margin-top: 16px;
@@ -447,7 +448,7 @@
 
         .permission-description {
           margin: 0 0 16px 0;
-          color: var(--text-secondary);
+          color: #4a5568; // Descripción de permisos más legible
           line-height: 1.5;
         }
 
@@ -461,7 +462,7 @@
             font-size: 0.9rem;
 
             strong {
-              color: var(--text-primary);
+              color: #1a202c; // Texto fuerte más contrastante
               margin-right: 8px;
             }
           }
@@ -496,40 +497,41 @@
   }
 }
 
-// Dark theme support
+// Light theme support (removed dark colors)
 @media (prefers-color-scheme: dark) {
   .usuario-sudo-container {
-    background-color: #303030;
-    color: #fff;
+    background-color: #f8f9fa;
+    color: #333;
 
     mat-card {
-      background-color: #424242;
-      color: #fff;
+      background-color: #ffffff;
+      color: #333;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
 
     .page-title {
-      color: #f48fb1 !important;
+      color: #d69e2e !important; // Título de advertencia más visible pero no demasiado brillante
     }
 
     .security-alert {
-      background: linear-gradient(135deg, #424242 0%, #616161 100%);
-      color: #fff;
+      background: linear-gradient(135deg, var(--warn-50) 0%, var(--warn-100) 100%);
+      color: #1a202c; // Texto de alerta más contrastante
     }
 
     table {
       .mat-mdc-header-cell {
-        background-color: #424242;
-        color: #fff;
-        border-bottom-color: #666;
+        background-color: #e2e8f0;
+        color: #1a202c; // Header más contrastante
+        border-bottom-color: #cbd5e0;
       }
 
       .mat-mdc-row:hover {
-        background-color: #616161;
+        background-color: #f0f8ff;
       }
 
       .mat-mdc-cell {
-        border-bottom-color: #666;
-        color: #fff;
+        border-bottom-color: #cbd5e0;
+        color: #1a202c; // Celdas más contrastantes
       }
     }
   }
