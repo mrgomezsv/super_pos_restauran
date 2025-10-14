@@ -7,19 +7,49 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 # Modelos base
+class Company(BaseModel):
+    """Modelo para empresas cliente (multi-tenant)"""
+    id: int
+    nombre: str
+    razonSocial: str
+    nit: str
+    dui: Optional[str] = None
+    telefono: Optional[str] = None
+    email: str
+    direccion: Optional[str] = None
+    ciudad: Optional[str] = None
+    pais: str = "El Salvador"
+    tipoEmpresa: str  # retail, manufacturing, services, restaurant, other
+    estado: str = "activa"  # activa, inactiva, suspendida
+    fechaRegistro: datetime
+    contactoPrincipal: Optional[str] = None
+    limiteCredito: float = 0.0
+    saldoActual: float = 0.0
+    adminUserId: Optional[int] = None
+    subscriptionPlan: str = "basic"  # basic, premium, enterprise
+    maxUsers: int = 5
+    maxProducts: int = 1000
+    maxSalesPerMonth: int = 500
+    databaseSchema: Optional[str] = None
+    isActive: bool = True
+    createdAt: datetime
+    updatedAt: datetime
+
 class User(BaseModel):
     id: int
+    company_id: Optional[int] = None  # Nullable para usuarios SUDO
     username: str
     name: str
     email: str
     password: str
-    role: str  # admin, manager, cashier
+    role: str  # sudo, admin, manager, cashier
     isActive: bool
     createdAt: datetime
     lastLogin: Optional[datetime] = None
 
 class Product(BaseModel):
     id: int
+    company_id: int
     code: str
     name: str
     description: Optional[str] = None
@@ -38,12 +68,14 @@ class Product(BaseModel):
 
 class ProductCategory(BaseModel):
     id: int
+    company_id: int
     name: str
     description: Optional[str] = None
     isActive: bool
 
 class FiscalDocument(BaseModel):
     id: int
+    company_id: int
     code: str  # Código interno único
     name: str  # Nombre del documento (ej: "Consumidor Final", "Crédito Fiscal")
     description: Optional[str] = None
@@ -65,6 +97,7 @@ class CartItem(BaseModel):
 
 class Sale(BaseModel):
     id: int
+    company_id: int
     invoiceNumber: str
     customerName: Optional[str] = None
     customerDocument: Optional[str] = None
@@ -86,6 +119,7 @@ class Sale(BaseModel):
 # Modelos contables
 class Account(BaseModel):
     id: int
+    company_id: int
     code: str  # Código de cuenta (ej: "1101", "4101")
     name: str
     accountType: str  # activo, pasivo, patrimonio, ingreso, gasto
@@ -98,6 +132,7 @@ class Account(BaseModel):
 
 class JournalEntry(BaseModel):
     id: int
+    company_id: int
     entryNumber: str  # Número de póliza
     date: datetime
     source: str  # pos, purchase, payment, adjustment
@@ -123,6 +158,7 @@ class JournalLine(BaseModel):
 
 class InventoryMovement(BaseModel):
     id: int
+    company_id: int
     productId: int
     movementType: str  # entrada, salida
     quantity: int
@@ -134,6 +170,7 @@ class InventoryMovement(BaseModel):
 
 class ArInvoice(BaseModel):  # Accounts Receivable Invoice
     id: int
+    company_id: int
     invoiceNumber: str
     customerName: str
     customerDui: Optional[str] = None
@@ -147,6 +184,7 @@ class ArInvoice(BaseModel):  # Accounts Receivable Invoice
 
 class ApInvoice(BaseModel):  # Accounts Payable Invoice
     id: int
+    company_id: int
     invoiceNumber: str
     supplierName: str
     supplierNrc: Optional[str] = None

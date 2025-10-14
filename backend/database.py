@@ -2,10 +2,7 @@
 Configuración de base de datos SQLite para Super POS
 """
 
-import os
-from datetime import datetime
-from typing import Optional, List
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.sql import func
@@ -36,32 +33,93 @@ def get_db():
 
 # Modelos de base de datos (equivalentes a los modelos Pydantic)
 
+class Company(Base):
+    """Modelo para empresas cliente (multi-tenant)"""
+    __tablename__ = "companies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(200), nullable=False)
+    razonSocial = Column(String(200), nullable=False)
+    nit = Column(String(50), unique=True, nullable=False, index=True)
+    dui = Column(String(20), nullable=True)
+    telefono = Column(String(20), nullable=True)
+    email = Column(String(100), nullable=False)
+    direccion = Column(Text, nullable=True)
+    ciudad = Column(String(100), nullable=True)
+    pais = Column(String(50), default="El Salvador")
+    tipoEmpresa = Column(String(50), nullable=False)  # retail, manufacturing, services, restaurant, other
+    estado = Column(String(20), default="activa")  # activa, inactiva, suspendida
+    fechaRegistro = Column(DateTime, default=func.now())
+    contactoPrincipal = Column(String(200), nullable=True)
+    limiteCredito = Column(Float, default=0.0)
+    saldoActual = Column(Float, default=0.0)
+    
+    # Usuario administrador de la compañía
+    adminUserId = Column(Integer, nullable=True)  # Se asignará después de crear el usuario
+    
+    # Configuración de suscripción
+    subscriptionPlan = Column(String(50), default="basic")  # basic, premium, enterprise
+    maxUsers = Column(Integer, default=5)
+    maxProducts = Column(Integer, default=1000)
+    maxSalesPerMonth = Column(Integer, default=500)
+    
+    # Configuración técnica
+    databaseSchema = Column(String(100), nullable=True)  # Para futuro uso con schemas separados
+    isActive = Column(Boolean, default=True)
+    createdAt = Column(DateTime, default=func.now())
+    updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    users = relationship("User", back_populates="company", cascade="all, delete-orphan")
+    products = relationship("Product", back_populates="company", cascade="all, delete-orphan")
+    sales = relationship("Sale", back_populates="company", cascade="all, delete-orphan")
+
 class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), unique=True, index=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)  # Nullable para usuarios SUDO
+    username = Column(String(50), index=True, nullable=False)  # Removido unique para permitir mismo username en diferentes compañías
     name = Column(String(100), nullable=False)
-    email = Column(String(100), unique=True, index=True, nullable=False)
+    email = Column(String(100), index=True, nullable=False)  # Removido unique para permitir mismo email en diferentes compañías
     password = Column(String(100), nullable=False)  # En producción usar hash
-    role = Column(String(20), nullable=False)  # admin, manager, cashier
+    role = Column(String(20), nullable=False)  # sudo, admin, manager, cashier
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=func.now())
     lastLogin = Column(DateTime, nullable=True)
+    
+    # Relaciones
+    company = relationship("Company", back_populates="users")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('username', 'company_id', name='unique_username_per_company'),
+        UniqueConstraint('email', 'company_id', name='unique_email_per_company'),
+    )
 
 class ProductCategory(Base):
     __tablename__ = "product_categories"
     
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     isActive = Column(Boolean, default=True)
+    
+    # Relaciones
+    company = relationship("Company", backref="product_categories")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('name', 'company_id', name='unique_category_name_per_company'),
+    )
 
 class Product(Base):
     __tablename__ = "products"
     
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(20), unique=True, index=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    code = Column(String(20), index=True, nullable=False)  # Removido unique para permitir mismo código en diferentes compañías
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     price = Column(Float, nullable=False)
@@ -76,12 +134,22 @@ class Product(Base):
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=func.now())
     updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    company = relationship("Company", back_populates="products")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('code', 'company_id', name='unique_product_code_per_company'),
+        UniqueConstraint('barcode', 'company_id', name='unique_barcode_per_company'),
+    )
 
 class FiscalDocument(Base):
     __tablename__ = "fiscal_documents"
     
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(50), unique=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    code = Column(String(50), nullable=False)  # Removido unique para permitir mismo código en diferentes compañías
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     prefix = Column(String(10), nullable=False)
@@ -90,12 +158,21 @@ class FiscalDocument(Base):
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=func.now())
     updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    company = relationship("Company", backref="fiscal_documents")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('code', 'company_id', name='unique_fiscal_doc_code_per_company'),
+    )
 
 class Sale(Base):
     __tablename__ = "sales"
     
     id = Column(Integer, primary_key=True, index=True)
-    invoiceNumber = Column(String(50), unique=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    invoiceNumber = Column(String(50), nullable=False)  # Removido unique para permitir mismo número en diferentes compañías
     customerName = Column(String(200), nullable=True)
     customerDocument = Column(String(50), nullable=True)
     customerEmail = Column(String(100), nullable=True)
@@ -113,8 +190,14 @@ class Sale(Base):
     status = Column(String(20), default="completed")  # completed, cancelled, refunded
     
     # Relaciones
-    cashier = relationship("User", backref="sales")
+    company = relationship("Company", back_populates="sales")
+    cashier = relationship("User", backref="sales_as_cashier")
     items = relationship("SaleItem", back_populates="sale", cascade="all, delete-orphan")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('invoiceNumber', 'company_id', name='unique_invoice_number_per_company'),
+    )
 
 class SaleItem(Base):
     __tablename__ = "sale_items"
@@ -138,7 +221,8 @@ class Account(Base):
     __tablename__ = "accounts"
     
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(20), unique=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    code = Column(String(20), nullable=False)  # Removido unique para permitir mismo código en diferentes compañías
     name = Column(String(200), nullable=False)
     accountType = Column(String(20), nullable=False)  # activo, pasivo, patrimonio, ingreso, gasto
     nature = Column(String(20), nullable=False)  # deudora, acreedora
@@ -149,13 +233,20 @@ class Account(Base):
     updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Relaciones
+    company = relationship("Company", backref="accounts")
     parent = relationship("Account", remote_side=[id], backref="children")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('code', 'company_id', name='unique_account_code_per_company'),
+    )
 
 class JournalEntry(Base):
     __tablename__ = "journal_entries"
     
     id = Column(Integer, primary_key=True, index=True)
-    entryNumber = Column(String(20), unique=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    entryNumber = Column(String(20), nullable=False)  # Removido unique para permitir mismo número en diferentes compañías
     date = Column(DateTime, default=func.now())
     source = Column(String(20), nullable=False)  # pos, purchase, payment, adjustment
     reference = Column(String(100), nullable=False)
@@ -168,9 +259,15 @@ class JournalEntry(Base):
     createdAt = Column(DateTime, default=func.now())
     
     # Relaciones
+    company = relationship("Company", backref="journal_entries")
     creator = relationship("User", foreign_keys=[createdBy], backref="created_entries")
     poster = relationship("User", foreign_keys=[postedBy], backref="posted_entries")
     lines = relationship("JournalLine", back_populates="journal_entry", cascade="all, delete-orphan")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('entryNumber', 'company_id', name='unique_entry_number_per_company'),
+    )
 
 class JournalLine(Base):
     __tablename__ = "journal_lines"
@@ -192,6 +289,7 @@ class InventoryMovement(Base):
     __tablename__ = "inventory_movements"
     
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     productId = Column(Integer, ForeignKey("products.id"))
     movementType = Column(String(20), nullable=False)  # entrada, salida
     quantity = Column(Integer, nullable=False)
@@ -202,12 +300,14 @@ class InventoryMovement(Base):
     createdAt = Column(DateTime, default=func.now())
     
     # Relaciones
+    company = relationship("Company", backref="inventory_movements")
     product = relationship("Product", backref="inventory_movements")
 
 class ArInvoice(Base):
     __tablename__ = "ar_invoices"
     
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     invoiceNumber = Column(String(50), nullable=False)
     customerName = Column(String(200), nullable=False)
     customerDui = Column(String(50), nullable=True)
@@ -220,12 +320,14 @@ class ArInvoice(Base):
     createdAt = Column(DateTime, default=func.now())
     
     # Relaciones
+    company = relationship("Company", backref="ar_invoices")
     journal_entry = relationship("JournalEntry", backref="ar_invoices")
 
 class ApInvoice(Base):
     __tablename__ = "ap_invoices"
     
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     invoiceNumber = Column(String(50), nullable=False)
     supplierName = Column(String(200), nullable=False)
     supplierNrc = Column(String(50), nullable=True)
@@ -238,6 +340,7 @@ class ApInvoice(Base):
     createdAt = Column(DateTime, default=func.now())
     
     # Relaciones
+    company = relationship("Company", backref="ap_invoices")
     journal_entry = relationship("JournalEntry", backref="ap_invoices")
 
 # Función para crear todas las tablas
