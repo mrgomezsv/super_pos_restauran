@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from database import get_db_session, User as DBUser, Company as DBCompany
+from database import get_db, get_db_session, User as DBUser, Company as DBCompany
 
 class CompanyContextService:
     """Servicio para gestión del contexto de compañía multi-tenant"""

@@ -35,7 +35,7 @@ from schemas import (
 
 # Importar servicio de compañías
 from company_service import company_service
-from context_service import get_current_context
+from context_service import get_current_context, context_service
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -378,7 +378,6 @@ async def get_products(
     query = db.query(DBProduct)
     
     # Aplicar filtro automático por compañía usando el context_service
-    from context_service import context_service
     query = context_service.apply_company_filter(query, DBProduct, context)
     
     if search:
