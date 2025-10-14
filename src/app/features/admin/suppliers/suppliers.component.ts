@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-suppliers',
@@ -43,12 +44,18 @@ import { ToastrService } from 'ngx-toastr';
   </mat-card>
   `
 })
-export class AdminSuppliersComponent {
+export class AdminSuppliersComponent implements OnInit {
   cols = ['name', 'taxId', 'email'];
   suppliers: any[] = [];
   form = this.fb.group({ name: ['', Validators.required], taxId: [''], email: [''] });
-  constructor(private fb: FormBuilder, private toastr: ToastrService) {}
-  create(){ if(this.form.invalid) return; this.suppliers=[...this.suppliers, this.form.value]; this.form.reset(); this.toastr.success('Proveedor agregado'); }
+  private readonly api = 'http://localhost:3000/api/suppliers';
+  constructor(private fb: FormBuilder, private toastr: ToastrService, private http: HttpClient) {}
+  ngOnInit(){ this.load(); }
+  load(){ this.http.get<any[]>(this.api).subscribe(rows=> this.suppliers = rows); }
+  create(){
+    if(this.form.invalid) return;
+    this.http.post(this.api, this.form.value).subscribe(()=>{ this.toastr.success('Proveedor agregado'); this.form.reset(); this.load(); });
+  }
 }
 
 
