@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
-import { adminGuard } from './core/guards/admin.guard';
+import { authGuard, authWithCompanyGuard } from './core/guards/auth.guard';
+import { adminGuard, adminWithCompanyGuard } from './core/guards/admin.guard';
+import { companyGuard, sudoGuard, companyAdminGuard } from './core/guards/company.guard';
 
 export const routes: Routes = [
   {
@@ -8,36 +9,36 @@ export const routes: Routes = [
     redirectTo: '/login',
     pathMatch: 'full'
   },
-  // Accounting routes
+  // Accounting routes (requieren compañía)
   {
     path: 'accounting/diario',
     loadComponent: () => import('./features/accounting/diario/diario.component').then(m => m.AccountingDiarioComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'accounting/mayor',
     loadComponent: () => import('./features/accounting/mayor/mayor.component').then(m => m.AccountingMayorComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'accounting/inventarios',
     loadComponent: () => import('./features/accounting/inventarios/inventarios.component').then(m => m.AccountingInventariosComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'accounting/vat/ventas',
     loadComponent: () => import('./features/accounting/vat-sales/vat-sales.component').then(m => m.AccountingVatSalesComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'accounting/vat/compras',
     loadComponent: () => import('./features/accounting/vat-purchases/vat-purchases.component').then(m => m.AccountingVatPurchasesComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'accounting/trial-balance',
     loadComponent: () => import('./features/accounting/trial-balance/trial-balance.component').then(m => m.AccountingTrialBalanceComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'login',
@@ -46,49 +47,49 @@ export const routes: Routes = [
   {
     path: 'pos',
     loadComponent: () => import('./features/pos/pos.component').then(m => m.PosComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'dashboard',
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    canActivate: [authGuard]
+    canActivate: [authWithCompanyGuard]
   },
   {
     path: 'products',
     loadComponent: () => import('./features/products/products.component').then(m => m.ProductsComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'users',
     loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent),
-    canActivate: [adminGuard]
+    canActivate: [companyAdminGuard]
   },
   {
     path: 'reports',
     loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent),
-    canActivate: [authGuard]
+    canActivate: [companyGuard]
   },
-  // Admin routes
+  // Admin routes (requieren permisos de administración en la compañía)
   {
     path: 'admin/business-config',
     loadComponent: () => import('./features/admin/business-config/business-config.component').then(m => m.BusinessConfigComponent),
-    canActivate: [adminGuard]
+    canActivate: [companyAdminGuard]
   },
   {
     path: 'admin/fiscal-documents',
     loadComponent: () => import('./features/fiscal-documents/fiscal-documents.component').then(m => m.FiscalDocumentsComponent),
-    canActivate: [adminGuard]
+    canActivate: [companyAdminGuard]
   },
-  // SUDO routes
+  // SUDO routes (solo para usuarios SUDO)
   {
     path: 'sudo/empresas-clientes',
     loadComponent: () => import('./features/sudo/empresas-clientes/empresas-clientes.component').then(m => m.EmpresasClientesComponent),
-    canActivate: [adminGuard]
+    canActivate: [sudoGuard]
   },
   {
     path: 'sudo/usuario-sudo',
     loadComponent: () => import('./features/sudo/usuario-sudo/usuario-sudo.component').then(m => m.UsuarioSudoComponent),
-    canActivate: [adminGuard]
+    canActivate: [sudoGuard]
   },
   {
     path: '**',
