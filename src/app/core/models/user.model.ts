@@ -3,7 +3,8 @@ export interface User {
   username: string;
   name: string;
   email: string;
-  role: 'admin' | 'cashier' | 'manager';
+  role: 'sudo' | 'admin' | 'cashier' | 'manager';
+  company_id?: number;
   isActive: boolean;
   createdAt: Date;
   lastLogin?: Date;
