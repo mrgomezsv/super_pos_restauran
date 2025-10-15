@@ -136,6 +136,18 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private scrollYPosition = 0;
 
   openProductDialog(product?: Product): void {
+    // Si es nuevo producto (no edición), validar límite
+    if (!product) {
+      const limits = this.productService.getProductLimits();
+      if (limits.hasLimits && this.products.length >= limits.maxProducts) {
+        this.toastr.warning(
+          `Has alcanzado el límite de ${limits.maxProducts} productos de tu plan`,
+          'Límite Alcanzado'
+        );
+        return;
+      }
+    }
+
     // Guardar la posición actual del scroll
     this.scrollYPosition = window.scrollY;
     
@@ -247,5 +259,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
       this.isCategoryDropdownOpen = false;
       this.isStatusDropdownOpen = false;
     }
+  }
+
+  // Método para obtener límites de productos según suscripción
+  getProductLimits() {
+    return this.productService.getProductLimits();
   }
 }
