@@ -15,6 +15,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, takeUntil } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 interface EmpresaCliente {
   id: number;
@@ -80,11 +82,13 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   ];
 
   private destroy$ = new Subject<void>();
+  private readonly api = `${environment.apiUrl}/companies`;
 
   constructor(
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private http: HttpClient
   ) {
     this.searchForm = this.fb.group({
       search: [''],
@@ -114,68 +118,36 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   private loadEmpresas(): void {
     this.isLoading = true;
     
-    // Datos de ejemplo (en producción vendrían del backend)
-    setTimeout(() => {
-      this.empresas = [
-        {
-          id: 1,
-          nombre: 'Supermercado La Económica',
-          razonSocial: 'Comercial La Económica S.A. de C.V.',
-          nit: '0614-121298-001-4',
-          dui: '12345678-9',
-          telefono: '2234-5678',
-          email: 'info@laeconomica.com',
-          direccion: 'Av. Principal #123, Col. Centro',
-          ciudad: 'San Salvador',
-          pais: 'El Salvador',
-          tipoEmpresa: 'retail',
-          estado: 'activa',
-          fechaRegistro: '2024-01-15',
-          contactoPrincipal: 'María García',
-          limiteCredito: 50000,
-          saldoActual: 15000
-        },
-        {
-          id: 2,
-          nombre: 'Restaurante El Buen Sabor',
-          razonSocial: 'El Buen Sabor S.A. de C.V.',
-          nit: '0614-234567-001-8',
-          dui: '23456789-1',
-          telefono: '2345-6789',
-          email: 'contacto@elbuensabor.com',
-          direccion: 'Calle Comercio #45, Zona Rosa',
-          ciudad: 'San Salvador',
-          pais: 'El Salvador',
-          tipoEmpresa: 'restaurant',
-          estado: 'activa',
-          fechaRegistro: '2024-02-10',
-          contactoPrincipal: 'Carlos Rodríguez',
-          limiteCredito: 30000,
-          saldoActual: 8500
-        },
-        {
-          id: 3,
-          nombre: 'Fábrica de Textiles Nacional',
-          razonSocial: 'Textiles Nacional S.A. de C.V.',
-          nit: '0614-345678-001-2',
-          dui: '34567890-2',
-          telefono: '2456-7890',
-          email: 'ventas@textilesnacional.com',
-          direccion: 'Zona Industrial Apopa, Bodega 15',
-          ciudad: 'Apopa',
-          pais: 'El Salvador',
-          tipoEmpresa: 'manufacturing',
-          estado: 'suspendida',
-          fechaRegistro: '2023-11-20',
-          contactoPrincipal: 'Ana López',
-          limiteCredito: 100000,
-          saldoActual: 75000
-        }
-      ];
-      
-      this.filteredEmpresas = [...this.empresas];
-      this.isLoading = false;
-    }, 1000);
+    this.http.get<any[]>(`${this.api}?active_only=false`).subscribe({
+      next: (data) => {
+        this.empresas = data.map(c => ({
+          id: c.id,
+          nombre: c.nombre,
+          razonSocial: c.razonSocial,
+          nit: c.nit,
+          dui: c.dui || '',
+          telefono: c.telefono || '',
+          email: c.email,
+          direccion: c.direccion || '',
+          ciudad: c.ciudad || '',
+          pais: c.pais,
+          tipoEmpresa: c.tipoEmpresa,
+          estado: c.estado,
+          fechaRegistro: c.fechaRegistro,
+          contactoPrincipal: c.contactoPrincipal || '',
+          limiteCredito: c.limiteCredito,
+          saldoActual: c.saldoActual
+        }));
+        
+        this.filteredEmpresas = [...this.empresas];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando empresas:', err);
+        this.toastr.error('Error al cargar empresas cliente');
+        this.isLoading = false;
+      }
+    });
   }
 
   private filterEmpresas(): void {
@@ -233,7 +205,22 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   }
 
   cambiarEstado(empresa: EmpresaCliente): void {
-    this.toastr.success(`Estado cambiado para: ${empresa.nombre}`, 'Estado Actualizado');
+    // Ciclar estados: activa -> inactiva -> suspendida -> activa
+    let nuevoEstado: string;
+    if (empresa.estado === 'activa') nuevoEstado = 'inactiva';
+    else if (empresa.estado === 'inactiva') nuevoEstado = 'suspendida';
+    else nuevoEstado = 'activa';
+
+    this.http.put(`${this.api}/${empresa.id}/status`, { estado: nuevoEstado }).subscribe({
+      next: () => {
+        this.toastr.success(`Estado cambiado a: ${nuevoEstado}`, 'Estado Actualizado');
+        this.loadEmpresas();
+      },
+      error: (err) => {
+        console.error('Error cambiando estado:', err);
+        this.toastr.error('Error al cambiar estado');
+      }
+    });
   }
 
   generarReporte(): void {
