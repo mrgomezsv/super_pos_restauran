@@ -1627,6 +1627,150 @@ async def create_audit_log(
     log_audit_event(user_id, action, module, detail, company_id, db)
     return {"message": "Evento registrado"}
 
+# -----------------------------
+# Cash Sessions (Sesiones de Caja)
+# -----------------------------
+@app.get("/api/cash-sessions", response_model=List[CashSessionResponse])
+async def get_cash_sessions(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Listar sesiones de caja"""
+    query = db.query(DBCashSession)
+    query = context_service.apply_company_filter(query, DBCashSession, context)
+    sessions = query.order_by(DBCashSession.openedAt.desc()).limit(50).all()
+    
+    return [CashSessionResponse(
+        id=s.id, company_id=s.company_id, userId=s.userId,
+        openedAt=s.openedAt, closedAt=s.closedAt,
+        openingAmount=s.openingAmount, closingAmount=s.closingAmount,
+        status=s.status
+    ) for s in sessions]
+
+@app.get("/api/cash-sessions/current")
+async def get_current_cash_session(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Obtener sesión de caja activa del usuario actual"""
+    user_id = context.get("user", {}).get("id")
+    company_id = context.get("company", {}).get("id")
+    
+    if not company_id:
+        raise HTTPException(status_code=400, detail="Compañía requerida")
+    
+    current_session = db.query(DBCashSession).filter(
+        DBCashSession.company_id == company_id,
+        DBCashSession.userId == user_id,
+        DBCashSession.status == "open"
+    ).first()
+    
+    if not current_session:
+        return {"session": None, "hasOpenSession": False}
+    
+    return {
+        "session": CashSessionResponse(
+            id=current_session.id, company_id=current_session.company_id,
+            userId=current_session.userId, openedAt=current_session.openedAt,
+            closedAt=current_session.closedAt, openingAmount=current_session.openingAmount,
+            closingAmount=current_session.closingAmount, status=current_session.status
+        ),
+        "hasOpenSession": True
+    }
+
+@app.post("/api/cash-sessions/open", response_model=CashSessionResponse)
+async def open_cash_session(payload: CashSessionOpen, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Abrir sesión de caja"""
+    user_id = context.get("user", {}).get("id")
+    company_id = context.get("company", {}).get("id")
+    
+    if not company_id:
+        raise HTTPException(status_code=400, detail="Compañía requerida")
+    
+    # Verificar que no haya sesión abierta
+    existing_session = db.query(DBCashSession).filter(
+        DBCashSession.company_id == company_id,
+        DBCashSession.userId == user_id,
+        DBCashSession.status == "open"
+    ).first()
+    
+    if existing_session:
+        raise HTTPException(status_code=400, detail="Ya existe una sesión de caja abierta")
+    
+    # Crear nueva sesión
+    new_session = DBCashSession(
+        company_id=company_id,
+        userId=user_id,
+        openedAt=datetime.now(),
+        openingAmount=payload.openingAmount,
+        status="open"
+    )
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="CASH_SESSION_OPEN",
+        module="Cash Register",
+        detail=f"Apertura de caja con ${payload.openingAmount:.2f}",
+        company_id=company_id,
+        db=db
+    )
+    
+    # TODO: Crear asiento contable de apertura (Débito Caja / Crédito Efectivo en Tránsito)
+    
+    return CashSessionResponse(
+        id=new_session.id, company_id=new_session.company_id, userId=new_session.userId,
+        openedAt=new_session.openedAt, closedAt=new_session.closedAt,
+        openingAmount=new_session.openingAmount, closingAmount=new_session.closingAmount,
+        status=new_session.status
+    )
+
+@app.post("/api/cash-sessions/{session_id}/close", response_model=CashSessionResponse)
+async def close_cash_session(
+    session_id: int, 
+    payload: CashSessionClose, 
+    context: dict = Depends(get_current_context), 
+    db: Session = Depends(get_db)
+):
+    """Cerrar sesión de caja"""
+    session = db.query(DBCashSession).filter(DBCashSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    
+    # Validar acceso
+    if not context_service.validate_company_access(context, session.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    if session.status != "open":
+        raise HTTPException(status_code=400, detail="La sesión ya está cerrada")
+    
+    # Cerrar sesión
+    session.closedAt = datetime.now()
+    session.closingAmount = payload.closingAmount
+    session.status = "closed"
+    db.commit()
+    db.refresh(session)
+    
+    # Calcular diferencia
+    difference = payload.closingAmount - session.openingAmount
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="CASH_SESSION_CLOSE",
+        module="Cash Register",
+        detail=f"Cierre de caja: Apertura=${session.openingAmount:.2f}, Cierre=${payload.closingAmount:.2f}, Diferencia=${difference:.2f}",
+        company_id=session.company_id,
+        db=db
+    )
+    
+    # TODO: Crear asiento contable de cierre y arqueo de caja
+    
+    return CashSessionResponse(
+        id=session.id, company_id=session.company_id, userId=session.userId,
+        openedAt=session.openedAt, closedAt=session.closedAt,
+        openingAmount=session.openingAmount, closingAmount=session.closingAmount,
+        status=session.status
+    )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3000)
