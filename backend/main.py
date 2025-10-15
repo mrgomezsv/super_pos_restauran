@@ -342,6 +342,18 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     ).first()
     
     if not user:
+        # Registrar intento fallido de login
+        failed_user = db.query(DBUser).filter(DBUser.username == user_data.username).first()
+        if failed_user:
+            log_audit_event(
+                user_id=failed_user.id,
+                action="LOGIN_FAILED",
+                module="Authentication",
+                detail=f"Intento de login fallido para usuario {user_data.username}",
+                company_id=failed_user.company_id,
+                db=db
+            )
+        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas"
@@ -350,6 +362,16 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     # Actualizar último login
     user.lastLogin = datetime.now()
     db.commit()
+    
+    # Registrar login exitoso
+    log_audit_event(
+        user_id=user.id,
+        action="LOGIN_SUCCESS",
+        module="Authentication",
+        detail=f"Usuario {user.username} inició sesión exitosamente",
+        company_id=user.company_id,
+        db=db
+    )
     
     # Generar token (en producción usar JWT real)
     token = f"mock_token_{user.id}_{int(datetime.now().timestamp())}"
@@ -1515,6 +1537,95 @@ async def get_inventory_alerts(context: dict = Depends(get_current_context), db:
         "total": len(alerts),
         "alerts": alerts
     }
+
+# -----------------------------
+# Audit Logs (Bitácora de Auditoría)
+# -----------------------------
+def log_audit_event(
+    user_id: int, 
+    action: str, 
+    module: str, 
+    detail: Optional[str] = None,
+    company_id: Optional[int] = None,
+    db: Session = None
+):
+    """Función auxiliar para registrar eventos de auditoría"""
+    if db is None:
+        return
+    
+    try:
+        log_entry = DBAuditLog(
+            company_id=company_id,
+            userId=user_id,
+            action=action,
+            module=module,
+            detail=detail,
+            createdAt=datetime.now()
+        )
+        db.add(log_entry)
+        db.commit()
+    except Exception as e:
+        print(f"Error logging audit event: {e}")
+        db.rollback()
+
+@app.get("/api/audit-logs", response_model=List[AuditLogResponse])
+async def get_audit_logs(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    userId: Optional[int] = None,
+    module: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener bitácora de auditoría con filtros"""
+    query = db.query(DBAuditLog)
+    
+    # Filtrar por compañía
+    company_id = context.get("company", {}).get("id")
+    if company_id and not context.get("user", {}).get("is_sudo"):
+        query = query.filter(DBAuditLog.company_id == company_id)
+    
+    # Aplicar filtros
+    if startDate:
+        start = datetime.fromisoformat(startDate)
+        query = query.filter(DBAuditLog.createdAt >= start)
+    
+    if endDate:
+        end = datetime.fromisoformat(endDate) + timedelta(days=1)
+        query = query.filter(DBAuditLog.createdAt < end)
+    
+    if userId:
+        query = query.filter(DBAuditLog.userId == userId)
+    
+    if module:
+        query = query.filter(DBAuditLog.module == module)
+    
+    logs = query.order_by(DBAuditLog.createdAt.desc()).limit(100).all()
+    
+    return [AuditLogResponse(
+        id=log.id,
+        company_id=log.company_id,
+        userId=log.userId,
+        action=log.action,
+        module=log.module,
+        detail=log.detail,
+        createdAt=log.createdAt
+    ) for log in logs]
+
+@app.post("/api/audit-logs")
+async def create_audit_log(
+    action: str,
+    module: str,
+    detail: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Crear evento de auditoría manual"""
+    user_id = context.get("user", {}).get("id")
+    company_id = context.get("company", {}).get("id")
+    
+    log_audit_event(user_id, action, module, detail, company_id, db)
+    return {"message": "Evento registrado"}
 
 if __name__ == "__main__":
     import uvicorn
