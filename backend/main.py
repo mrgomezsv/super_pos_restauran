@@ -18,7 +18,7 @@ from database import (
     ProductCategory as DBProductCategory, FiscalDocument as DBFiscalDocument,
     Account as DBAccount, JournalEntry as DBJournalEntry, JournalLine as DBJournalLine,
     InventoryMovement as DBInventoryMovement, ArInvoice as DBArInvoice, ApInvoice as DBApInvoice,
-    Supplier as DBSupplier
+    Supplier as DBSupplier, Discount as DBDiscount, CashSession as DBCashSession, AuditLog as DBAuditLog
 )
 
 # Importar modelos Pydantic para requests/responses
@@ -32,7 +32,10 @@ from schemas import (
     FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate,
     CompanyResponse, CompanyWithAdminCreate, CompanyUpdate, CompanyStatusUpdate, 
     CompanyCreationResponse, CompanyContext,
-    SupplierResponse, SupplierCreate, SupplierUpdate
+    SupplierResponse, SupplierCreate, SupplierUpdate,
+    DiscountResponse, DiscountCreate, DiscountUpdate,
+    CashSessionResponse, CashSessionOpen, CashSessionClose,
+    AuditLogResponse
 )
 
 # Importar servicio de compañías
@@ -1385,6 +1388,80 @@ async def delete_supplier(supplier_id: int, context: dict = Depends(get_current_
         raise HTTPException(status_code=403, detail="No autorizado")
     db.delete(sup); db.commit()
     return {"message": "Proveedor eliminado"}
+
+# -----------------------------
+# Discounts (Descuentos)
+# -----------------------------
+@app.get("/api/discounts", response_model=List[DiscountResponse])
+async def get_discounts(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Obtener lista de descuentos de la compañía"""
+    query = db.query(DBDiscount)
+    query = context_service.apply_company_filter(query, DBDiscount, context)
+    rows = query.filter(DBDiscount.isActive == True).order_by(DBDiscount.createdAt.desc()).all()
+    return [DiscountResponse(
+        id=r.id, company_id=r.company_id, name=r.name, percent=r.percent,
+        isActive=r.isActive, createdAt=r.createdAt
+    ) for r in rows]
+
+@app.post("/api/discounts", response_model=DiscountResponse)
+async def create_discount(payload: DiscountCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Crear nuevo descuento"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    # Validar rango de porcentaje
+    if payload.percent < 0 or payload.percent > 100:
+        raise HTTPException(status_code=400, detail="El porcentaje debe estar entre 0 y 100")
+    
+    new_discount = DBDiscount(
+        company_id=company_id,
+        name=payload.name.strip(),
+        percent=payload.percent,
+        isActive=payload.isActive,
+        createdAt=datetime.now()
+    )
+    db.add(new_discount)
+    db.commit()
+    db.refresh(new_discount)
+    return DiscountResponse(
+        id=new_discount.id, company_id=new_discount.company_id, name=new_discount.name,
+        percent=new_discount.percent, isActive=new_discount.isActive, createdAt=new_discount.createdAt
+    )
+
+@app.put("/api/discounts/{discount_id}", response_model=DiscountResponse)
+async def update_discount(discount_id: int, payload: DiscountUpdate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Actualizar descuento existente"""
+    disc = db.query(DBDiscount).filter(DBDiscount.id == discount_id).first()
+    if not disc:
+        raise HTTPException(status_code=404, detail="Descuento no encontrado")
+    if not context_service.validate_company_access(context, disc.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        if field == "percent" and value is not None:
+            if value < 0 or value > 100:
+                raise HTTPException(status_code=400, detail="El porcentaje debe estar entre 0 y 100")
+        setattr(disc, field, value)
+    
+    db.commit()
+    db.refresh(disc)
+    return DiscountResponse(
+        id=disc.id, company_id=disc.company_id, name=disc.name,
+        percent=disc.percent, isActive=disc.isActive, createdAt=disc.createdAt
+    )
+
+@app.delete("/api/discounts/{discount_id}")
+async def delete_discount(discount_id: int, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Eliminar descuento"""
+    disc = db.query(DBDiscount).filter(DBDiscount.id == discount_id).first()
+    if not disc:
+        raise HTTPException(status_code=404, detail="Descuento no encontrado")
+    if not context_service.validate_company_access(context, disc.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    db.delete(disc)
+    db.commit()
+    return {"message": "Descuento eliminado exitosamente"}
 
 if __name__ == "__main__":
     import uvicorn
