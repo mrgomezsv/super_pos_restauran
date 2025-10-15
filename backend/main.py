@@ -1463,6 +1463,59 @@ async def delete_discount(discount_id: int, context: dict = Depends(get_current_
     db.commit()
     return {"message": "Descuento eliminado exitosamente"}
 
+# -----------------------------
+# Inventory Alerts (Alertas de Inventario)
+# -----------------------------
+@app.get("/api/inventory/alerts")
+async def get_inventory_alerts(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Obtener productos con stock bajo el mínimo (alertas de inventario)"""
+    query = db.query(DBProduct)
+    query = context_service.apply_company_filter(query, DBProduct, context)
+    
+    # Filtrar productos donde stock < minStock
+    low_stock_products = query.filter(
+        DBProduct.stock < DBProduct.minStock,
+        DBProduct.isActive == True
+    ).order_by(
+        # Ordenar por criticidad: productos con menor % de stock primero
+        (DBProduct.stock * 1.0 / DBProduct.minStock).asc()
+    ).all()
+    
+    alerts = []
+    for product in low_stock_products:
+        # Calcular nivel de criticidad
+        if product.minStock > 0:
+            stock_percent = (product.stock / product.minStock) * 100
+        else:
+            stock_percent = 100 if product.stock > 0 else 0
+        
+        # Determinar nivel de urgencia
+        if stock_percent == 0:
+            urgency = "critico"
+        elif stock_percent < 25:
+            urgency = "alto"
+        elif stock_percent < 50:
+            urgency = "medio"
+        else:
+            urgency = "bajo"
+        
+        alerts.append({
+            "id": product.id,
+            "code": product.code,
+            "name": product.name,
+            "stock": product.stock,
+            "minStock": product.minStock,
+            "stockPercent": round(stock_percent, 1),
+            "urgency": urgency,
+            "category": product.category,
+            "brand": product.brand
+        })
+    
+    return {
+        "total": len(alerts),
+        "alerts": alerts
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3000)
