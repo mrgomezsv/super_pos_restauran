@@ -1734,27 +1734,31 @@ async def get_accounts(
     db: Session = Depends(get_db)
 ):
     """Obtener plan de cuentas de la compañía"""
-    query = db.query(DBAccount)
-    query = context_service.apply_company_filter(query, DBAccount, context)
-    
-    # Aplicar filtro por tipo si se especifica
-    if accountType:
-        query = query.filter(DBAccount.accountType == accountType)
-    
-    accounts = query.filter(DBAccount.isActive == True).order_by(DBAccount.code.asc()).all()
-    
-    return [AccountResponse(
-        id=account.id,
-        company_id=account.company_id,
-        code=account.code,
-        name=account.name,
-        accountType=account.accountType,
-        parentCode=account.parentCode,
-        level=account.level,
-        isActive=account.isActive,
-        createdAt=account.createdAt,
-        updatedAt=account.updatedAt
-    ) for account in accounts]
+    try:
+        query = db.query(DBAccount)
+        query = context_service.apply_company_filter(query, DBAccount, context)
+        
+        # Aplicar filtro por tipo si se especifica
+        if accountType:
+            query = query.filter(DBAccount.accountType == accountType)
+        
+        accounts = query.filter(DBAccount.isActive == True).order_by(DBAccount.code.asc()).all()
+        
+        return [AccountResponse(
+            id=account.id,
+            company_id=account.company_id,
+            code=account.code,
+            name=account.name,
+            accountType=account.accountType,
+            parentCode=account.parentCode,
+            level=account.level,
+            isActive=account.isActive,
+            createdAt=account.createdAt,
+            updatedAt=account.updatedAt
+        ) for account in accounts]
+    except Exception as e:
+        print(f"Error getting accounts: {e}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
 @app.post("/api/accounting/accounts", response_model=AccountResponse)
 async def create_account(payload: AccountCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
