@@ -1771,6 +1771,156 @@ async def close_cash_session(
         status=session.status
     )
 
+# -----------------------------
+# Product Categories (Categorías de Productos)
+# -----------------------------
+@app.get("/api/product-categories", response_model=List[ProductCategoryResponse])
+async def get_product_categories(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Obtener categorías de productos de la compañía"""
+    query = db.query(DBProductCategory)
+    query = context_service.apply_company_filter(query, DBProductCategory, context)
+    categories = query.filter(DBProductCategory.isActive == True).order_by(DBProductCategory.name.asc()).all()
+    
+    return [ProductCategoryResponse(
+        id=cat.id, company_id=cat.company_id, name=cat.name,
+        description=cat.description, isActive=cat.isActive,
+        createdAt=cat.createdAt
+    ) for cat in categories]
+
+@app.post("/api/product-categories", response_model=ProductCategoryResponse)
+async def create_product_category(payload: ProductCategoryCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Crear nueva categoría de producto"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    # Verificar que no exista una categoría con el mismo nombre
+    existing = db.query(DBProductCategory).filter(
+        DBProductCategory.company_id == company_id,
+        DBProductCategory.name == payload.name.strip(),
+        DBProductCategory.isActive == True
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Ya existe una categoría con este nombre")
+    
+    new_category = DBProductCategory(
+        company_id=company_id,
+        name=payload.name.strip(),
+        description=payload.description.strip() if payload.description else None,
+        isActive=True,
+        createdAt=datetime.now()
+    )
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="CATEGORY_CREATE",
+        module="Products",
+        detail=f"Categoría creada: {new_category.name}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return ProductCategoryResponse(
+        id=new_category.id, company_id=new_category.company_id, name=new_category.name,
+        description=new_category.description, isActive=new_category.isActive,
+        createdAt=new_category.createdAt
+    )
+
+@app.put("/api/product-categories/{category_id}", response_model=ProductCategoryResponse)
+async def update_product_category(category_id: int, payload: ProductCategoryUpdate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Actualizar categoría de producto"""
+    category = db.query(DBProductCategory).filter(DBProductCategory.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    if not context_service.validate_company_access(context, category.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar nombre único si se está cambiando
+    if payload.name and payload.name.strip() != category.name:
+        existing = db.query(DBProductCategory).filter(
+            DBProductCategory.company_id == category.company_id,
+            DBProductCategory.name == payload.name.strip(),
+            DBProductCategory.isActive == True,
+            DBProductCategory.id != category_id
+        ).first()
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="Ya existe una categoría con este nombre")
+    
+    # Actualizar campos
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        if field == "name" and value:
+            setattr(category, field, value.strip())
+        elif field == "description" and value:
+            setattr(category, field, value.strip())
+        else:
+            setattr(category, field, value)
+    
+    db.commit()
+    db.refresh(category)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="CATEGORY_UPDATE",
+        module="Products",
+        detail=f"Categoría actualizada: {category.name}",
+        company_id=category.company_id,
+        db=db
+    )
+    
+    return ProductCategoryResponse(
+        id=category.id, company_id=category.company_id, name=category.name,
+        description=category.description, isActive=category.isActive,
+        createdAt=category.createdAt
+    )
+
+@app.delete("/api/product-categories/{category_id}")
+async def delete_product_category(category_id: int, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Eliminar categoría de producto (soft delete)"""
+    category = db.query(DBProductCategory).filter(DBProductCategory.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    if not context_service.validate_company_access(context, category.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar que no tenga productos asociados
+    products_count = db.query(DBProduct).filter(
+        DBProduct.category == category.name,
+        DBProduct.company_id == category.company_id,
+        DBProduct.isActive == True
+    ).count()
+    
+    if products_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"No se puede eliminar la categoría porque tiene {products_count} productos asociados"
+        )
+    
+    # Soft delete
+    category.isActive = False
+    db.commit()
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="CATEGORY_DELETE",
+        module="Products",
+        detail=f"Categoría eliminada: {category.name}",
+        company_id=category.company_id,
+        db=db
+    )
+    
+    return {"message": "Categoría eliminada exitosamente"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3000)

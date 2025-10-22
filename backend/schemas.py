@@ -271,6 +271,24 @@ class AuditLogResponse(BaseModel):
     detail: Optional[str] = None
     createdAt: datetime
 
+# Product Categories Schemas
+class ProductCategoryResponse(BaseModel):
+    id: int
+    company_id: int
+    name: str
+    description: Optional[str] = None
+    isActive: bool
+    createdAt: datetime
+
+class ProductCategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class ProductCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    isActive: Optional[bool] = None
+
 # Esquemas de compañía (multi-tenant)
 class CompanyResponse(BaseModel):
     id: int
