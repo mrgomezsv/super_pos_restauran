@@ -290,13 +290,13 @@ class AccountResponse(BaseModel):
 class AccountCreate(BaseModel):
     code: str = Field(..., min_length=2, max_length=10)
     name: str = Field(..., min_length=2, max_length=200)
-    accountType: str = Field(..., regex="^(activo|pasivo|patrimonio|ingreso|gasto)$")
+    accountType: str = Field(..., pattern="^(activo|pasivo|patrimonio|ingreso|gasto)$")
     parentCode: Optional[str] = Field(None, max_length=10)
 
 class AccountUpdate(BaseModel):
     code: Optional[str] = Field(None, min_length=2, max_length=10)
     name: Optional[str] = Field(None, min_length=2, max_length=200)
-    accountType: Optional[str] = Field(None, regex="^(activo|pasivo|patrimonio|ingreso|gasto)$")
+    accountType: Optional[str] = Field(None, pattern="^(activo|pasivo|patrimonio|ingreso|gasto)$")
     parentCode: Optional[str] = Field(None, max_length=10)
     isActive: Optional[bool] = None
 
@@ -376,10 +376,10 @@ class BusinessConfigUpdate(BaseModel):
     nrc: Optional[str] = Field(None, max_length=20)
     direccion: Optional[str] = Field(None, max_length=500)
     telefono: Optional[str] = Field(None, max_length=20)
-    email: Optional[str] = Field(None, regex="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    email: Optional[str] = Field(None, pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
     sitioWeb: Optional[str] = Field(None, max_length=200)
     logoUrl: Optional[str] = Field(None, max_length=500)
-    moneda: Optional[str] = Field(None, regex="^(USD|EUR|SVC)$")
+    moneda: Optional[str] = Field(None, pattern="^(USD|EUR|SVC)$")
     pais: Optional[str] = Field(None, max_length=100)
     ciudad: Optional[str] = Field(None, max_length=100)
     codigoPostal: Optional[str] = Field(None, max_length=20)
