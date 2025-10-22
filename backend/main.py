@@ -131,40 +131,40 @@ def calculate_totals(items: List[CartItemSchema]) -> dict:
         "total": total
     }
 
-def create_journal_entry(source: str, reference: str, description: str, lines_data: List[dict], created_by: int, db: Session) -> DBJournalEntry:
-    """Crear póliza contable"""
+def create_accounting_entry(source: str, reference: str, description: str, lines_data: List[dict], created_by: int, company_id: int, db: Session) -> DBJournalEntry:
+    """Crear póliza contable automática desde POS"""
     
-    # Generar número de póliza
-    entry_count = db.query(DBJournalEntry).count() + 1
-    entry_number = f"POL-{entry_count:06d}"
+    # Generar número de asiento
+    last_entry = db.query(DBJournalEntry).filter(
+        DBJournalEntry.company_id == company_id
+    ).order_by(DBJournalEntry.entryNumber.desc()).first()
     
-    # Crear póliza
+    next_number = (last_entry.entryNumber + 1) if last_entry else 1
+    
+    # Crear asiento
     journal_entry = DBJournalEntry(
-        entryNumber=entry_number,
+        company_id=company_id,
+        entryNumber=next_number,
         date=datetime.now(),
-        source=source,
-        reference=reference,
         description=description,
-        status="posted",
-        createdBy=created_by,
-        postedBy=created_by,
-        postedAt=datetime.now(),
+        reference=reference,
+        totalDebit=sum(line.get("debit", 0.0) for line in lines_data),
+        totalCredit=sum(line.get("credit", 0.0) for line in lines_data),
         createdAt=datetime.now()
     )
     
     db.add(journal_entry)
     db.flush()  # Para obtener el ID
     
-    # Crear líneas de la póliza
+    # Crear líneas del asiento
     for line_data in lines_data:
         journal_line = DBJournalLine(
             journalEntryId=journal_entry.id,
-            accountId=line_data["accountId"],
+            accountCode=line_data["accountCode"],
+            accountName=line_data["accountName"],
             description=line_data["description"],
             debit=line_data.get("debit", 0.0),
-            credit=line_data.get("credit", 0.0),
-            costCenter=line_data.get("costCenter"),
-            createdAt=datetime.now()
+            credit=line_data.get("credit", 0.0)
         )
         db.add(journal_line)
     
@@ -193,42 +193,51 @@ def post_sale_to_accounting(sale: DBSale, db: Session) -> dict:
     """Contabilizar venta en libros contables"""
     
     try:
-        # 1. Crear póliza de ingreso (Ventas + IVA)
+        company_id = sale.company_id
+        
+        # 1. Crear asiento de ingreso (Caja + Ventas + IVA)
         income_lines = [
             {
-                "accountId": 1,  # Caja
+                "accountCode": "1101",  # Caja
+                "accountName": "Caja General",
                 "description": f"Venta {sale.invoiceNumber}",
                 "debit": sale.total,
                 "credit": 0.0
             },
             {
-                "accountId": 9,  # Ventas
+                "accountCode": "4101",  # Ventas
+                "accountName": "Ventas de Mercaderías",
                 "description": f"Venta {sale.invoiceNumber}",
                 "debit": 0.0,
                 "credit": sale.subtotal
             },
             {
-                "accountId": 10,  # IVA Débito Fiscal
+                "accountCode": "2101",  # IVA Débito Fiscal
+                "accountName": "IVA Débito Fiscal",
                 "description": f"IVA Venta {sale.invoiceNumber}",
                 "debit": 0.0,
                 "credit": sale.taxAmount
             }
         ]
         
-        income_entry = create_journal_entry(
+        income_entry = create_accounting_entry(
             source="pos",
             reference=sale.invoiceNumber,
             description=f"Venta POS {sale.invoiceNumber}",
             lines_data=income_lines,
             created_by=sale.cashierId,
+            company_id=company_id,
             db=db
         )
         
-        # 2. Crear póliza de costo (Costo de Ventas + Inventarios)
+        # 2. Crear asiento de costo (Costo de Ventas + Inventarios)
         cost_entry = None
         total_cost = 0.0
         
-        for item in sale.items:
+        # Obtener items de la venta
+        sale_items = db.query(DBSaleItem).filter(DBSaleItem.saleId == sale.id).all()
+        
+        for item in sale_items:
             # Buscar producto para obtener costo
             product = db.query(DBProduct).filter(DBProduct.id == item.productId).first()
             if product:
@@ -249,30 +258,34 @@ def post_sale_to_accounting(sale: DBSale, db: Session) -> dict:
         if total_cost > 0:
             cost_lines = [
                 {
-                    "accountId": 11,  # Costo de Ventas
+                    "accountCode": "5101",  # Costo de Ventas
+                    "accountName": "Costo de Ventas",
                     "description": f"Costo Venta {sale.invoiceNumber}",
                     "debit": total_cost,
                     "credit": 0.0
                 },
                 {
-                    "accountId": 4,  # Inventarios
+                    "accountCode": "1201",  # Inventarios
+                    "accountName": "Inventario de Mercaderías",
                     "description": f"Salida Inventario {sale.invoiceNumber}",
                     "debit": 0.0,
                     "credit": total_cost
                 }
             ]
             
-            cost_entry = create_journal_entry(
+            cost_entry = create_accounting_entry(
                 source="pos",
                 reference=sale.invoiceNumber,
                 description=f"Costo Venta POS {sale.invoiceNumber}",
                 lines_data=cost_lines,
                 created_by=sale.cashierId,
+                company_id=company_id,
                 db=db
             )
         
         # 3. Crear registro de factura AR
         ar_invoice = DBArInvoice(
+            company_id=company_id,
             invoiceNumber=sale.invoiceNumber,
             customerName=sale.customerName or "Cliente Varios",
             customerDui=sale.customerDocument,
