@@ -39,7 +39,10 @@ from schemas import (
     JournalEntryResponse, JournalEntryDetailResponse, JournalEntryCreate,
     JournalLineResponse, JournalLineCreate,
     LedgerEntryResponse, LedgerAccountDetailResponse, LedgerMovementResponse,
-    TrialBalanceResponse, TrialBalanceAccountResponse
+    TrialBalanceResponse, TrialBalanceAccountResponse,
+    SalesSummaryReportResponse, DailySalesResponse, UserSalesResponse,
+    InventoryStatusReportResponse, InventoryProductResponse,
+    FinancialSummaryReportResponse, SalesMetricsResponse, AccountingMetricsResponse, AccountTotalResponse
 )
 
 # Importar servicio de compañías
@@ -1470,6 +1473,225 @@ async def get_trial_balance(
         totalDebits=total_debits,
         totalCredits=total_credits,
         isBalanced=is_balanced
+    )
+
+# -----------------------------
+# Reports - Reportes del Sistema
+# -----------------------------
+@app.get("/api/reports/sales-summary", response_model=SalesSummaryReportResponse)
+async def get_sales_summary_report(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Reporte de resumen de ventas"""
+    company_id = context.get("company", {}).get("id")
+    
+    # Usar fechas por defecto si no se especifican
+    if not startDate:
+        startDate = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+    if not endDate:
+        endDate = datetime.now().strftime('%Y-%m-%d')
+    
+    start = datetime.fromisoformat(startDate)
+    end = datetime.fromisoformat(endDate) + timedelta(days=1)
+    
+    # Obtener ventas del período
+    sales = db.query(DBSale).filter(
+        DBSale.company_id == company_id,
+        DBSale.date >= start,
+        DBSale.date < end
+    ).all()
+    
+    # Calcular métricas
+    total_sales = len(sales)
+    total_amount = sum(sale.total for sale in sales)
+    total_tax = sum(sale.tax for sale in sales)
+    total_discount = sum(sale.discount for sale in sales)
+    
+    # Ventas por día
+    daily_sales = {}
+    for sale in sales:
+        date_key = sale.date.strftime('%Y-%m-%d')
+        if date_key not in daily_sales:
+            daily_sales[date_key] = {'count': 0, 'amount': 0}
+        daily_sales[date_key]['count'] += 1
+        daily_sales[date_key]['amount'] += sale.total
+    
+    # Ventas por usuario
+    user_sales = {}
+    for sale in sales:
+        user_id = sale.userId
+        if user_id not in user_sales:
+            user_sales[user_id] = {'count': 0, 'amount': 0}
+        user_sales[user_id]['count'] += 1
+        user_sales[user_id]['amount'] += sale.total
+    
+    return SalesSummaryReportResponse(
+        periodStart=start.date(),
+        periodEnd=datetime.fromisoformat(endDate).date(),
+        totalSales=total_sales,
+        totalAmount=total_amount,
+        totalTax=total_tax,
+        totalDiscount=total_discount,
+        averageSaleAmount=total_amount / total_sales if total_sales > 0 else 0,
+        dailySales=[DailySalesResponse(
+            date=date_key,
+            salesCount=data['count'],
+            totalAmount=data['amount']
+        ) for date_key, data in daily_sales.items()],
+        userSales=[UserSalesResponse(
+            userId=user_id,
+            salesCount=data['count'],
+            totalAmount=data['amount']
+        ) for user_id, data in user_sales.items()]
+    )
+
+@app.get("/api/reports/inventory-status", response_model=InventoryStatusReportResponse)
+async def get_inventory_status_report(
+    lowStockThreshold: Optional[int] = 10,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Reporte de estado de inventario"""
+    company_id = context.get("company", {}).get("id")
+    
+    # Obtener todos los productos
+    products = db.query(DBProduct).filter(
+        DBProduct.company_id == company_id,
+        DBProduct.isActive == True
+    ).all()
+    
+    # Clasificar productos
+    low_stock_products = []
+    out_of_stock_products = []
+    normal_stock_products = []
+    
+    total_products = len(products)
+    total_value = 0
+    
+    for product in products:
+        product_value = product.stock * product.price
+        total_value += product_value
+        
+        if product.stock == 0:
+            out_of_stock_products.append(InventoryProductResponse(
+                id=product.id,
+                name=product.name,
+                code=product.code,
+                stock=product.stock,
+                price=product.price,
+                value=product_value,
+                category=product.category
+            ))
+        elif product.stock <= lowStockThreshold:
+            low_stock_products.append(InventoryProductResponse(
+                id=product.id,
+                name=product.name,
+                code=product.code,
+                stock=product.stock,
+                price=product.price,
+                value=product_value,
+                category=product.category
+            ))
+        else:
+            normal_stock_products.append(InventoryProductResponse(
+                id=product.id,
+                name=product.name,
+                code=product.code,
+                stock=product.stock,
+                price=product.price,
+                value=product_value,
+                category=product.category
+            ))
+    
+    return InventoryStatusReportResponse(
+        totalProducts=total_products,
+        totalValue=total_value,
+        lowStockThreshold=lowStockThreshold,
+        lowStockProducts=low_stock_products,
+        outOfStockProducts=out_of_stock_products,
+        normalStockProducts=normal_stock_products,
+        lowStockCount=len(low_stock_products),
+        outOfStockCount=len(out_of_stock_products),
+        normalStockCount=len(normal_stock_products)
+    )
+
+@app.get("/api/reports/financial-summary", response_model=FinancialSummaryReportResponse)
+async def get_financial_summary_report(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Reporte de resumen financiero"""
+    company_id = context.get("company", {}).get("id")
+    
+    # Usar fechas por defecto si no se especifican
+    if not startDate:
+        startDate = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+    if not endDate:
+        endDate = datetime.now().strftime('%Y-%m-%d')
+    
+    start = datetime.fromisoformat(startDate)
+    end = datetime.fromisoformat(endDate) + timedelta(days=1)
+    
+    # Obtener ventas del período
+    sales = db.query(DBSale).filter(
+        DBSale.company_id == company_id,
+        DBSale.date >= start,
+        DBSale.date < end
+    ).all()
+    
+    # Obtener movimientos contables del período
+    journal_lines = db.query(DBJournalLine).join(DBJournalEntry).filter(
+        DBJournalEntry.company_id == company_id,
+        DBJournalEntry.date >= start,
+        DBJournalEntry.date < end
+    ).all()
+    
+    # Calcular métricas de ventas
+    total_sales_amount = sum(sale.total for sale in sales)
+    total_sales_tax = sum(sale.tax for sale in sales)
+    total_sales_discount = sum(sale.discount for sale in sales)
+    
+    # Calcular métricas contables
+    total_debits = sum(line.debit for line in journal_lines)
+    total_credits = sum(line.credit for line in journal_lines)
+    
+    # Agrupar por tipo de cuenta
+    account_totals = {}
+    for line in journal_lines:
+        account_code = line.accountCode
+        if account_code not in account_totals:
+            account_totals[account_code] = {'debit': 0, 'credit': 0, 'name': line.accountName}
+        account_totals[account_code]['debit'] += line.debit
+        account_totals[account_code]['credit'] += line.credit
+    
+    return FinancialSummaryReportResponse(
+        periodStart=start.date(),
+        periodEnd=datetime.fromisoformat(endDate).date(),
+        salesMetrics=SalesMetricsResponse(
+            totalAmount=total_sales_amount,
+            totalTax=total_sales_tax,
+            totalDiscount=total_sales_discount,
+            salesCount=len(sales),
+            averageSaleAmount=total_sales_amount / len(sales) if sales else 0
+        ),
+        accountingMetrics=AccountingMetricsResponse(
+            totalDebits=total_debits,
+            totalCredits=total_credits,
+            journalEntriesCount=len(set(line.journalEntryId for line in journal_lines)),
+            accountsWithActivity=len(account_totals)
+        ),
+        accountTotals=[AccountTotalResponse(
+            accountCode=code,
+            accountName=data['name'],
+            totalDebit=data['debit'],
+            totalCredit=data['credit'],
+            balance=data['debit'] - data['credit']
+        ) for code, data in account_totals.items()]
     )
 
 # Rutas de usuarios

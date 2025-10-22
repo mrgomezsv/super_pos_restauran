@@ -205,6 +205,75 @@ class TrialBalanceResponse(BaseModel):
     totalCredits: float
     isBalanced: bool
 
+# Reports Schemas
+class DailySalesResponse(BaseModel):
+    date: str
+    salesCount: int
+    totalAmount: float
+
+class UserSalesResponse(BaseModel):
+    userId: int
+    salesCount: int
+    totalAmount: float
+
+class SalesSummaryReportResponse(BaseModel):
+    periodStart: date
+    periodEnd: date
+    totalSales: int
+    totalAmount: float
+    totalTax: float
+    totalDiscount: float
+    averageSaleAmount: float
+    dailySales: List[DailySalesResponse]
+    userSales: List[UserSalesResponse]
+
+class InventoryProductResponse(BaseModel):
+    id: int
+    name: str
+    code: str
+    stock: int
+    price: float
+    value: float
+    category: str
+
+class InventoryStatusReportResponse(BaseModel):
+    totalProducts: int
+    totalValue: float
+    lowStockThreshold: int
+    lowStockProducts: List[InventoryProductResponse]
+    outOfStockProducts: List[InventoryProductResponse]
+    normalStockProducts: List[InventoryProductResponse]
+    lowStockCount: int
+    outOfStockCount: int
+    normalStockCount: int
+
+class SalesMetricsResponse(BaseModel):
+    totalAmount: float
+    totalTax: float
+    totalDiscount: float
+    salesCount: int
+    averageSaleAmount: float
+
+class AccountingMetricsResponse(BaseModel):
+    totalDebits: float
+    totalCredits: float
+    journalEntriesCount: int
+    accountsWithActivity: int
+
+class AccountTotalResponse(BaseModel):
+    accountCode: str
+    accountName: str
+    totalDebit: float
+    totalCredit: float
+    balance: float
+
+class FinancialSummaryReportResponse(BaseModel):
+    periodStart: date
+    periodEnd: date
+    salesMetrics: SalesMetricsResponse
+    accountingMetrics: AccountingMetricsResponse
+    accountTotals: List[AccountTotalResponse]
+
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int
