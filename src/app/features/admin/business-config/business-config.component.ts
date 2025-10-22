@@ -15,12 +15,40 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../../../environments/environment';
 
-import { BusinessService } from '../../../core/services/business.service';
-import { BusinessConfiguration, TicketTemplate } from '../../../core/models/business.model';
-import { TicketPreviewComponent } from '../../../shared/components/ticket-preview/ticket-preview.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+
+interface BusinessConfig {
+  id: number;
+  nombre: string;
+  razonSocial: string;
+  nit: string;
+  nrc?: string;
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  sitioWeb?: string;
+  logoUrl?: string;
+  moneda: string;
+  pais: string;
+  ciudad?: string;
+  codigoPostal?: string;
+  regimenFiscal?: string;
+  actividadEconomica?: string;
+  fechaInicioOperaciones?: string;
+  representanteLegal?: string;
+  contador?: string;
+  auditor?: string;
+  configuracionFiscal?: any;
+  configuracionContable?: any;
+  configuracionPOS?: any;
+  createdAt: string;
+  updatedAt: string;
+}
 
 @Component({
   selector: 'app-business-config',
@@ -40,20 +68,21 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatTooltipModule,
-    TicketPreviewComponent
+    MatSnackBarModule
   ],
   templateUrl: './business-config.component.html',
   styleUrls: ['./business-config.component.scss']
 })
 export class BusinessConfigComponent implements OnInit, OnDestroy {
+  private readonly api = `${environment.apiUrl}/business/config`;
+  
   businessForm: FormGroup;
   isLoading = false;
   isSaving = false;
   showPreview = false;
   saveSuccess = false;
-  currentConfig: BusinessConfiguration | null = null;
-  ticketTemplate: TicketTemplate | null = null;
-  expandedSections: Set<string> = new Set(['company', 'contact', 'tickets', 'labels']);
+  currentConfig: BusinessConfig | null = null;
+  expandedSections: Set<string> = new Set(['company', 'contact', 'fiscal', 'accounting']);
   private destroy$ = new Subject<void>();
 
   currencies = [
@@ -84,9 +113,16 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     'Otros'
   ];
 
+  fiscalRegimes = [
+    'Contribuyente Especial',
+    'Contribuyente Ordinario',
+    'Exento',
+    'Pequeño Contribuyente'
+  ];
+
   constructor(
     private fb: FormBuilder,
-    private businessService: BusinessService,
+    private http: HttpClient,
     private toastr: ToastrService,
     private dialog: MatDialog
   ) {
@@ -104,85 +140,76 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
 
   private createForm(): FormGroup {
     return this.fb.group({
-      // Información de la empresa
-      businessName: ['', [Validators.required, Validators.minLength(3)]],
-      commercialName: ['', [Validators.required, Validators.minLength(3)]],
-      taxId: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{6}-\d{3}-\d{1}$/)]],
-      registrationNumber: ['', [Validators.required, Validators.pattern(/^\d{6}-\d{1}$/)]],
-      economicActivity: ['', Validators.required],
+      // Información básica de la empresa
+      nombre: ['', [Validators.required, Validators.minLength(3)]],
+      razonSocial: ['', [Validators.required, Validators.minLength(3)]],
+      nit: ['', [Validators.required, Validators.minLength(9)]],
+      nrc: [''],
       
       // Información de contacto
-      address: ['', Validators.required],
-      city: ['', Validators.required],
-      state: ['', Validators.required],
-      country: ['El Salvador', Validators.required],
-      zipCode: [''],
-      phone: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{4}$/)]],
-      email: ['', [Validators.required, Validators.email]],
+      direccion: [''],
+      telefono: [''],
+      email: ['', [Validators.email]],
+      sitioWeb: [''],
+      ciudad: [''],
+      codigoPostal: [''],
       
-      // Información del establecimiento
-      establishmentName: ['Casa Matriz', Validators.required],
-      establishmentCode: ['001', Validators.required],
+      // Información fiscal
+      moneda: ['USD', Validators.required],
+      pais: ['El Salvador', Validators.required],
+      regimenFiscal: [''],
+      actividadEconomica: [''],
+      fechaInicioOperaciones: [''],
       
-      // Configuración de tickets
-      receiptHeader: ['Gracias por su compra'],
-      receiptFooter: ['¡Vuelva pronto!'],
-      defaultObservations: [''],
+      // Información legal
+      representanteLegal: [''],
+      contador: [''],
+      auditor: [''],
       
-      // Configuración fiscal
-      currency: ['USD', Validators.required],
-      defaultTaxRate: [15, [Validators.required, Validators.min(0), Validators.max(100)]],
-      allowNegativeStock: [false],
-      requireCustomerInfo: [false],
-      showPricesWithTax: [false],
-      
-      // Configuración de impresión
-      printLogo: [false],
-      logoPath: [''],
-      printQRCode: [false],
-      qrCodeUrl: [''],
-      
-      // Etiquetas del ticket
-      receiptTitle: ['FACTURA'],
-      dateLabel: ['FECHA:'],
-      generationDateLabel: ['FECHA GENERACIÓN:'],
-      generationCodeLabel: ['CÓDIGO DE GENERACIÓN:'],
-      receptionSealLabel: ['SELLO DE RECEPCIÓN:'],
-      controlNumberLabel: ['NÚMERO DE CONTROL:'],
-      transmissionLabel: ['TRANSMISIÓN:'],
-      modelLabel: ['MODELO:'],
-      invoiceNumberLabel: ['FACTURA N°:'],
-      cashierLabel: ['CAJERO:'],
-      customerLabel: ['CLIENTE:'],
-      recipientLabel: ['RECEPTOR:'],
-      duiLabel: ['DUI:'],
-      addressLabel: ['DIRECCIÓN:'],
-      subtotalLabel: ['SUBTOTAL:'],
-      taxLabel: ['IVA:'],
-      totalLabel: ['TOTAL:'],
-      paymentMethodLabel: ['MÉTODO DE PAGO:'],
-      cashReceivedLabel: ['EFECTIVO RECIBIDO:'],
-      cashReturnedLabel: ['EFECTIVO DEVUELTO:'],
-      observationsLabel: ['OBSERVACIONES:']
+      // Configuraciones
+      configuracionFiscal: [{}],
+      configuracionContable: [{}],
+      configuracionPOS: [{}]
     });
   }
 
   private loadBusinessConfiguration(): void {
     this.isLoading = true;
     
-    this.businessService.getConfiguration()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (config) => {
-          this.businessForm.patchValue(config);
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading business configuration:', error);
-          this.toastr.error('Error al cargar la configuración del negocio');
-          this.isLoading = false;
-        }
-      });
+    this.http.get<BusinessConfig>(this.api).subscribe({
+      next: (config) => {
+        this.currentConfig = config;
+        this.businessForm.patchValue({
+          nombre: config.nombre,
+          razonSocial: config.razonSocial,
+          nit: config.nit,
+          nrc: config.nrc || '',
+          direccion: config.direccion || '',
+          telefono: config.telefono || '',
+          email: config.email || '',
+          sitioWeb: config.sitioWeb || '',
+          ciudad: config.ciudad || '',
+          codigoPostal: config.codigoPostal || '',
+          moneda: config.moneda,
+          pais: config.pais,
+          regimenFiscal: config.regimenFiscal || '',
+          actividadEconomica: config.actividadEconomica || '',
+          fechaInicioOperaciones: config.fechaInicioOperaciones || '',
+          representanteLegal: config.representanteLegal || '',
+          contador: config.contador || '',
+          auditor: config.auditor || '',
+          configuracionFiscal: config.configuracionFiscal || {},
+          configuracionContable: config.configuracionContable || {},
+          configuracionPOS: config.configuracionPOS || {}
+        });
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando configuración:', error);
+        this.toastr.error('Error al cargar la configuración del negocio');
+        this.isLoading = false;
+      }
+    });
   }
 
   onSave(): void {
@@ -194,7 +221,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
 
     const dialogData: ConfirmationDialogData = {
       title: 'Guardar Configuración',
-      message: '¿Está seguro de que desea guardar los cambios realizados en la configuración del negocio? Esta acción actualizará todos los tickets y documentos.',
+      message: '¿Está seguro de que desea guardar los cambios realizados en la configuración del negocio?',
       confirmText: 'Guardar',
       cancelText: 'Cancelar',
       type: 'info',
@@ -202,7 +229,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     };
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px', // ← CAMBIAR AQUÍ PARA AJUSTAR EL ANCHO DEL MODAL (ej: '500px', '90vw', etc.)
+      width: '400px',
       data: dialogData,
       disableClose: true,
       hasBackdrop: true,
@@ -227,68 +254,26 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     
     const formData = this.businessForm.value;
     
-    this.businessService.updateConfiguration(formData)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (config) => {
-          this.toastr.success('Configuración guardada exitosamente');
-          this.isSaving = false;
-          this.saveSuccess = true;
-          this.businessForm.markAsPristine();
-          
-          // Ocultar mensaje de éxito después de 3 segundos
-          setTimeout(() => {
-            this.saveSuccess = false;
-          }, 3000);
-        },
-        error: (error) => {
-          console.error('Error saving business configuration:', error);
-          this.toastr.error('Error al guardar la configuración');
-          this.isSaving = false;
+    this.http.put<BusinessConfig>(this.api, formData).subscribe({
+      next: (config) => {
+        this.currentConfig = config;
+        this.toastr.success('Configuración guardada exitosamente');
+        this.isSaving = false;
+        this.saveSuccess = true;
+        this.businessForm.markAsPristine();
+        
+        // Ocultar mensaje de éxito después de 3 segundos
+        setTimeout(() => {
           this.saveSuccess = false;
-        }
-      });
-  }
-
-  onRestore(): void {
-    const dialogData: ConfirmationDialogData = {
-      title: 'Restaurar Configuración',
-      message: '¿Está seguro de que desea restaurar la configuración a los valores por defecto? Todos los cambios actuales se perderán y no se podrán recuperar.',
-      confirmText: 'Restaurar',
-      cancelText: 'Cancelar',
-      type: 'danger',
-      icon: 'restore'
-    };
-
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px', // ← CAMBIAR AQUÍ PARA AJUSTAR EL ANCHO DEL MODAL (ej: '500px', '90vw', etc.)
-      data: dialogData,
-      disableClose: true,
-      hasBackdrop: true,
-      backdropClass: 'confirmation-dialog-backdrop',
-      position: {
-        top: '50%',
-        left: '50%'
+        }, 3000);
       },
-      panelClass: 'confirmation-dialog-container'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.performRestore();
+      error: (error) => {
+        console.error('Error guardando configuración:', error);
+        this.toastr.error(error.error?.detail || 'Error al guardar la configuración');
+        this.isSaving = false;
+        this.saveSuccess = false;
       }
     });
-  }
-
-  private performRestore(): void {
-    this.businessForm.reset();
-    this.businessService.getConfiguration()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(config => {
-        this.businessForm.patchValue(config);
-        this.toastr.success('Configuración restaurada a los valores por defecto');
-        this.businessForm.markAsPristine();
-      });
   }
 
   onReset(): void {
@@ -296,23 +281,38 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     this.toastr.info('Configuración restaurada a los valores guardados');
   }
 
-  previewTicket(): void {
-    if (this.businessForm.valid) {
-      // Actualizar la configuración actual con los datos del formulario
-      this.currentConfig = { ...this.currentConfig, ...this.businessForm.value };
-      
-      // Mostrar/ocultar la vista previa
-      this.showPreview = !this.showPreview;
-      
-      if (this.showPreview) {
-        this.toastr.success('Vista previa del ticket activada');
-      } else {
-        this.toastr.info('Vista previa del ticket oculta');
-      }
-    } else {
-      this.markFormGroupTouched();
-      this.toastr.warning('Por favor, complete todos los campos requeridos antes de ver la vista previa');
+  onUploadLogo(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      this.toastr.error('Solo se permiten archivos de imagen');
+      return;
     }
+
+    // Validar tamaño (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      this.toastr.error('El archivo no puede ser mayor a 2MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post(`${this.api}/logo`, formData).subscribe({
+      next: (response: any) => {
+        this.toastr.success('Logo subido exitosamente');
+        // Actualizar la configuración local
+        if (this.currentConfig) {
+          this.currentConfig.logoUrl = response.logoUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Error subiendo logo:', error);
+        this.toastr.error(error.error?.detail || 'Error al subir el logo');
+      }
+    });
   }
 
   private markFormGroupTouched(): void {
@@ -332,26 +332,8 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
       if (control.errors['email']) {
         return 'Formato de email inválido';
       }
-      if (control.errors['pattern']) {
-        if (fieldName === 'taxId') {
-          return 'Formato: XXXX-XXXXXX-XXX-X';
-        }
-        if (fieldName === 'registrationNumber') {
-          return 'Formato: XXXXXX-X';
-        }
-        if (fieldName === 'phone') {
-          return 'Formato: XXXX-XXXX';
-        }
-        return 'Formato inválido';
-      }
       if (control.errors['minlength']) {
         return `Mínimo ${control.errors['minlength'].requiredLength} caracteres`;
-      }
-      if (control.errors['min']) {
-        return `Valor mínimo: ${control.errors['min'].min}`;
-      }
-      if (control.errors['max']) {
-        return `Valor máximo: ${control.errors['max'].max}`;
       }
     }
     return '';
@@ -360,87 +342,6 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   hasFieldError(fieldName: string): boolean {
     const control = this.businessForm.get(fieldName);
     return !!(control?.errors && control.touched);
-  }
-
-  // Métodos de ayuda para formateo
-  formatNIT(event: any): void {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length >= 4) {
-      value = value.substring(0, 4) + '-' + value.substring(4);
-    }
-    if (value.length >= 11) {
-      value = value.substring(0, 11) + '-' + value.substring(11);
-    }
-    if (value.length >= 15) {
-      value = value.substring(0, 15) + '-' + value.substring(15);
-    }
-    if (value.length > 18) {
-      value = value.substring(0, 18);
-    }
-    this.businessForm.get('taxId')?.setValue(value, { emitEvent: false });
-  }
-
-  formatPhone(event: any): void {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length >= 4) {
-      value = value.substring(0, 4) + '-' + value.substring(4);
-    }
-    if (value.length > 9) {
-      value = value.substring(0, 9);
-    }
-    this.businessForm.get('phone')?.setValue(value, { emitEvent: false });
-  }
-
-  formatRegistrationNumber(event: any): void {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length >= 6) {
-      value = value.substring(0, 6) + '-' + value.substring(6);
-    }
-    if (value.length > 8) {
-      value = value.substring(0, 8);
-    }
-    this.businessForm.get('registrationNumber')?.setValue(value, { emitEvent: false });
-  }
-
-  private getDefaultTemplate(): TicketTemplate {
-    return {
-      header: {
-        businessName: 'Super POS',
-        commercialName: 'Super POS',
-        taxId: '0000-000000-000-0',
-        address: 'Calle Principal, Zona Centro',
-        phone: '0000-0000',
-        email: 'info@superpos.com'
-      },
-      footer: {
-        message: '¡Gracias por su compra!',
-        observations: '',
-        thankYouMessage: '¡Vuelva pronto!'
-      },
-      receipt: {
-        title: 'FACTURA',
-        dateLabel: 'FECHA:',
-        generationDateLabel: 'FECHA GENERACIÓN:',
-        generationCodeLabel: 'CÓDIGO DE GENERACIÓN:',
-        receptionSealLabel: 'SELLO DE RECEPCIÓN:',
-        controlNumberLabel: 'NÚMERO DE CONTROL:',
-        transmissionLabel: 'TRANSMISIÓN:',
-        modelLabel: 'MODELO:',
-        cashierLabel: 'CAJERO:',
-        invoiceNumberLabel: 'FACTURA N°:',
-        customerLabel: 'CLIENTE:',
-        recipientLabel: 'RECEPTOR:',
-        duiLabel: 'DUI:',
-        addressLabel: 'DIRECCIÓN:',
-        subtotalLabel: 'SUBTOTAL:',
-        taxLabel: 'IVA:',
-        totalLabel: 'TOTAL:',
-        paymentMethodLabel: 'MÉTODO DE PAGO:',
-        cashReceivedLabel: 'EFECTIVO RECIBIDO:',
-        cashReturnedLabel: 'EFECTIVO DEVUELTO:',
-        observationsLabel: 'OBSERVACIONES:'
-      }
-    };
   }
 
   // Métodos para el progreso de configuración
@@ -478,10 +379,10 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
 
   clearSection(sectionId: string): void {
     const sectionFields: { [key: string]: string[] } = {
-      'company': ['businessName', 'commercialName', 'taxId', 'registrationNumber', 'economicActivity', 'establishmentName', 'establishmentCode'],
-      'contact': ['address', 'city', 'state', 'country', 'zipCode', 'phone', 'email'],
-      'tickets': ['receiptHeader', 'receiptFooter', 'defaultObservations', 'currency', 'defaultTaxRate', 'logoPath', 'qrCodeUrl', 'allowNegativeStock', 'requireCustomerInfo', 'showPricesWithTax', 'printLogo', 'printQRCode'],
-      'labels': ['receiptTitle', 'dateLabel', 'generationDateLabel', 'generationCodeLabel', 'receptionSealLabel', 'controlNumberLabel', 'transmissionLabel', 'modelLabel', 'invoiceNumberLabel', 'cashierLabel', 'customerLabel', 'recipientLabel', 'duiLabel', 'addressLabel', 'subtotalLabel', 'taxLabel', 'totalLabel', 'paymentMethodLabel', 'cashReceivedLabel', 'cashReturnedLabel', 'observationsLabel']
+      'company': ['nombre', 'razonSocial', 'nit', 'nrc'],
+      'contact': ['direccion', 'telefono', 'email', 'sitioWeb', 'ciudad', 'codigoPostal'],
+      'fiscal': ['regimenFiscal', 'actividadEconomica', 'fechaInicioOperaciones'],
+      'accounting': ['representanteLegal', 'contador', 'auditor']
     };
 
     const fieldsToClear = sectionFields[sectionId];

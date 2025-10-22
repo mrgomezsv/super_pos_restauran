@@ -341,6 +341,58 @@ class DashboardMetricsResponse(BaseModel):
     topProducts: List[TopProductResponse]
     alerts: List[DashboardAlertResponse]
 
+# Business Configuration Schemas
+class BusinessConfigResponse(BaseModel):
+    id: int
+    nombre: str
+    razonSocial: str
+    nit: str
+    nrc: Optional[str] = None
+    direccion: Optional[str] = None
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+    sitioWeb: Optional[str] = None
+    logoUrl: Optional[str] = None
+    moneda: str = "USD"
+    pais: str = "El Salvador"
+    ciudad: Optional[str] = None
+    codigoPostal: Optional[str] = None
+    regimenFiscal: Optional[str] = None
+    actividadEconomica: Optional[str] = None
+    fechaInicioOperaciones: Optional[date] = None
+    representanteLegal: Optional[str] = None
+    contador: Optional[str] = None
+    auditor: Optional[str] = None
+    configuracionFiscal: Optional[dict] = None
+    configuracionContable: Optional[dict] = None
+    configuracionPOS: Optional[dict] = None
+    createdAt: datetime
+    updatedAt: datetime
+
+class BusinessConfigUpdate(BaseModel):
+    nombre: Optional[str] = Field(None, min_length=2, max_length=200)
+    razonSocial: Optional[str] = Field(None, min_length=2, max_length=200)
+    nit: Optional[str] = Field(None, min_length=9, max_length=20)
+    nrc: Optional[str] = Field(None, max_length=20)
+    direccion: Optional[str] = Field(None, max_length=500)
+    telefono: Optional[str] = Field(None, max_length=20)
+    email: Optional[str] = Field(None, regex="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    sitioWeb: Optional[str] = Field(None, max_length=200)
+    logoUrl: Optional[str] = Field(None, max_length=500)
+    moneda: Optional[str] = Field(None, regex="^(USD|EUR|SVC)$")
+    pais: Optional[str] = Field(None, max_length=100)
+    ciudad: Optional[str] = Field(None, max_length=100)
+    codigoPostal: Optional[str] = Field(None, max_length=20)
+    regimenFiscal: Optional[str] = Field(None, max_length=100)
+    actividadEconomica: Optional[str] = Field(None, max_length=200)
+    fechaInicioOperaciones: Optional[date] = None
+    representanteLegal: Optional[str] = Field(None, max_length=200)
+    contador: Optional[str] = Field(None, max_length=200)
+    auditor: Optional[str] = Field(None, max_length=200)
+    configuracionFiscal: Optional[dict] = None
+    configuracionContable: Optional[dict] = None
+    configuracionPOS: Optional[dict] = None
+
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int

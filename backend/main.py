@@ -3,7 +3,7 @@ Super POS - Backend API con FastAPI y SQLite
 Sistema de Punto de Ventas para Supermercados con Persistencia Real
 """
 
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import FastAPI, HTTPException, status, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta
@@ -45,7 +45,8 @@ from schemas import (
     FinancialSummaryReportResponse, SalesMetricsResponse, AccountingMetricsResponse, AccountTotalResponse,
     AccountResponse, AccountCreate, AccountUpdate,
     DashboardMetricsResponse, SalesDashboardMetrics, InventoryDashboardMetrics, AccountingDashboardMetrics,
-    DailySalesResponse, TopProductResponse, DashboardAlertResponse
+    DailySalesResponse, TopProductResponse, DashboardAlertResponse,
+    BusinessConfigResponse, BusinessConfigUpdate
 )
 
 # Importar servicio de compañías
@@ -2087,6 +2088,156 @@ async def get_dashboard_metrics(
         ) for product in top_products],
         alerts=alerts
     )
+
+# -----------------------------
+# Business Configuration
+# -----------------------------
+@app.get("/api/business/config", response_model=BusinessConfigResponse)
+async def get_business_config(
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener configuración de la empresa"""
+    company_id = context.get("company", {}).get("id")
+    
+    company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+    
+    return BusinessConfigResponse(
+        id=company.id,
+        nombre=company.nombre,
+        razonSocial=company.razonSocial,
+        nit=company.nit,
+        nrc=company.nrc,
+        direccion=company.direccion,
+        telefono=company.telefono,
+        email=company.email,
+        sitioWeb=company.sitioWeb,
+        logoUrl=company.logoUrl,
+        moneda=company.moneda,
+        pais=company.pais,
+        ciudad=company.ciudad,
+        codigoPostal=company.codigoPostal,
+        regimenFiscal=company.regimenFiscal,
+        actividadEconomica=company.actividadEconomica,
+        fechaInicioOperaciones=company.fechaInicioOperaciones,
+        representanteLegal=company.representanteLegal,
+        contador=company.contador,
+        auditor=company.auditor,
+        configuracionFiscal=company.configuracionFiscal,
+        configuracionContable=company.configuracionContable,
+        configuracionPOS=company.configuracionPOS,
+        createdAt=company.createdAt,
+        updatedAt=company.updatedAt
+    )
+
+@app.put("/api/business/config", response_model=BusinessConfigResponse)
+async def update_business_config(
+    payload: BusinessConfigUpdate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Actualizar configuración de la empresa"""
+    company_id = context.get("company", {}).get("id")
+    
+    company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+    
+    # Actualizar campos
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        if value is not None:
+            setattr(company, field, value)
+    
+    company.updatedAt = datetime.now()
+    db.commit()
+    db.refresh(company)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="BUSINESS_CONFIG_UPDATE",
+        module="Business",
+        detail="Configuración de empresa actualizada",
+        company_id=company_id,
+        db=db
+    )
+    
+    return BusinessConfigResponse(
+        id=company.id,
+        nombre=company.nombre,
+        razonSocial=company.razonSocial,
+        nit=company.nit,
+        nrc=company.nrc,
+        direccion=company.direccion,
+        telefono=company.telefono,
+        email=company.email,
+        sitioWeb=company.sitioWeb,
+        logoUrl=company.logoUrl,
+        moneda=company.moneda,
+        pais=company.pais,
+        ciudad=company.ciudad,
+        codigoPostal=company.codigoPostal,
+        regimenFiscal=company.regimenFiscal,
+        actividadEconomica=company.actividadEconomica,
+        fechaInicioOperaciones=company.fechaInicioOperaciones,
+        representanteLegal=company.representanteLegal,
+        contador=company.contador,
+        auditor=company.auditor,
+        configuracionFiscal=company.configuracionFiscal,
+        configuracionContable=company.configuracionContable,
+        configuracionPOS=company.configuracionPOS,
+        createdAt=company.createdAt,
+        updatedAt=company.updatedAt
+    )
+
+@app.post("/api/business/config/logo")
+async def upload_logo(
+    file: UploadFile = File(...),
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Subir logo de la empresa"""
+    company_id = context.get("company", {}).get("id")
+    
+    # Validar tipo de archivo
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos de imagen")
+    
+    # Validar tamaño (máximo 2MB)
+    content = await file.read()
+    if len(content) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="El archivo no puede ser mayor a 2MB")
+    
+    # Generar nombre único
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'png'
+    filename = f"logo_{company_id}_{int(datetime.now().timestamp())}.{file_extension}"
+    
+    # En un entorno real, aquí guardarías el archivo en un servicio de almacenamiento
+    # Por ahora, simulamos la URL
+    logo_url = f"/uploads/logos/{filename}"
+    
+    # Actualizar empresa
+    company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
+    if company:
+        company.logoUrl = logo_url
+        company.updatedAt = datetime.now()
+        db.commit()
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="LOGO_UPLOAD",
+        module="Business",
+        detail=f"Logo actualizado: {filename}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return {"message": "Logo subido exitosamente", "logoUrl": logo_url}
 
 # Rutas de usuarios
 
