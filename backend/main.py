@@ -43,7 +43,9 @@ from schemas import (
     SalesSummaryReportResponse, DailySalesResponse, UserSalesResponse,
     InventoryStatusReportResponse, InventoryProductResponse,
     FinancialSummaryReportResponse, SalesMetricsResponse, AccountingMetricsResponse, AccountTotalResponse,
-    AccountResponse, AccountCreate, AccountUpdate
+    AccountResponse, AccountCreate, AccountUpdate,
+    DashboardMetricsResponse, SalesDashboardMetrics, InventoryDashboardMetrics, AccountingDashboardMetrics,
+    DailySalesResponse, TopProductResponse, DashboardAlertResponse
 )
 
 # Importar servicio de compañías
@@ -1921,6 +1923,172 @@ async def delete_account(account_id: int, context: dict = Depends(get_current_co
     )
     
     return {"message": "Cuenta eliminada exitosamente"}
+
+# -----------------------------
+# Dashboard - Métricas en Tiempo Real
+# -----------------------------
+@app.get("/api/dashboard/metrics", response_model=DashboardMetricsResponse)
+async def get_dashboard_metrics(
+    period: Optional[str] = "today",
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener métricas del dashboard"""
+    company_id = context.get("company", {}).get("id")
+    
+    # Calcular fechas según el período
+    now = datetime.now()
+    if period == "today":
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = now
+    elif period == "week":
+        start_date = now - timedelta(days=7)
+        end_date = now
+    elif period == "month":
+        start_date = now - timedelta(days=30)
+        end_date = now
+    else:
+        start_date = now - timedelta(days=1)
+        end_date = now
+    
+    # Métricas de Ventas
+    sales_query = db.query(DBSale).filter(
+        DBSale.company_id == company_id,
+        DBSale.date >= start_date,
+        DBSale.date <= end_date
+    )
+    
+    total_sales = sales_query.count()
+    total_revenue = db.query(func.sum(DBSale.total)).filter(
+        DBSale.company_id == company_id,
+        DBSale.date >= start_date,
+        DBSale.date <= end_date
+    ).scalar() or 0
+    
+    total_tax = db.query(func.sum(DBSale.taxAmount)).filter(
+        DBSale.company_id == company_id,
+        DBSale.date >= start_date,
+        DBSale.date <= end_date
+    ).scalar() or 0
+    
+    average_sale = total_revenue / total_sales if total_sales > 0 else 0
+    
+    # Métricas de Productos
+    total_products = db.query(DBProduct).filter(
+        DBProduct.company_id == company_id,
+        DBProduct.isActive == True
+    ).count()
+    
+    low_stock_products = db.query(DBProduct).filter(
+        DBProduct.company_id == company_id,
+        DBProduct.isActive == True,
+        DBProduct.stock <= 10
+    ).count()
+    
+    out_of_stock_products = db.query(DBProduct).filter(
+        DBProduct.company_id == company_id,
+        DBProduct.isActive == True,
+        DBProduct.stock == 0
+    ).count()
+    
+    # Métricas de Inventario
+    inventory_value = db.query(func.sum(DBProduct.stock * DBProduct.price)).filter(
+        DBProduct.company_id == company_id,
+        DBProduct.isActive == True
+    ).scalar() or 0
+    
+    # Métricas Contables
+    journal_entries_count = db.query(DBJournalEntry).filter(
+        DBJournalEntry.company_id == company_id,
+        DBJournalEntry.date >= start_date,
+        DBJournalEntry.date <= end_date
+    ).count()
+    
+    # Ventas por día (últimos 7 días)
+    daily_sales = []
+    for i in range(7):
+        day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        
+        day_sales = db.query(func.sum(DBSale.total)).filter(
+            DBSale.company_id == company_id,
+            DBSale.date >= day_start,
+            DBSale.date < day_end
+        ).scalar() or 0
+        
+        daily_sales.append({
+            "date": day_start.strftime('%Y-%m-%d'),
+            "amount": day_sales
+        })
+    
+    daily_sales.reverse()  # Ordenar cronológicamente
+    
+    # Productos más vendidos (últimos 7 días)
+    top_products = db.query(
+        DBSaleItem.productName,
+        func.sum(DBSaleItem.quantity).label('total_quantity'),
+        func.sum(DBSaleItem.total).label('total_amount')
+    ).join(DBSale).filter(
+        DBSale.company_id == company_id,
+        DBSale.date >= start_date,
+        DBSale.date <= end_date
+    ).group_by(DBSaleItem.productName).order_by(
+        func.sum(DBSaleItem.quantity).desc()
+    ).limit(5).all()
+    
+    # Alertas del sistema
+    alerts = []
+    
+    if out_of_stock_products > 0:
+        alerts.append({
+            "type": "error",
+            "message": f"{out_of_stock_products} productos sin stock",
+            "icon": "error"
+        })
+    
+    if low_stock_products > 0:
+        alerts.append({
+            "type": "warning",
+            "message": f"{low_stock_products} productos con stock bajo",
+            "icon": "warning"
+        })
+    
+    if total_sales == 0 and period == "today":
+        alerts.append({
+            "type": "info",
+            "message": "No hay ventas registradas hoy",
+            "icon": "info"
+        })
+    
+    return DashboardMetricsResponse(
+        period=period,
+        periodStart=start_date.date(),
+        periodEnd=end_date.date(),
+        salesMetrics=SalesDashboardMetrics(
+            totalSales=total_sales,
+            totalRevenue=total_revenue,
+            totalTax=total_tax,
+            averageSale=average_sale
+        ),
+        inventoryMetrics=InventoryDashboardMetrics(
+            totalProducts=total_products,
+            lowStockProducts=low_stock_products,
+            outOfStockProducts=out_of_stock_products,
+            inventoryValue=inventory_value
+        ),
+        accountingMetrics=AccountingDashboardMetrics(
+            journalEntriesCount=journal_entries_count
+        ),
+        dailySales=daily_sales,
+        topProducts=[TopProductResponse(
+            productName=product.productName,
+            totalQuantity=product.total_quantity,
+            totalAmount=product.total_amount
+        ) for product in top_products],
+        alerts=alerts
+    )
+
+# Rutas de usuarios
 
 # Rutas de usuarios
 

@@ -300,6 +300,47 @@ class AccountUpdate(BaseModel):
     parentCode: Optional[str] = Field(None, max_length=10)
     isActive: Optional[bool] = None
 
+# Dashboard Schemas
+class SalesDashboardMetrics(BaseModel):
+    totalSales: int
+    totalRevenue: float
+    totalTax: float
+    averageSale: float
+
+class InventoryDashboardMetrics(BaseModel):
+    totalProducts: int
+    lowStockProducts: int
+    outOfStockProducts: int
+    inventoryValue: float
+
+class AccountingDashboardMetrics(BaseModel):
+    journalEntriesCount: int
+
+class DailySalesResponse(BaseModel):
+    date: str
+    amount: float
+
+class TopProductResponse(BaseModel):
+    productName: str
+    totalQuantity: int
+    totalAmount: float
+
+class DashboardAlertResponse(BaseModel):
+    type: str
+    message: str
+    icon: str
+
+class DashboardMetricsResponse(BaseModel):
+    period: str
+    periodStart: date
+    periodEnd: date
+    salesMetrics: SalesDashboardMetrics
+    inventoryMetrics: InventoryDashboardMetrics
+    accountingMetrics: AccountingDashboardMetrics
+    dailySales: List[DailySalesResponse]
+    topProducts: List[TopProductResponse]
+    alerts: List[DashboardAlertResponse]
+
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int

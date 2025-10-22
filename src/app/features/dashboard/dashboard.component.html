@@ -11,133 +11,264 @@
         <span class="role-text">{{ getRoleText() }}</span>
       </div>
     </div>
-  </div>
-
-  <!-- POS Quick Access - Estilo Odoo -->
-  <div class="pos-quick-access" *ngIf="!isLoading">
-    <div class="pos-header">
-      <div class="pos-title">
-        <mat-icon class="pos-icon">point_of_sale</mat-icon>
-        <h2>Punto de Venta</h2>
-      </div>
-      <div class="pos-status">
-        <div class="status-indicator online"></div>
-        <span>Sesión Activa</span>
-      </div>
-    </div>
     
-    <div class="pos-content">
-      <div class="pos-stats">
-        <div class="pos-stat">
-          <div class="stat-number">${{ salesSummary?.totalSales | number:'1.2-2' }}</div>
-          <div class="stat-label">Ventas Hoy</div>
-        </div>
-        <div class="pos-stat">
-          <div class="stat-number">{{ salesSummary?.totalTransactions }}</div>
-          <div class="stat-label">Transacciones</div>
-        </div>
-        <div class="pos-stat">
-          <div class="stat-number">${{ salesSummary?.averageTicket | number:'1.2-2' }}</div>
-          <div class="stat-label">Ticket Promedio</div>
-        </div>
-      </div>
+    <!-- Period Selector -->
+    <div class="period-selector">
+      <mat-form-field appearance="outline">
+        <mat-label>Período</mat-label>
+        <mat-select [(value)]="selectedPeriod" (selectionChange)="onPeriodChange()">
+          <mat-option value="today">Hoy</mat-option>
+          <mat-option value="week">Última Semana</mat-option>
+          <mat-option value="month">Último Mes</mat-option>
+        </mat-select>
+      </mat-form-field>
       
-      <div class="pos-actions">
-        <button class="pos-primary-btn" (click)="goToPOS()">
-          <mat-icon>add_shopping_cart</mat-icon>
-          <span>Nueva Venta</span>
+      <button mat-icon-button (click)="refreshMetrics()" [disabled]="isLoading" matTooltip="Actualizar métricas">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando métricas del dashboard...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && metrics" class="dashboard-content">
+    
+    <!-- Alertas del Sistema -->
+    <div *ngIf="metrics.alerts.length > 0" class="alerts-section">
+      <h3>
+        <mat-icon>notifications</mat-icon>
+        Alertas del Sistema
+      </h3>
+      <div class="alerts-grid">
+        <mat-chip-set>
+          <mat-chip 
+            *ngFor="let alert of metrics.alerts" 
+            [color]="getAlertColor(alert.type)"
+            [matTooltip]="alert.message">
+            <mat-icon>{{ getAlertIcon(alert.type) }}</mat-icon>
+            {{ alert.message }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </div>
+
+    <!-- Métricas Principales -->
+    <div class="metrics-grid">
+      <!-- Ventas -->
+      <mat-card class="metric-card sales">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>trending_up</mat-icon>
+            Ventas
+          </mat-card-title>
+          <mat-card-subtitle>{{ getPeriodLabel(metrics.period) }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatCurrency(metrics.salesMetrics.totalRevenue) }}</div>
+          <div class="metric-details">
+            <div class="metric-item">
+              <span class="label">Transacciones:</span>
+              <span class="value">{{ metrics.salesMetrics.totalSales }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="label">Promedio:</span>
+              <span class="value">{{ formatCurrency(metrics.salesMetrics.averageSale) }}</span>
+            </div>
+            <div class="metric-item">
+              <span class="label">IVA:</span>
+              <span class="value">{{ formatCurrency(metrics.salesMetrics.totalTax) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="goToPOS()">
+            <mat-icon>point_of_sale</mat-icon>
+            Nueva Venta
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Inventario -->
+      <mat-card class="metric-card inventory">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>inventory</mat-icon>
+            Inventario
+          </mat-card-title>
+          <mat-card-subtitle>Estado actual</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.inventoryMetrics.totalProducts }}</div>
+          <div class="metric-details">
+            <div class="metric-item">
+              <span class="label">Valor Total:</span>
+              <span class="value">{{ formatCurrency(metrics.inventoryMetrics.inventoryValue) }}</span>
+            </div>
+            <div class="metric-item" *ngIf="metrics.inventoryMetrics.lowStockProducts > 0">
+              <span class="label warning">Stock Bajo:</span>
+              <span class="value warning">{{ metrics.inventoryMetrics.lowStockProducts }}</span>
+            </div>
+            <div class="metric-item" *ngIf="metrics.inventoryMetrics.outOfStockProducts > 0">
+              <span class="label error">Sin Stock:</span>
+              <span class="value error">{{ metrics.inventoryMetrics.outOfStockProducts }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="goToProducts()">
+            <mat-icon>inventory_2</mat-icon>
+            Gestionar
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Contabilidad -->
+      <mat-card class="metric-card accounting">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>account_balance</mat-icon>
+            Contabilidad
+          </mat-card-title>
+          <mat-card-subtitle>{{ getPeriodLabel(metrics.period) }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ metrics.accountingMetrics.journalEntriesCount }}</div>
+          <div class="metric-details">
+            <div class="metric-item">
+              <span class="label">Asientos Contables</span>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="goToAccounting()">
+            <mat-icon>book</mat-icon>
+            Ver Diario
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Gráfico de Ventas Diarias -->
+    <mat-card class="chart-card" *ngIf="metrics.dailySales.length > 0">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>show_chart</mat-icon>
+          Ventas Diarias (Últimos 7 días)
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="sales-chart">
+          <div class="chart-bars">
+            <div 
+              *ngFor="let day of metrics.dailySales; let i = index" 
+              class="chart-bar"
+              [style.height.%]="getBarHeight(day.amount, metrics.dailySales)"
+              [matTooltip]="formatCurrency(day.amount) + ' - ' + formatDate(day.date)">
+              <div class="bar-value">{{ formatCurrency(day.amount) }}</div>
+              <div class="bar-label">{{ formatDate(day.date) }}</div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Productos Más Vendidos -->
+    <mat-card class="table-card" *ngIf="metrics.topProducts.length > 0">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>star</mat-icon>
+          Productos Más Vendidos
+        </mat-card-title>
+        <mat-card-subtitle>{{ getPeriodLabel(metrics.period) }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="metrics.topProducts" class="products-table">
+          <ng-container matColumnDef="position">
+            <th mat-header-cell *matHeaderCellDef> # </th>
+            <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="productName">
+            <th mat-header-cell *matHeaderCellDef> Producto </th>
+            <td mat-cell *matCellDef="let element">{{ element.productName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalQuantity">
+            <th mat-header-cell *matHeaderCellDef> Cantidad </th>
+            <td mat-cell *matCellDef="let element">{{ element.totalQuantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalAmount">
+            <th mat-header-cell *matHeaderCellDef> Total </th>
+            <td mat-cell *matCellDef="let element">{{ formatCurrency(element.totalAmount) }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Acciones Rápidas -->
+    <div class="quick-actions-section">
+      <h3>Acciones Rápidas</h3>
+      <div class="actions-grid">
+        <button class="action-btn primary" (click)="goToPOS()">
+          <div class="action-icon">
+            <mat-icon>point_of_sale</mat-icon>
+          </div>
+          <div class="action-content">
+            <span class="action-title">Nueva Venta</span>
+            <span class="action-subtitle">Iniciar transacción</span>
+          </div>
         </button>
-        <button class="pos-secondary-btn" (click)="goToProducts()">
-          <mat-icon>inventory</mat-icon>
-          <span>Productos</span>
+
+        <button class="action-btn secondary" (click)="goToProducts()">
+          <div class="action-icon">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <div class="action-content">
+            <span class="action-title">Productos</span>
+            <span class="action-subtitle">Gestionar inventario</span>
+          </div>
+        </button>
+
+        <button class="action-btn accent" (click)="goToReports()">
+          <div class="action-icon">
+            <mat-icon>analytics</mat-icon>
+          </div>
+          <div class="action-content">
+            <span class="action-title">Reportes</span>
+            <span class="action-subtitle">Ver estadísticas</span>
+          </div>
+        </button>
+
+        <button class="action-btn warning" (click)="goToUsers()">
+          <div class="action-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="action-content">
+            <span class="action-title">Usuarios</span>
+            <span class="action-subtitle">Gestionar personal</span>
+          </div>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Quick Stats Grid -->
-  <div class="quick-stats-grid" *ngIf="!isLoading">
-    <div class="quick-stat-card">
-      <div class="stat-icon-wrapper cash">
-        <mat-icon>payments</mat-icon>
-      </div>
-      <div class="stat-info">
-        <div class="stat-value">${{ salesSummary?.salesByPaymentMethod?.cash | number:'1.2-2' }}</div>
-        <div class="stat-label">Efectivo</div>
-      </div>
-    </div>
-
-    <div class="quick-stat-card">
-      <div class="stat-icon-wrapper card">
-        <mat-icon>credit_card</mat-icon>
-      </div>
-      <div class="stat-info">
-        <div class="stat-value">${{ salesSummary?.salesByPaymentMethod?.card | number:'1.2-2' }}</div>
-        <div class="stat-label">Tarjeta</div>
-      </div>
-    </div>
-
-    <div class="quick-stat-card">
-      <div class="stat-icon-wrapper transfer">
-        <mat-icon>account_balance</mat-icon>
-      </div>
-      <div class="stat-info">
-        <div class="stat-value">${{ salesSummary?.salesByPaymentMethod?.transfer | number:'1.2-2' }}</div>
-        <div class="stat-label">Transferencia</div>
-      </div>
-    </div>
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !metrics" class="empty-state">
+    <mat-icon>dashboard</mat-icon>
+    <h3>No hay datos disponibles</h3>
+    <p>No se pudieron cargar las métricas del dashboard</p>
+    <button mat-raised-button color="primary" (click)="refreshMetrics()">
+      <mat-icon>refresh</mat-icon>
+      Reintentar
+    </button>
   </div>
-
-  <!-- Quick Actions -->
-  <div class="quick-actions-section" *ngIf="!isLoading">
-    <h3>Acciones Rápidas</h3>
-    <div class="actions-grid">
-      <button class="action-btn primary" (click)="goToPOS()">
-        <div class="action-icon">
-          <mat-icon>point_of_sale</mat-icon>
-        </div>
-        <div class="action-content">
-          <span class="action-title">Nueva Venta</span>
-          <span class="action-subtitle">Iniciar transacción</span>
-        </div>
-      </button>
-
-      <button class="action-btn secondary" (click)="goToProducts()">
-        <div class="action-icon">
-          <mat-icon>inventory_2</mat-icon>
-        </div>
-        <div class="action-content">
-          <span class="action-title">Productos</span>
-          <span class="action-subtitle">Gestionar inventario</span>
-        </div>
-      </button>
-
-      <button class="action-btn accent" (click)="goToReports()">
-        <div class="action-icon">
-          <mat-icon>analytics</mat-icon>
-        </div>
-        <div class="action-content">
-          <span class="action-title">Reportes</span>
-          <span class="action-subtitle">Ver estadísticas</span>
-        </div>
-      </button>
-
-      <button class="action-btn warning" (click)="goToUsers()">
-        <div class="action-icon">
-          <mat-icon>people</mat-icon>
-        </div>
-        <div class="action-content">
-          <span class="action-title">Usuarios</span>
-          <span class="action-subtitle">Gestionar personal</span>
-        </div>
-      </button>
-    </div>
-  </div>
-
-  <ng-template #loadingTemplate>
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Cargando datos del dashboard...</p>
-    </div>
-  </ng-template>
 </div>

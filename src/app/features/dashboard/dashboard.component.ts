@@ -7,11 +7,52 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { HttpClient } from '@angular/common/http';
+import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../../../environments/environment';
 
-import { SaleService } from '../../core/services/sale.service';
 import { AuthService } from '../../core/services/auth.service';
-import { SaleSummary } from '../../core/models/sale.model';
 import { User } from '../../core/models/user.model';
+
+interface DashboardMetrics {
+  period: string;
+  periodStart: string;
+  periodEnd: string;
+  salesMetrics: {
+    totalSales: number;
+    totalRevenue: number;
+    totalTax: number;
+    averageSale: number;
+  };
+  inventoryMetrics: {
+    totalProducts: number;
+    lowStockProducts: number;
+    outOfStockProducts: number;
+    inventoryValue: number;
+  };
+  accountingMetrics: {
+    journalEntriesCount: number;
+  };
+  dailySales: Array<{
+    date: string;
+    amount: number;
+  }>;
+  topProducts: Array<{
+    productName: string;
+    totalQuantity: number;
+    totalAmount: number;
+  }>;
+  alerts: Array<{
+    type: string;
+    message: string;
+    icon: string;
+  }>;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -22,26 +63,37 @@ import { User } from '../../core/models/user.model';
     MatGridListModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatButtonModule
+    MatButtonModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatChipsModule,
+    MatTableModule,
+    MatTooltipModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  salesSummary: SaleSummary | null = null;
+  private readonly api = `${environment.apiUrl}/dashboard/metrics`;
+  
+  metrics: DashboardMetrics | null = null;
   currentUser: User | null = null;
   isLoading = true;
+  selectedPeriod = 'today';
   private destroy$ = new Subject<void>();
 
+  displayedColumns = ['position', 'productName', 'totalQuantity', 'totalAmount'];
+
   constructor(
-    private saleService: SaleService,
+    private http: HttpClient,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.loadSalesSummary();
+    this.loadMetrics();
   }
 
   ngOnDestroy(): void {
@@ -49,21 +101,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadSalesSummary(): void {
+  loadMetrics(): void {
     this.isLoading = true;
     
-    this.saleService.getSalesSummary()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (summary) => {
-          this.salesSummary = summary;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading sales summary:', error);
-          this.isLoading = false;
-        }
-      });
+    this.http.get<DashboardMetrics>(this.api, { 
+      params: { period: this.selectedPeriod } 
+    }).subscribe({
+      next: (data) => {
+        this.metrics = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando métricas:', error);
+        this.toastr.error('Error al cargar métricas del dashboard');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onPeriodChange(): void {
+    this.loadMetrics();
+  }
+
+  refreshMetrics(): void {
+    this.loadMetrics();
   }
 
   goToPOS(): void {
@@ -82,6 +143,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/users']);
   }
 
+  goToAccounting(): void {
+    this.router.navigate(['/accounting/diario']);
+  }
+
+  goToInventory(): void {
+    this.router.navigate(['/admin/inventory-alerts']);
+  }
+
   getCurrentDate(): string {
     const today = new Date();
     const options: Intl.DateTimeFormatOptions = {
@@ -97,6 +166,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.currentUser) return '👤';
     
     switch (this.currentUser.role) {
+      case 'sudo':
+        return '🔧';
       case 'admin':
         return '👑';
       case 'manager':
@@ -112,6 +183,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.currentUser) return 'Usuario';
     
     switch (this.currentUser.role) {
+      case 'sudo':
+        return 'Super Administrador';
       case 'admin':
         return 'Administrador';
       case 'manager':
@@ -121,5 +194,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
       default:
         return 'Usuario';
     }
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('es-SV', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  getAlertColor(type: string): string {
+    switch (type) {
+      case 'error': return 'warn';
+      case 'warning': return 'accent';
+      case 'info': return 'primary';
+      default: return 'primary';
+    }
+  }
+
+  getAlertIcon(type: string): string {
+    switch (type) {
+      case 'error': return 'error';
+      case 'warning': return 'warning';
+      case 'info': return 'info';
+      default: return 'info';
+    }
+  }
+
+  getPeriodLabel(period: string): string {
+    switch (period) {
+      case 'today': return 'Hoy';
+      case 'week': return 'Última Semana';
+      case 'month': return 'Último Mes';
+      default: return 'Hoy';
+    }
+  }
+
+  getBarHeight(amount: number, allAmounts: Array<{amount: number}>): number {
+    if (!allAmounts.length) return 0;
+    const maxAmount = Math.max(...allAmounts.map(d => d.amount));
+    return maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
   }
 }
