@@ -42,7 +42,8 @@ from schemas import (
     TrialBalanceResponse, TrialBalanceAccountResponse,
     SalesSummaryReportResponse, DailySalesResponse, UserSalesResponse,
     InventoryStatusReportResponse, InventoryProductResponse,
-    FinancialSummaryReportResponse, SalesMetricsResponse, AccountingMetricsResponse, AccountTotalResponse
+    FinancialSummaryReportResponse, SalesMetricsResponse, AccountingMetricsResponse, AccountTotalResponse,
+    AccountResponse, AccountCreate, AccountUpdate
 )
 
 # Importar servicio de compañías
@@ -1706,6 +1707,222 @@ async def get_financial_summary_report(
             balance=data['debit'] - data['credit']
         ) for code, data in account_totals.items()]
     )
+
+# -----------------------------
+# Accounting - Plan de Cuentas
+# -----------------------------
+@app.get("/api/accounting/accounts", response_model=List[AccountResponse])
+async def get_accounts(
+    accountType: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener plan de cuentas de la compañía"""
+    query = db.query(DBAccount)
+    query = context_service.apply_company_filter(query, DBAccount, context)
+    
+    # Aplicar filtro por tipo si se especifica
+    if accountType:
+        query = query.filter(DBAccount.accountType == accountType)
+    
+    accounts = query.filter(DBAccount.isActive == True).order_by(DBAccount.code.asc()).all()
+    
+    return [AccountResponse(
+        id=account.id,
+        company_id=account.company_id,
+        code=account.code,
+        name=account.name,
+        accountType=account.accountType,
+        parentCode=account.parentCode,
+        level=account.level,
+        isActive=account.isActive,
+        createdAt=account.createdAt,
+        updatedAt=account.updatedAt
+    ) for account in accounts]
+
+@app.post("/api/accounting/accounts", response_model=AccountResponse)
+async def create_account(payload: AccountCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Crear nueva cuenta contable"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    # Verificar que no exista una cuenta con el mismo código
+    existing = db.query(DBAccount).filter(
+        DBAccount.company_id == company_id,
+        DBAccount.code == payload.code.strip(),
+        DBAccount.isActive == True
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Ya existe una cuenta con este código")
+    
+    # Calcular nivel basado en el código
+    level = len(payload.code.strip()) // 2
+    
+    # Verificar cuenta padre si se especifica
+    parent_account = None
+    if payload.parentCode:
+        parent_account = db.query(DBAccount).filter(
+            DBAccount.company_id == company_id,
+            DBAccount.code == payload.parentCode.strip(),
+            DBAccount.isActive == True
+        ).first()
+        
+        if not parent_account:
+            raise HTTPException(status_code=400, detail="Cuenta padre no encontrada")
+    
+    new_account = DBAccount(
+        company_id=company_id,
+        code=payload.code.strip(),
+        name=payload.name.strip(),
+        accountType=payload.accountType,
+        parentCode=payload.parentCode.strip() if payload.parentCode else None,
+        level=level,
+        isActive=True,
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    )
+    db.add(new_account)
+    db.commit()
+    db.refresh(new_account)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="ACCOUNT_CREATE",
+        module="Accounting",
+        detail=f"Cuenta creada: {new_account.code} - {new_account.name}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return AccountResponse(
+        id=new_account.id,
+        company_id=new_account.company_id,
+        code=new_account.code,
+        name=new_account.name,
+        accountType=new_account.accountType,
+        parentCode=new_account.parentCode,
+        level=new_account.level,
+        isActive=new_account.isActive,
+        createdAt=new_account.createdAt,
+        updatedAt=new_account.updatedAt
+    )
+
+@app.put("/api/accounting/accounts/{account_id}", response_model=AccountResponse)
+async def update_account(account_id: int, payload: AccountUpdate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Actualizar cuenta contable"""
+    account = db.query(DBAccount).filter(DBAccount.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Cuenta no encontrada")
+    if not context_service.validate_company_access(context, account.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar código único si se está cambiando
+    if payload.code and payload.code.strip() != account.code:
+        existing = db.query(DBAccount).filter(
+            DBAccount.company_id == account.company_id,
+            DBAccount.code == payload.code.strip(),
+            DBAccount.isActive == True,
+            DBAccount.id != account_id
+        ).first()
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="Ya existe una cuenta con este código")
+    
+    # Actualizar campos
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        if field == "code" and value:
+            setattr(account, field, value.strip())
+            # Recalcular nivel
+            account.level = len(value.strip()) // 2
+        elif field == "name" and value:
+            setattr(account, field, value.strip())
+        else:
+            setattr(account, field, value)
+    
+    account.updatedAt = datetime.now()
+    db.commit()
+    db.refresh(account)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="ACCOUNT_UPDATE",
+        module="Accounting",
+        detail=f"Cuenta actualizada: {account.code} - {account.name}",
+        company_id=account.company_id,
+        db=db
+    )
+    
+    return AccountResponse(
+        id=account.id,
+        company_id=account.company_id,
+        code=account.code,
+        name=account.name,
+        accountType=account.accountType,
+        parentCode=account.parentCode,
+        level=account.level,
+        isActive=account.isActive,
+        createdAt=account.createdAt,
+        updatedAt=account.updatedAt
+    )
+
+@app.delete("/api/accounting/accounts/{account_id}")
+async def delete_account(account_id: int, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Eliminar cuenta contable (soft delete)"""
+    account = db.query(DBAccount).filter(DBAccount.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Cuenta no encontrada")
+    if not context_service.validate_company_access(context, account.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar que no tenga movimientos contables
+    movements_count = db.query(DBJournalLine).filter(
+        DBJournalLine.accountCode == account.code
+    ).count()
+    
+    if movements_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"No se puede eliminar la cuenta porque tiene {movements_count} movimientos contables"
+        )
+    
+    # Verificar que no tenga cuentas hijas
+    children_count = db.query(DBAccount).filter(
+        DBAccount.parentCode == account.code,
+        DBAccount.company_id == account.company_id,
+        DBAccount.isActive == True
+    ).count()
+    
+    if children_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"No se puede eliminar la cuenta porque tiene {children_count} cuentas hijas"
+        )
+    
+    # Soft delete
+    account.isActive = False
+    account.updatedAt = datetime.now()
+    db.commit()
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="ACCOUNT_DELETE",
+        module="Accounting",
+        detail=f"Cuenta eliminada: {account.code} - {account.name}",
+        company_id=account.company_id,
+        db=db
+    )
+    
+    return {"message": "Cuenta eliminada exitosamente"}
+
+# Rutas de usuarios
 
 # Rutas de usuarios
 

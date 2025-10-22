@@ -274,6 +274,32 @@ class FinancialSummaryReportResponse(BaseModel):
     accountingMetrics: AccountingMetricsResponse
     accountTotals: List[AccountTotalResponse]
 
+# Account Schemas
+class AccountResponse(BaseModel):
+    id: int
+    company_id: int
+    code: str
+    name: str
+    accountType: str
+    parentCode: Optional[str] = None
+    level: int
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+
+class AccountCreate(BaseModel):
+    code: str = Field(..., min_length=2, max_length=10)
+    name: str = Field(..., min_length=2, max_length=200)
+    accountType: str = Field(..., regex="^(activo|pasivo|patrimonio|ingreso|gasto)$")
+    parentCode: Optional[str] = Field(None, max_length=10)
+
+class AccountUpdate(BaseModel):
+    code: Optional[str] = Field(None, min_length=2, max_length=10)
+    name: Optional[str] = Field(None, min_length=2, max_length=200)
+    accountType: Optional[str] = Field(None, regex="^(activo|pasivo|patrimonio|ingreso|gasto)$")
+    parentCode: Optional[str] = Field(None, max_length=10)
+    isActive: Optional[bool] = None
+
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int
