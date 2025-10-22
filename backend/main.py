@@ -570,49 +570,49 @@ async def create_product(
     try:
         # Generar SKU automáticamente
         product_code = generate_next_sku(db, context.get("company_id"))
-        
+    
         # Crear el producto
-        new_product = DBProduct(
-            code=product_code,
-            name=product_data.name,
-            description=product_data.description,
-            price=product_data.price,
-            cost=product_data.cost,
-            category=product_data.category,
-            brand=product_data.brand,
-            stock=product_data.stock,
-            minStock=product_data.minStock,
-            maxStock=product_data.maxStock,
-            barcode=product_data.barcode,
-            taxRate=product_data.taxRate,
-            isActive=product_data.isActive,
+    new_product = DBProduct(
+        code=product_code,
+        name=product_data.name,
+        description=product_data.description,
+        price=product_data.price,
+        cost=product_data.cost,
+        category=product_data.category,
+        brand=product_data.brand,
+        stock=product_data.stock,
+        minStock=product_data.minStock,
+        maxStock=product_data.maxStock,
+        barcode=product_data.barcode,
+        taxRate=product_data.taxRate,
+        isActive=product_data.isActive,
             company_id=context.get("company_id"),
-            createdAt=datetime.now(),
-            updatedAt=datetime.now()
-        )
-        
-        db.add(new_product)
-        db.commit()
-        db.refresh(new_product)
-        
-        return ProductResponse(
-            id=new_product.id,
-            code=new_product.code,
-            name=new_product.name,
-            description=new_product.description,
-            price=new_product.price,
-            cost=new_product.cost,
-            category=new_product.category,
-            brand=new_product.brand,
-            stock=new_product.stock,
-            minStock=new_product.minStock,
-            maxStock=new_product.maxStock,
-            barcode=new_product.barcode,
-            taxRate=new_product.taxRate,
-            isActive=new_product.isActive,
-            createdAt=new_product.createdAt,
-            updatedAt=new_product.updatedAt
-        )
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    )
+    
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    
+    return ProductResponse(
+        id=new_product.id,
+        code=new_product.code,
+        name=new_product.name,
+        description=new_product.description,
+        price=new_product.price,
+        cost=new_product.cost,
+        category=new_product.category,
+        brand=new_product.brand,
+        stock=new_product.stock,
+        minStock=new_product.minStock,
+        maxStock=new_product.maxStock,
+        barcode=new_product.barcode,
+        taxRate=new_product.taxRate,
+        isActive=new_product.isActive,
+        createdAt=new_product.createdAt,
+        updatedAt=new_product.updatedAt
+    )
     except Exception as e:
         print(f"Error creating product: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
@@ -1952,62 +1952,124 @@ async def get_dashboard_metrics(
     db: Session = Depends(get_db)
 ):
     """Obtener métricas del dashboard"""
-    company_id = context.get("company", {}).get("id")
-    
-    # Calcular fechas según el período
-    now = datetime.now()
-    if period == "today":
-        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_date = now
-    elif period == "week":
-        start_date = now - timedelta(days=7)
-        end_date = now
-    elif period == "month":
-        start_date = now - timedelta(days=30)
-        end_date = now
-    else:
-        start_date = now - timedelta(days=1)
-        end_date = now
-    
-    # Métricas de Ventas
-    sales_query = db.query(DBSale).filter(
-        DBSale.company_id == company_id,
-        DBSale.date >= start_date,
-        DBSale.date <= end_date
-    )
-    
-    total_sales = sales_query.count()
-    total_revenue = db.query(func.sum(DBSale.total)).filter(
-        DBSale.company_id == company_id,
-        DBSale.date >= start_date,
-        DBSale.date <= end_date
-    ).scalar() or 0
-    
-    total_tax = db.query(func.sum(DBSale.taxAmount)).filter(
-        DBSale.company_id == company_id,
-        DBSale.date >= start_date,
-        DBSale.date <= end_date
-    ).scalar() or 0
-    
-    average_sale = total_revenue / total_sales if total_sales > 0 else 0
-    
-    # Métricas de Productos
-    total_products = db.query(DBProduct).filter(
-        DBProduct.company_id == company_id,
-        DBProduct.isActive == True
-    ).count()
-    
-    low_stock_products = db.query(DBProduct).filter(
-        DBProduct.company_id == company_id,
-        DBProduct.isActive == True,
-        DBProduct.stock <= 10
-    ).count()
-    
-    out_of_stock_products = db.query(DBProduct).filter(
-        DBProduct.company_id == company_id,
-        DBProduct.isActive == True,
-        DBProduct.stock == 0
-    ).count()
+    try:
+        company_id = context.get("company", {}).get("id")
+        
+        # Calcular fechas según el período
+        now = datetime.now()
+        if period == "today":
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+        elif period == "week":
+            start_date = now - timedelta(days=7)
+            end_date = now
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+            end_date = now
+        else:
+            start_date = now - timedelta(days=1)
+            end_date = now
+        
+        # Métricas de Ventas
+        sales_query = db.query(DBSale).filter(
+            DBSale.company_id == company_id,
+            DBSale.date >= start_date,
+            DBSale.date <= end_date
+        )
+        
+        total_sales = sales_query.count()
+        total_revenue = db.query(func.sum(DBSale.total)).filter(
+            DBSale.company_id == company_id,
+            DBSale.date >= start_date,
+            DBSale.date <= end_date
+        ).scalar() or 0
+        
+        total_tax = db.query(func.sum(DBSale.taxAmount)).filter(
+            DBSale.company_id == company_id,
+            DBSale.date >= start_date,
+            DBSale.date <= end_date
+        ).scalar() or 0
+        
+        average_sale = total_revenue / total_sales if total_sales > 0 else 0
+        
+        # Métricas de Productos
+        total_products = db.query(DBProduct).filter(DBProduct.company_id == company_id).count()
+        low_stock_products = db.query(DBProduct).filter(
+            DBProduct.company_id == company_id,
+            DBProduct.stock <= DBProduct.minStock
+        ).count()
+        
+        # Métricas de Contabilidad
+        total_accounts = db.query(DBAccount).filter(DBAccount.company_id == company_id).count()
+        
+        # Ventas diarias para gráfico
+        daily_sales = []
+        current_date = start_date
+        while current_date <= end_date:
+            day_sales = db.query(func.sum(DBSale.total)).filter(
+                DBSale.company_id == company_id,
+                DBSale.date >= current_date,
+                DBSale.date < current_date + timedelta(days=1)
+            ).scalar() or 0
+            
+            daily_sales.append({
+                "date": current_date.strftime("%Y-%m-%d"),
+                "amount": float(day_sales)
+            })
+            current_date += timedelta(days=1)
+        
+        # Top productos
+        top_products = db.query(
+            DBSaleItem.productName,
+            func.sum(DBSaleItem.quantity).label('total_quantity'),
+            func.sum(DBSaleItem.total).label('total_revenue')
+        ).join(DBSale).filter(
+            DBSale.company_id == company_id,
+            DBSale.date >= start_date,
+            DBSale.date <= end_date
+        ).group_by(DBSaleItem.productName).order_by(
+            func.sum(DBSaleItem.quantity).desc()
+        ).limit(5).all()
+        
+        top_products_data = [
+            {
+                "productName": item.productName,
+                "quantity": int(item.total_quantity),
+                "revenue": float(item.total_revenue)
+            }
+            for item in top_products
+        ]
+        
+        # Alertas
+        alerts = []
+        if low_stock_products > 0:
+            alerts.append({
+                "type": "warning",
+                "message": f"{low_stock_products} productos con stock bajo",
+                "timestamp": now.isoformat()
+            })
+        
+        return DashboardMetricsResponse(
+            sales=SalesDashboardMetrics(
+                totalSales=total_sales,
+                totalRevenue=float(total_revenue),
+                totalTax=float(total_tax),
+                averageSale=float(average_sale)
+            ),
+            inventory=InventoryDashboardMetrics(
+                totalProducts=total_products,
+                lowStockProducts=low_stock_products
+            ),
+            accounting=AccountingDashboardMetrics(
+                totalAccounts=total_accounts
+            ),
+            dailySales=daily_sales,
+            topProducts=top_products_data,
+            alerts=alerts
+        )
+    except Exception as e:
+        print(f"Error getting dashboard metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
     
     # Métricas de Inventario
     inventory_value = db.query(func.sum(DBProduct.stock * DBProduct.price)).filter(
