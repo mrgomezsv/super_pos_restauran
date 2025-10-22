@@ -59,12 +59,14 @@ import { ToastrService } from 'ngx-toastr';
 export class AdminCategoriesComponent implements OnInit {
   displayedColumns = ['name', 'description'];
   categories: any[] = [];
-  form = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    description: ['']
-  });
+  form: any;
 
-  constructor(private fb: FormBuilder, private toastr: ToastrService) {}
+  constructor(private fb: FormBuilder, private toastr: ToastrService) {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      description: ['']
+    });
+  }
 
   ngOnInit(): void {
     // placeholder: en implementación final, consumir ProductService.getCategories()

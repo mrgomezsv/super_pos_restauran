@@ -225,6 +225,52 @@ class SupplierUpdate(BaseModel):
     address: Optional[str] = None
     isActive: Optional[bool] = None
 
+# Descuentos
+class DiscountResponse(BaseModel):
+    id: int
+    company_id: Optional[int] = None
+    name: str
+    percent: float
+    isActive: bool
+    createdAt: datetime
+
+class DiscountCreate(BaseModel):
+    name: str
+    percent: float
+    isActive: bool = True
+
+class DiscountUpdate(BaseModel):
+    name: Optional[str] = None
+    percent: Optional[float] = None
+    isActive: Optional[bool] = None
+
+# Sesión de Caja
+class CashSessionResponse(BaseModel):
+    id: int
+    company_id: Optional[int] = None
+    userId: int
+    openedAt: datetime
+    closedAt: Optional[datetime] = None
+    openingAmount: float
+    closingAmount: Optional[float] = None
+    status: str
+
+class CashSessionOpen(BaseModel):
+    openingAmount: float = 0.0
+
+class CashSessionClose(BaseModel):
+    closingAmount: float = 0.0
+
+# Bitácora
+class AuditLogResponse(BaseModel):
+    id: int
+    company_id: Optional[int] = None
+    userId: int
+    action: str
+    module: str
+    detail: Optional[str] = None
+    createdAt: datetime
+
 # Esquemas de compañía (multi-tenant)
 class CompanyResponse(BaseModel):
     id: int

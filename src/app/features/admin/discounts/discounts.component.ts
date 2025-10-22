@@ -121,17 +121,18 @@ export class AdminDiscountsComponent implements OnInit {
   displayedColumns = ['name', 'percent', 'isActive', 'actions'];
   discounts: Discount[] = [];
   isLoading = false;
-  
-  form = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    percent: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
-  });
+  form: any;
 
   constructor(
     private fb: FormBuilder, 
     private toastr: ToastrService,
     private http: HttpClient
-  ) {}
+  ) {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      percent: [0, [Validators.required, Validators.min(0), Validators.max(100)]]
+    });
+  }
 
   ngOnInit(): void {
     this.load();

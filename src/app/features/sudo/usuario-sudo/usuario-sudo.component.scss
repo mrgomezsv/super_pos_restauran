@@ -179,15 +179,206 @@
         }
       }
 
+      // Campos de entrada más altos - con mayor especificidad
+      ::ng-deep mat-form-field {
+        .mat-mdc-form-field-infix {
+          min-height: 56px !important; // Duplicar la altura estándar de 28px
+          padding: 16px 0 !important; // Aumentar padding vertical
+        }
+
+        .mat-mdc-input-element {
+          font-size: 16px !important; // Aumentar tamaño de fuente para mejor proporción
+          line-height: 1.5 !important;
+          padding: 8px 0 !important; // Padding adicional para el input
+        }
+
+        .mat-mdc-form-field-label {
+          font-size: 16px !important; // Aumentar tamaño de label
+          font-weight: 600 !important; // Hacer las etiquetas más prominentes
+          color: #2d3748 !important; // Color más oscuro y profesional
+          letter-spacing: 0.025em !important; // Mejor espaciado de letras
+        }
+
+        // Estilo para labels flotantes
+        .mat-mdc-form-field-label.mdc-floating-label {
+          font-weight: 600 !important;
+          color: #4a5568 !important; // Color más suave cuando está flotando
+        }
+
+        // Estilo para labels cuando el campo está enfocado
+        .mat-mdc-form-field.mat-focused .mat-mdc-form-field-label {
+          color: #017E84 !important; // Color del tema principal cuando está enfocado
+          font-weight: 700 !important; // Más bold cuando está enfocado
+          text-shadow: 0 1px 2px rgba(1, 126, 132, 0.1) !important; // Sutil sombra
+        }
+
+        // Mejorar el placeholder
+        .mat-mdc-input-element::placeholder {
+          color: #a0aec0 !important; // Placeholder más suave
+          font-weight: 400 !important;
+          font-style: italic !important;
+        }
+
+        // Estilo para campos con contenido
+        .mat-mdc-form-field.mat-form-field-has-label .mat-mdc-form-field-label {
+          transform: translateY(-106%) scale(0.75) !important;
+          color: #4a5568 !important;
+          font-weight: 600 !important;
+        }
+
+        // Estilo para el asterisco de campos requeridos
+        .mat-mdc-form-field-label::after {
+          content: ' *' !important;
+          color: #e53e3e !important; // Rojo para indicar campo requerido
+          font-weight: 700 !important;
+          font-size: 14px !important;
+        }
+
+        // Animación suave para las transiciones
+        .mat-mdc-form-field-label {
+          transition: all 0.2s ease-in-out !important;
+        }
+
+        .mat-mdc-form-field-icon-suffix {
+          padding: 0 12px !important; // Aumentar padding de iconos
+        }
+
+        // Asegurar que el contenedor completo sea más alto
+        .mat-mdc-form-field-flex {
+          min-height: 56px !important;
+        }
+
+        // Estilo para el outline
+        .mat-mdc-form-field-outline {
+          min-height: 56px !important;
+        }
+
+        .mat-mdc-form-field-outline-start,
+        .mat-mdc-form-field-outline-end,
+        .mat-mdc-form-field-outline-gap {
+          min-height: 56px !important;
+        }
+
+        // Para el mat-select específicamente
+        .mat-mdc-select {
+          min-height: 40px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+
+        .mat-mdc-select-value {
+          padding: 8px 0 !important;
+        }
+
+        // Asegurar que el mat-form-field completo tenga la altura correcta
+        &.mat-mdc-form-field {
+          height: auto !important;
+          min-height: 72px !important; // Altura total del campo incluyendo label
+        }
+      }
+
+      // Estilos adicionales para asegurar la altura
+      .create-user-card mat-form-field {
+        height: auto !important;
+        min-height: 72px !important;
+        
+        .mat-mdc-form-field-wrapper {
+          min-height: 56px !important;
+        }
+
+        .mat-mdc-text-field-wrapper {
+          min-height: 56px !important;
+        }
+      }
+
+      // Mejoras adicionales para las etiquetas del formulario
+      .form-row mat-form-field {
+        // Estilo personalizado para cada tipo de campo
+        &:nth-child(1) .mat-mdc-form-field-label::before {
+          content: '👤 '; // Icono para Username
+          font-size: 14px;
+          margin-right: 4px;
+        }
+
+        &:nth-child(2) .mat-mdc-form-field-label::before {
+          content: '📧 '; // Icono para Email
+          font-size: 14px;
+          margin-right: 4px;
+        }
+
+        // Para la segunda fila
+        &:nth-child(3) .mat-mdc-form-field-label::before {
+          content: '👨 '; // Icono para Nombre
+          font-size: 14px;
+          margin-right: 4px;
+        }
+
+        &:nth-child(4) .mat-mdc-form-field-label::before {
+          content: '👤 '; // Icono para Apellido
+          font-size: 14px;
+          margin-right: 4px;
+        }
+
+        // Para la tercera fila
+        &:nth-child(5) .mat-mdc-form-field-label::before {
+          content: '📞 '; // Icono para Teléfono
+          font-size: 14px;
+          margin-right: 4px;
+        }
+
+        &:nth-child(6) .mat-mdc-form-field-label::before {
+          content: '🔐 '; // Icono para Permisos
+          font-size: 14px;
+          margin-right: 4px;
+        }
+      }
+
       .form-actions {
         display: flex;
         justify-content: flex-end;
-        margin-top: 24px;
+        margin-top: 32px; // Más espacio antes del botón
+        padding-top: 16px;
+        border-top: 1px solid #e2e8f0; // Línea separadora sutil
 
         button {
           display: flex;
           align-items: center;
           gap: 8px;
+          padding: 14px 28px; // Botón más grande
+          font-size: 16px;
+          font-weight: 600; // Texto del botón más bold
+          border-radius: 8px; // Bordes más redondeados
+          box-shadow: 0 2px 8px rgba(1, 126, 132, 0.2); // Sombra suave
+          transition: all 0.2s ease-in-out; // Animación suave
+
+          &:hover {
+            transform: translateY(-1px); // Efecto hover
+            box-shadow: 0 4px 12px rgba(1, 126, 132, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+
+      // Mejorar el título del formulario
+      .create-user-card mat-card-header {
+        .mat-mdc-card-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1a202c;
+          margin-bottom: 8px;
+
+          mat-icon {
+            color: #017E84;
+            font-size: 1.8rem;
+            width: 1.8rem;
+            height: 1.8rem;
+          }
         }
       }
     }

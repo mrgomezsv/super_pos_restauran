@@ -47,9 +47,16 @@ import { HttpClient } from '@angular/common/http';
 export class AdminSuppliersComponent implements OnInit {
   cols = ['name', 'taxId', 'email'];
   suppliers: any[] = [];
-  form = this.fb.group({ name: ['', Validators.required], taxId: [''], email: [''] });
+  form: any;
   private readonly api = 'http://localhost:3000/api/suppliers';
-  constructor(private fb: FormBuilder, private toastr: ToastrService, private http: HttpClient) {}
+  
+  constructor(private fb: FormBuilder, private toastr: ToastrService, private http: HttpClient) {
+    this.form = this.fb.group({ 
+      name: ['', Validators.required], 
+      taxId: [''], 
+      email: [''] 
+    });
+  }
   ngOnInit(){ this.load(); }
   load(){ this.http.get<any[]>(this.api).subscribe(rows=> this.suppliers = rows); }
   create(){

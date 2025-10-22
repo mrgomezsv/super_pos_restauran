@@ -29,9 +29,9 @@ def init_sudo_user(db: Session):
         email="sudo@superpos.com",
         password="sudo123",  # En producción usar hash
         role="sudo",
-        isActive=True,
-        createdAt=datetime.now()
-    )
+            isActive=True,
+            createdAt=datetime.now()
+        )
     
     db.add(sudo_user)
     db.commit()

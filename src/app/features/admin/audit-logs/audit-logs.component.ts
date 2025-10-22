@@ -146,18 +146,19 @@ export class AdminAuditLogsComponent implements OnInit {
   private readonly api = `${environment.apiUrl}/audit-logs`;
   cols = ['date', 'user', 'action', 'module', 'detail'];
   logs: AuditLog[] = [];
-
-  filterForm = this.fb.group({
-    module: [''],
-    startDate: [''],
-    endDate: ['']
-  });
+  filterForm: any;
 
   constructor(
     private http: HttpClient,
     private toastr: ToastrService,
     private fb: FormBuilder
-  ) {}
+  ) {
+    this.filterForm = this.fb.group({
+      module: [''],
+      startDate: [''],
+      endDate: ['']
+    });
+  }
 
   ngOnInit(): void {
     this.load();

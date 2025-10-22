@@ -362,6 +362,53 @@ class Supplier(Base):
         UniqueConstraint('name', 'company_id', name='unique_supplier_name_per_company'),
     )
 
+# Descuentos
+class Discount(Base):
+    __tablename__ = "discounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    name = Column(String(120), nullable=False)
+    percent = Column(Float, nullable=False)  # 0..100
+    isActive = Column(Boolean, default=True)
+    createdAt = Column(DateTime, default=func.now())
+
+    company = relationship("Company", backref="discounts")
+    __table_args__ = (
+        UniqueConstraint('name', 'company_id', name='unique_discount_name_per_company'),
+    )
+
+# Sesiones de Caja
+class CashSession(Base):
+    __tablename__ = "cash_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    userId = Column(Integer, ForeignKey("users.id"))
+    openedAt = Column(DateTime, default=func.now())
+    closedAt = Column(DateTime, nullable=True)
+    openingAmount = Column(Float, default=0.0)
+    closingAmount = Column(Float, nullable=True)
+    status = Column(String(20), default="open")  # open/closed
+
+    company = relationship("Company", backref="cash_sessions")
+    user = relationship("User", backref="cash_sessions")
+
+# Bitácora
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)
+    userId = Column(Integer, ForeignKey("users.id"))
+    action = Column(String(50), nullable=False)
+    module = Column(String(50), nullable=False)
+    detail = Column(Text, nullable=True)
+    createdAt = Column(DateTime, default=func.now())
+
+    company = relationship("Company", backref="audit_logs")
+    user = relationship("User", backref="audit_logs")
+
 # Función para crear todas las tablas
 def create_tables():
     """Crear todas las tablas en la base de datos"""

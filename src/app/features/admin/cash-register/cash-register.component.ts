@@ -110,7 +110,7 @@ interface CashSession {
                  [style.color]="getDifferenceTextColor()">
               <div style="font-size:11px; font-weight:500;">DIFERENCIA</div>
               <div style="font-size:18px; font-weight:600;">
-                {{getDifference() >= 0 ? '+' : ''}}${{getDifference() | number:'1.2-2'}}
+                {{getDifference() >= 0 ? '+' : ''}}\${{getDifference() | number:'1.2-2'}}
               </div>
             </div>
 
@@ -190,20 +190,22 @@ export class AdminCashRegisterComponent implements OnInit {
   sessions: CashSession[] = [];
   isLoading = false;
   sessionCols = ['openedAt', 'opening', 'closing', 'status'];
-
-  openForm = this.fb.group({
-    openingAmount: [0, [Validators.required, Validators.min(0)]]
-  });
-
-  closeForm = this.fb.group({
-    closingAmount: [0, [Validators.required, Validators.min(0)]]
-  });
+  openForm: any;
+  closeForm: any;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private toastr: ToastrService
-  ) {}
+  ) {
+    this.openForm = this.fb.group({
+      openingAmount: [0, [Validators.required, Validators.min(0)]]
+    });
+
+    this.closeForm = this.fb.group({
+      closingAmount: [0, [Validators.required, Validators.min(0)]]
+    });
+  }
 
   ngOnInit(): void {
     this.loadCurrentSession();
