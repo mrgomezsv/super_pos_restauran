@@ -2,7 +2,7 @@
 Esquemas de validación para el sistema Super POS
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 from pydantic import BaseModel, Field, EmailStr
 
@@ -178,6 +178,32 @@ class LedgerAccountDetailResponse(BaseModel):
     totalDebit: float
     totalCredit: float
     balance: float
+
+# Trial Balance Schemas
+class TrialBalanceAccountResponse(BaseModel):
+    accountCode: str
+    accountName: str
+    totalDebit: float
+    totalCredit: float
+    balance: float
+
+class TrialBalanceResponse(BaseModel):
+    asOfDate: date
+    assets: List[TrialBalanceAccountResponse]
+    liabilities: List[TrialBalanceAccountResponse]
+    equity: List[TrialBalanceAccountResponse]
+    totalAssetsDebit: float
+    totalAssetsCredit: float
+    totalAssetsBalance: float
+    totalLiabilitiesDebit: float
+    totalLiabilitiesCredit: float
+    totalLiabilitiesBalance: float
+    totalEquityDebit: float
+    totalEquityCredit: float
+    totalEquityBalance: float
+    totalDebits: float
+    totalCredits: float
+    isBalanced: bool
 
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):

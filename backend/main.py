@@ -38,7 +38,8 @@ from schemas import (
     AuditLogResponse,
     JournalEntryResponse, JournalEntryDetailResponse, JournalEntryCreate,
     JournalLineResponse, JournalLineCreate,
-    LedgerEntryResponse, LedgerAccountDetailResponse, LedgerMovementResponse
+    LedgerEntryResponse, LedgerAccountDetailResponse, LedgerMovementResponse,
+    TrialBalanceResponse, TrialBalanceAccountResponse
 )
 
 # Importar servicio de compañías
@@ -1358,6 +1359,117 @@ async def get_ledger_account_detail(
         totalDebit=total_debit,
         totalCredit=total_credit,
         balance=balance
+    )
+
+# -----------------------------
+# Accounting - Balance de Prueba
+# -----------------------------
+@app.get("/api/accounting/trial-balance", response_model=TrialBalanceResponse)
+async def get_trial_balance(
+    asOfDate: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener balance de prueba"""
+    company_id = context.get("company", {}).get("id")
+    
+    # Usar fecha actual si no se especifica
+    if asOfDate:
+        cutoff_date = datetime.fromisoformat(asOfDate) + timedelta(days=1)
+    else:
+        cutoff_date = datetime.now() + timedelta(days=1)
+    
+    # Obtener todas las cuentas con movimientos hasta la fecha especificada
+    query = db.query(DBJournalLine)
+    query = query.join(DBJournalEntry).filter(
+        DBJournalEntry.company_id == company_id,
+        DBJournalEntry.date < cutoff_date
+    )
+    
+    movements = query.all()
+    
+    # Agrupar por cuenta y calcular saldos
+    account_data = {}
+    for movement in movements:
+        account_code = movement.accountCode
+        if account_code not in account_data:
+            account_data[account_code] = {
+                'accountCode': account_code,
+                'accountName': movement.accountName,
+                'totalDebit': 0,
+                'totalCredit': 0,
+                'balance': 0
+            }
+        
+        account_data[account_code]['totalDebit'] += movement.debit
+        account_data[account_code]['totalCredit'] += movement.credit
+    
+    # Calcular saldos
+    for account_code, data in account_data.items():
+        data['balance'] = data['totalDebit'] - data['totalCredit']
+    
+    # Separar en activos/pasivos y patrimonio
+    assets = []
+    liabilities = []
+    equity = []
+    
+    for account_code, data in account_data.items():
+        account_entry = TrialBalanceAccountResponse(
+            accountCode=data['accountCode'],
+            accountName=data['accountName'],
+            totalDebit=data['totalDebit'],
+            totalCredit=data['totalCredit'],
+            balance=data['balance']
+        )
+        
+        # Clasificar por tipo de cuenta (simplificado)
+        if account_code.startswith(('1', '2')):  # Activos
+            assets.append(account_entry)
+        elif account_code.startswith(('3', '4')):  # Pasivos
+            liabilities.append(account_entry)
+        else:  # Patrimonio y otros
+            equity.append(account_entry)
+    
+    # Ordenar por código de cuenta
+    assets.sort(key=lambda x: x.accountCode)
+    liabilities.sort(key=lambda x: x.accountCode)
+    equity.sort(key=lambda x: x.accountCode)
+    
+    # Calcular totales
+    total_assets_debit = sum(a.totalDebit for a in assets)
+    total_assets_credit = sum(a.totalCredit for a in assets)
+    total_assets_balance = sum(a.balance for a in assets)
+    
+    total_liabilities_debit = sum(l.totalDebit for l in liabilities)
+    total_liabilities_credit = sum(l.totalCredit for l in liabilities)
+    total_liabilities_balance = sum(l.balance for l in liabilities)
+    
+    total_equity_debit = sum(e.totalDebit for e in equity)
+    total_equity_credit = sum(e.totalCredit for e in equity)
+    total_equity_balance = sum(e.balance for e in equity)
+    
+    # Verificar balance
+    total_debits = total_assets_debit + total_liabilities_debit + total_equity_debit
+    total_credits = total_assets_credit + total_liabilities_credit + total_equity_credit
+    is_balanced = abs(total_debits - total_credits) < 0.01
+    
+    return TrialBalanceResponse(
+        asOfDate=cutoff_date.date(),
+        assets=assets,
+        liabilities=liabilities,
+        equity=equity,
+        totalAssetsDebit=total_assets_debit,
+        totalAssetsCredit=total_assets_credit,
+        totalAssetsBalance=total_assets_balance,
+        totalLiabilitiesDebit=total_liabilities_debit,
+        totalLiabilitiesCredit=total_liabilities_credit,
+        totalLiabilitiesBalance=total_liabilities_balance,
+        totalEquityDebit=total_equity_debit,
+        totalEquityCredit=total_equity_credit,
+        totalEquityBalance=total_equity_balance,
+        totalDebits=total_debits,
+        totalCredits=total_credits,
+        isBalanced=is_balanced
     )
 
 # Rutas de usuarios
