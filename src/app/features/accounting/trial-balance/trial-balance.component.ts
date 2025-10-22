@@ -111,13 +111,13 @@ interface TrialBalance {
       </div>
 
       <!-- Activos -->
-      <div *ngIf="trialBalance?.assets.length > 0" style="margin-bottom:24px;">
+      <div *ngIf="trialBalance && trialBalance.assets && trialBalance.assets.length > 0" style="margin-bottom:24px;">
         <h3 style="color:#1976d2; margin-bottom:12px;">
           <mat-icon style="vertical-align:middle; margin-right:8px;">trending_up</mat-icon>
           ACTIVOS
         </h3>
         
-        <table mat-table [dataSource]="trialBalance.assets" style="width:100%;">
+        <table mat-table [dataSource]="trialBalance?.assets || []" style="width:100%;">
           <ng-container matColumnDef="accountCode">
             <th mat-header-cell *matHeaderCellDef> Código </th>
             <td mat-cell *matCellDef="let account"> {{account.accountCode}} </td>
@@ -159,10 +159,10 @@ interface TrialBalance {
           <div style="display:flex; justify-content:space-between; font-weight:500;">
             <span>Total Activos:</span>
             <div style="display:flex; gap:16px;">
-              <span>Débito: \${{trialBalance.totalAssetsDebit | number:'1.2-2'}}</span>
-              <span>Crédito: \${{trialBalance.totalAssetsCredit | number:'1.2-2'}}</span>
-              <span [style.color]="trialBalance.totalAssetsBalance >= 0 ? 'green' : 'red'">
-                Saldo: \${{trialBalance.totalAssetsBalance | number:'1.2-2'}}
+              <span>Débito: \${{trialBalance?.totalAssetsDebit || 0 | number:'1.2-2'}}</span>
+              <span>Crédito: \${{trialBalance?.totalAssetsCredit || 0 | number:'1.2-2'}}</span>
+              <span [style.color]="(trialBalance?.totalAssetsBalance || 0) >= 0 ? 'green' : 'red'">
+                Saldo: \${{trialBalance?.totalAssetsBalance || 0 | number:'1.2-2'}}
               </span>
             </div>
           </div>
@@ -172,13 +172,13 @@ interface TrialBalance {
       <mat-divider style="margin:24px 0;"></mat-divider>
 
       <!-- Pasivos -->
-      <div *ngIf="trialBalance?.liabilities.length > 0" style="margin-bottom:24px;">
+      <div *ngIf="trialBalance && trialBalance.liabilities && trialBalance.liabilities.length > 0" style="margin-bottom:24px;">
         <h3 style="color:#f44336; margin-bottom:12px;">
           <mat-icon style="vertical-align:middle; margin-right:8px;">trending_down</mat-icon>
           PASIVOS
         </h3>
         
-        <table mat-table [dataSource]="trialBalance.liabilities" style="width:100%;">
+        <table mat-table [dataSource]="trialBalance?.liabilities || []" style="width:100%;">
           <ng-container matColumnDef="accountCode">
             <th mat-header-cell *matHeaderCellDef> Código </th>
             <td mat-cell *matCellDef="let account"> {{account.accountCode}} </td>
@@ -220,10 +220,10 @@ interface TrialBalance {
           <div style="display:flex; justify-content:space-between; font-weight:500;">
             <span>Total Pasivos:</span>
             <div style="display:flex; gap:16px;">
-              <span>Débito: \${{trialBalance.totalLiabilitiesDebit | number:'1.2-2'}}</span>
-              <span>Crédito: \${{trialBalance.totalLiabilitiesCredit | number:'1.2-2'}}</span>
-              <span [style.color]="trialBalance.totalLiabilitiesBalance >= 0 ? 'green' : 'red'">
-                Saldo: \${{trialBalance.totalLiabilitiesBalance | number:'1.2-2'}}
+              <span>Débito: \${{trialBalance?.totalLiabilitiesDebit || 0 | number:'1.2-2'}}</span>
+              <span>Crédito: \${{trialBalance?.totalLiabilitiesCredit || 0 | number:'1.2-2'}}</span>
+              <span [style.color]="(trialBalance?.totalLiabilitiesBalance || 0) >= 0 ? 'green' : 'red'">
+                Saldo: \${{trialBalance?.totalLiabilitiesBalance || 0 | number:'1.2-2'}}
               </span>
             </div>
           </div>
@@ -233,13 +233,13 @@ interface TrialBalance {
       <mat-divider style="margin:24px 0;"></mat-divider>
 
       <!-- Patrimonio -->
-      <div *ngIf="trialBalance?.equity.length > 0" style="margin-bottom:24px;">
+      <div *ngIf="trialBalance && trialBalance.equity && trialBalance.equity.length > 0" style="margin-bottom:24px;">
         <h3 style="color:#ff9800; margin-bottom:12px;">
           <mat-icon style="vertical-align:middle; margin-right:8px;">account_balance</mat-icon>
           PATRIMONIO
         </h3>
         
-        <table mat-table [dataSource]="trialBalance.equity" style="width:100%;">
+        <table mat-table [dataSource]="trialBalance?.equity || []" style="width:100%;">
           <ng-container matColumnDef="accountCode">
             <th mat-header-cell *matHeaderCellDef> Código </th>
             <td mat-cell *matCellDef="let account"> {{account.accountCode}} </td>
@@ -281,10 +281,10 @@ interface TrialBalance {
           <div style="display:flex; justify-content:space-between; font-weight:500;">
             <span>Total Patrimonio:</span>
             <div style="display:flex; gap:16px;">
-              <span>Débito: \${{trialBalance.totalEquityDebit | number:'1.2-2'}}</span>
-              <span>Crédito: \${{trialBalance.totalEquityCredit | number:'1.2-2'}}</span>
-              <span [style.color]="trialBalance.totalEquityBalance >= 0 ? 'green' : 'red'">
-                Saldo: \${{trialBalance.totalEquityBalance | number:'1.2-2'}}
+              <span>Débito: \${{trialBalance?.totalEquityDebit || 0 | number:'1.2-2'}}</span>
+              <span>Crédito: \${{trialBalance?.totalEquityCredit || 0 | number:'1.2-2'}}</span>
+              <span [style.color]="(trialBalance?.totalEquityBalance || 0) >= 0 ? 'green' : 'red'">
+                Saldo: \${{trialBalance?.totalEquityBalance || 0 | number:'1.2-2'}}
               </span>
             </div>
           </div>

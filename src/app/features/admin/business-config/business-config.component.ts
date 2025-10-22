@@ -82,6 +82,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   showPreview = false;
   saveSuccess = false;
   currentConfig: BusinessConfig | null = null;
+  ticketTemplate: any = null; // TODO: Definir tipo específico para ticket template
   expandedSections: Set<string> = new Set(['company', 'contact', 'fiscal', 'accounting']);
   private destroy$ = new Subject<void>();
 
@@ -394,5 +395,18 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
       });
       this.toastr.info(`Sección ${sectionId} limpiada`);
     }
+  }
+
+  // Métodos faltantes para el template
+  onRestore(): void {
+    if (confirm('¿Está seguro de restaurar la configuración por defecto? Esto eliminará todos los cambios no guardados.')) {
+      this.loadBusinessConfiguration();
+      this.toastr.info('Configuración restaurada');
+    }
+  }
+
+  previewTicket(): void {
+    // TODO: Implementar vista previa del ticket
+    this.toastr.info('Vista previa del ticket no implementada aún');
   }
 }

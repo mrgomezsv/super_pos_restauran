@@ -47,9 +47,6 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = ['name', 'prefix', 'correlatives', 'status', 'actions'];
   isLoading = true;
   private destroy$ = new Subject<void>();
-  
-  showDocumentDialog = false;
-  selectedDocument: FiscalDocument | null = null;
   private scrollYPosition = 0;
 
   private readonly api = `${environment.apiUrl}/fiscal-documents`;
@@ -86,28 +83,8 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
   }
 
   openDocumentDialog(fiscalDocument?: FiscalDocument): void {
-    this.scrollYPosition = window.scrollY;
-    document.body.classList.add('modal-open');
-    document.body.style.top = `-${this.scrollYPosition}px`;
-    
-    this.selectedDocument = fiscalDocument || null;
-    this.showDocumentDialog = true;
-  }
-
-  closeDocumentDialog(): void {
-    document.body.classList.remove('modal-open');
-    document.body.style.top = '';
-    window.scrollTo(0, this.scrollYPosition);
-    
-    this.showDocumentDialog = false;
-    this.selectedDocument = null;
-  }
-
-  onDocumentDialogResult(result: boolean): void {
-    this.closeDocumentDialog();
-    if (result) {
-      this.loadDocuments();
-    }
+    // TODO: Implementar con MatDialog
+    console.log('Abrir diálogo para:', fiscalDocument);
   }
 
   editDocument(fiscalDocument: FiscalDocument): void {
@@ -116,7 +93,7 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
 
   deleteDocument(fiscalDocument: FiscalDocument): void {
     if (confirm(`¿Está seguro de eliminar el documento "${fiscalDocument.name}"?`)) {
-      this.fiscalDocumentService.deleteFiscalDocument(fiscalDocument.id)
+      this.http.delete(`${this.api}/${fiscalDocument.id}`)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {

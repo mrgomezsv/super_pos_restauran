@@ -14,7 +14,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 import { AuthService } from '../../core/services/auth.service';
 import { User } from '../../core/models/user.model';

@@ -90,10 +90,6 @@
   </mat-card>
 
   <!-- Modal de Documento -->
-  <app-fiscal-document-dialog 
-    *ngIf="showDocumentDialog"
-    [document]="selectedDocument"
-    (close)="onDocumentDialogResult($event)">
-  </app-fiscal-document-dialog>
+  <!-- Usar MatDialog en lugar de componente personalizado -->
 </div>
 
