@@ -111,6 +111,7 @@ class ProductCategoryUpdate(BaseModel):
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int
+    company_id: int
     code: str
     name: str
     description: Optional[str] = None

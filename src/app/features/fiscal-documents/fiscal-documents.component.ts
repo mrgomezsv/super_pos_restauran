@@ -7,11 +7,24 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
-import { FiscalDocumentService } from '../../core/services/fiscal-document.service';
-import { FiscalDocument } from '../../core/models/fiscal-document.model';
-import { FiscalDocumentDialogComponent } from './fiscal-document-dialog/fiscal-document-dialog.component';
+interface FiscalDocument {
+  id: number;
+  company_id: number;
+  code: string;
+  name: string;
+  description?: string;
+  prefix: string;
+  initialCorrelative: number;
+  currentCorrelative: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 @Component({
   selector: 'app-fiscal-documents',
@@ -24,7 +37,7 @@ import { FiscalDocumentDialogComponent } from './fiscal-document-dialog/fiscal-d
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    FiscalDocumentDialogComponent
+    MatDialogModule
   ],
   templateUrl: './fiscal-documents.component.html',
   styleUrls: ['./fiscal-documents.component.scss']
@@ -39,9 +52,12 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
   selectedDocument: FiscalDocument | null = null;
   private scrollYPosition = 0;
 
+  private readonly api = `${environment.apiUrl}/fiscal-documents`;
+
   constructor(
-    private fiscalDocumentService: FiscalDocumentService,
-    private toastr: ToastrService
+    private http: HttpClient,
+    private toastr: ToastrService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -56,19 +72,17 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
   private loadDocuments(): void {
     this.isLoading = true;
     
-    this.fiscalDocumentService.getFiscalDocuments()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (documents) => {
-          this.documents = documents;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading fiscal documents:', error);
-          this.toastr.error('Error al cargar los documentos fiscales');
-          this.isLoading = false;
-        }
-      });
+    this.http.get<FiscalDocument[]>(this.api).subscribe({
+      next: (data) => {
+        this.documents = data;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando documentos fiscales:', err);
+        this.toastr.error('Error al cargar documentos fiscales');
+        this.isLoading = false;
+      }
+    });
   }
 
   openDocumentDialog(fiscalDocument?: FiscalDocument): void {

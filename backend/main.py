@@ -903,11 +903,15 @@ async def create_category(category: ProductCategoryCreate, db: Session = Depends
 
 # Rutas de documentos fiscales
 @app.get("/api/fiscal-documents", response_model=List[FiscalDocumentResponse])
-async def get_fiscal_documents(db: Session = Depends(get_db)):
-    """Obtener todos los documentos fiscales"""
-    documents = db.query(DBFiscalDocument).all()
+async def get_fiscal_documents(context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Obtener documentos fiscales de la compañía"""
+    query = db.query(DBFiscalDocument)
+    query = context_service.apply_company_filter(query, DBFiscalDocument, context)
+    documents = query.filter(DBFiscalDocument.isActive == True).order_by(DBFiscalDocument.name.asc()).all()
+    
     return [FiscalDocumentResponse(
         id=doc.id,
+        company_id=doc.company_id,
         code=doc.code,
         name=doc.name,
         description=doc.description,
@@ -918,6 +922,187 @@ async def get_fiscal_documents(db: Session = Depends(get_db)):
         createdAt=doc.createdAt,
         updatedAt=doc.updatedAt
     ) for doc in documents]
+
+@app.post("/api/fiscal-documents", response_model=FiscalDocumentResponse)
+async def create_fiscal_document(payload: FiscalDocumentCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Crear nuevo documento fiscal"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    # Verificar que no exista un documento con el mismo nombre o prefijo
+    existing_name = db.query(DBFiscalDocument).filter(
+        DBFiscalDocument.company_id == company_id,
+        DBFiscalDocument.name == payload.name.strip(),
+        DBFiscalDocument.isActive == True
+    ).first()
+    
+    if existing_name:
+        raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con este nombre")
+    
+    existing_prefix = db.query(DBFiscalDocument).filter(
+        DBFiscalDocument.company_id == company_id,
+        DBFiscalDocument.prefix == payload.prefix.strip().upper(),
+        DBFiscalDocument.isActive == True
+    ).first()
+    
+    if existing_prefix:
+        raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con este prefijo")
+    
+    # Generar código interno
+    code = payload.name.lower().replace(" ", "_").replace("-", "_").replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+    
+    new_document = DBFiscalDocument(
+        company_id=company_id,
+        code=code,
+        name=payload.name.strip(),
+        description=payload.description.strip() if payload.description else None,
+        prefix=payload.prefix.strip().upper(),
+        initialCorrelative=payload.initialCorrelative,
+        currentCorrelative=payload.initialCorrelative,
+        isActive=True,
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    )
+    db.add(new_document)
+    db.commit()
+    db.refresh(new_document)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="FISCAL_DOCUMENT_CREATE",
+        module="Fiscal Documents",
+        detail=f"Documento fiscal creado: {new_document.name} ({new_document.prefix})",
+        company_id=company_id,
+        db=db
+    )
+    
+    return FiscalDocumentResponse(
+        id=new_document.id,
+        company_id=new_document.company_id,
+        code=new_document.code,
+        name=new_document.name,
+        description=new_document.description,
+        prefix=new_document.prefix,
+        initialCorrelative=new_document.initialCorrelative,
+        currentCorrelative=new_document.currentCorrelative,
+        isActive=new_document.isActive,
+        createdAt=new_document.createdAt,
+        updatedAt=new_document.updatedAt
+    )
+
+@app.put("/api/fiscal-documents/{document_id}", response_model=FiscalDocumentResponse)
+async def update_fiscal_document(document_id: int, payload: FiscalDocumentUpdate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Actualizar documento fiscal"""
+    document = db.query(DBFiscalDocument).filter(DBFiscalDocument.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento fiscal no encontrado")
+    if not context_service.validate_company_access(context, document.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar nombres/prefijos únicos si se están cambiando
+    if payload.name and payload.name.strip() != document.name:
+        existing_name = db.query(DBFiscalDocument).filter(
+            DBFiscalDocument.company_id == document.company_id,
+            DBFiscalDocument.name == payload.name.strip(),
+            DBFiscalDocument.isActive == True,
+            DBFiscalDocument.id != document_id
+        ).first()
+        
+        if existing_name:
+            raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con este nombre")
+    
+    if payload.prefix and payload.prefix.strip().upper() != document.prefix:
+        existing_prefix = db.query(DBFiscalDocument).filter(
+            DBFiscalDocument.company_id == document.company_id,
+            DBFiscalDocument.prefix == payload.prefix.strip().upper(),
+            DBFiscalDocument.isActive == True,
+            DBFiscalDocument.id != document_id
+        ).first()
+        
+        if existing_prefix:
+            raise HTTPException(status_code=400, detail="Ya existe un documento fiscal con este prefijo")
+    
+    # Actualizar campos
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        if field == "name" and value:
+            setattr(document, field, value.strip())
+        elif field == "description" and value:
+            setattr(document, field, value.strip())
+        elif field == "prefix" and value:
+            setattr(document, field, value.strip().upper())
+        else:
+            setattr(document, field, value)
+    
+    document.updatedAt = datetime.now()
+    db.commit()
+    db.refresh(document)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="FISCAL_DOCUMENT_UPDATE",
+        module="Fiscal Documents",
+        detail=f"Documento fiscal actualizado: {document.name}",
+        company_id=document.company_id,
+        db=db
+    )
+    
+    return FiscalDocumentResponse(
+        id=document.id,
+        company_id=document.company_id,
+        code=document.code,
+        name=document.name,
+        description=document.description,
+        prefix=document.prefix,
+        initialCorrelative=document.initialCorrelative,
+        currentCorrelative=document.currentCorrelative,
+        isActive=document.isActive,
+        createdAt=document.createdAt,
+        updatedAt=document.updatedAt
+    )
+
+@app.delete("/api/fiscal-documents/{document_id}")
+async def delete_fiscal_document(document_id: int, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Eliminar documento fiscal (soft delete)"""
+    document = db.query(DBFiscalDocument).filter(DBFiscalDocument.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento fiscal no encontrado")
+    if not context_service.validate_company_access(context, document.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Verificar que no tenga ventas asociadas
+    sales_count = db.query(DBSale).filter(
+        DBSale.fiscalDocumentId == document_id,
+        DBSale.company_id == document.company_id
+    ).count()
+    
+    if sales_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"No se puede eliminar el documento porque tiene {sales_count} ventas asociadas"
+        )
+    
+    # Soft delete
+    document.isActive = False
+    document.updatedAt = datetime.now()
+    db.commit()
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="FISCAL_DOCUMENT_DELETE",
+        module="Fiscal Documents",
+        detail=f"Documento fiscal eliminado: {document.name}",
+        company_id=document.company_id,
+        db=db
+    )
+    
+    return {"message": "Documento fiscal eliminado exitosamente"}
 
 # Rutas de usuarios
 @app.get("/api/users", response_model=List[UserResponse])
