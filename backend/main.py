@@ -9,16 +9,17 @@ from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_, func, text
+from sqlalchemy import or_, func
 
 # Importar configuración de base de datos
-from database import get_db, engine, create_tables
+from database import get_db, create_tables
 from database import (
     User as DBUser, Product as DBProduct, Sale as DBSale, SaleItem as DBSaleItem,
     ProductCategory as DBProductCategory, FiscalDocument as DBFiscalDocument,
     Account as DBAccount, JournalEntry as DBJournalEntry, JournalLine as DBJournalLine,
     InventoryMovement as DBInventoryMovement, ArInvoice as DBArInvoice, ApInvoice as DBApInvoice,
-    Supplier as DBSupplier, Discount as DBDiscount, CashSession as DBCashSession, AuditLog as DBAuditLog
+    Supplier as DBSupplier, Discount as DBDiscount, CashSession as DBCashSession, AuditLog as DBAuditLog,
+    Company as DBCompany
 )
 
 # Importar modelos Pydantic para requests/responses
@@ -2295,223 +2296,6 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         createdAt=new_user.createdAt,
         lastLogin=new_user.lastLogin
     )
-
-# Endpoints contables
-@app.get("/api/accounting/accounts")
-async def get_accounts(db: Session = Depends(get_db)):
-    """Obtener catálogo de cuentas"""
-    accounts = db.query(DBAccount).all()
-    return [{
-        "id": acc.id,
-        "code": acc.code,
-        "name": acc.name,
-        "accountType": acc.accountType,
-        "nature": acc.nature,
-        "level": acc.level,
-        "parentId": acc.parentId,
-        "isActive": acc.isActive,
-        "createdAt": acc.createdAt,
-        "updatedAt": acc.updatedAt
-    } for acc in accounts]
-
-@app.get("/api/accounting/journal-entries")
-async def get_journal_entries(
-    startDate: Optional[str] = None,
-    endDate: Optional[str] = None,
-    source: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Obtener pólizas contables (Libro Diario)"""
-    query = db.query(DBJournalEntry).options(joinedload(DBJournalEntry.lines))
-    
-    # Filtrar por fecha si se proporciona
-    if startDate:
-        start = datetime.strptime(startDate, "%Y-%m-%d").date()
-        query = query.filter(func.date(DBJournalEntry.date) >= start)
-    
-    if endDate:
-        end = datetime.strptime(endDate, "%Y-%m-%d").date()
-        query = query.filter(func.date(DBJournalEntry.date) <= end)
-    
-    # Filtrar por fuente si se proporciona
-    if source:
-        query = query.filter(DBJournalEntry.source == source)
-    
-    # Ordenar por fecha descendente
-    entries = query.order_by(DBJournalEntry.date.desc()).all()
-    
-    return [{
-        "id": entry.id,
-        "entryNumber": entry.entryNumber,
-        "date": entry.date,
-        "source": entry.source,
-        "reference": entry.reference,
-        "description": entry.description,
-        "currency": entry.currency,
-        "status": entry.status,
-        "createdBy": entry.createdBy,
-        "postedBy": entry.postedBy,
-        "postedAt": entry.postedAt,
-        "createdAt": entry.createdAt,
-        "lines": [{
-            "id": line.id,
-            "journalEntryId": line.journalEntryId,
-            "accountId": line.accountId,
-            "description": line.description,
-            "debit": line.debit,
-            "credit": line.credit,
-            "costCenter": line.costCenter,
-            "createdAt": line.createdAt
-        } for line in entry.lines]
-    } for entry in entries]
-
-@app.get("/api/accounting/ledger")
-async def get_ledger(db: Session = Depends(get_db)):
-    """Obtener Libro Mayor (saldos por cuenta)"""
-    accounts = db.query(DBAccount).all()
-    ledger = {}
-    
-    # Inicializar saldos por cuenta
-    for account in accounts:
-        ledger[account.id] = {
-            "account": {
-                "id": account.id,
-                "code": account.code,
-                "name": account.name,
-                "accountType": account.accountType,
-                "nature": account.nature,
-                "level": account.level,
-                "parentId": account.parentId,
-                "isActive": account.isActive,
-                "createdAt": account.createdAt,
-                "updatedAt": account.updatedAt
-            },
-            "debit_total": 0.0,
-            "credit_total": 0.0,
-            "balance": 0.0
-        }
-    
-    # Calcular totales de débitos y créditos
-    posted_entries = db.query(DBJournalEntry).filter(DBJournalEntry.status == "posted").all()
-    posted_entry_ids = [entry.id for entry in posted_entries]
-    
-    if posted_entry_ids:
-        lines = db.query(DBJournalLine).filter(DBJournalLine.journalEntryId.in_(posted_entry_ids)).all()
-        
-        for line in lines:
-            if line.accountId in ledger:
-                ledger[line.accountId]["debit_total"] += line.debit
-                ledger[line.accountId]["credit_total"] += line.credit
-    
-    # Calcular saldos
-    for account_id, data in ledger.items():
-        account = data["account"]
-        if account["nature"] == "deudora":
-            data["balance"] = data["debit_total"] - data["credit_total"]
-        else:  # acreedora
-            data["balance"] = data["credit_total"] - data["debit_total"]
-    
-    return ledger
-
-@app.get("/api/accounting/inventory-movements")
-async def get_inventory_movements(
-    productId: Optional[int] = None,
-    startDate: Optional[str] = None,
-    endDate: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Obtener movimientos de inventario"""
-    query = db.query(DBInventoryMovement)
-    
-    # Filtrar por producto
-    if productId:
-        query = query.filter(DBInventoryMovement.productId == productId)
-    
-    # Filtrar por fecha
-    if startDate:
-        start = datetime.strptime(startDate, "%Y-%m-%d").date()
-        query = query.filter(func.date(DBInventoryMovement.createdAt) >= start)
-    
-    if endDate:
-        end = datetime.strptime(endDate, "%Y-%m-%d").date()
-        query = query.filter(func.date(DBInventoryMovement.createdAt) <= end)
-    
-    # Ordenar por fecha descendente
-    movements = query.order_by(DBInventoryMovement.createdAt.desc()).all()
-    
-    return {"movements": [{
-        "id": mov.id,
-        "productId": mov.productId,
-        "movementType": mov.movementType,
-        "quantity": mov.quantity,
-        "unitCost": mov.unitCost,
-        "totalCost": mov.totalCost,
-        "reference": mov.reference,
-        "referenceId": mov.referenceId,
-        "createdAt": mov.createdAt
-    } for mov in movements]}
-
-@app.get("/api/accounting/vat/sales")
-async def get_vat_sales(
-    startDate: Optional[str] = None,
-    endDate: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Obtener Libro de Ventas (IVA)"""
-    query = db.query(DBArInvoice)
-    
-    # Filtrar por fecha
-    if startDate:
-        start = datetime.strptime(startDate, "%Y-%m-%d").date()
-        query = query.filter(func.date(DBArInvoice.createdAt) >= start)
-    
-    if endDate:
-        end = datetime.strptime(endDate, "%Y-%m-%d").date()
-        query = query.filter(func.date(DBArInvoice.createdAt) <= end)
-    
-    # Ordenar por fecha descendente
-    invoices = query.order_by(DBArInvoice.createdAt.desc()).all()
-    
-    return [{
-        "id": inv.id,
-        "invoiceNumber": inv.invoiceNumber,
-        "customerName": inv.customerName,
-        "customerDui": inv.customerDui,
-        "subtotal": inv.subtotal,
-        "taxAmount": inv.taxAmount,
-        "total": inv.total,
-        "invoiceType": inv.invoiceType,
-        "controlNumber": inv.controlNumber,
-        "journalEntryId": inv.journalEntryId,
-        "createdAt": inv.createdAt
-    } for inv in invoices]
-
-@app.get("/api/accounting/trial-balance")
-async def get_trial_balance(db: Session = Depends(get_db)):
-    """Obtener Balance de Comprobación"""
-    ledger_data = await get_ledger(db)
-    
-    trial_balance = []
-    total_debits = 0.0
-    total_credits = 0.0
-    
-    for account_id, data in ledger_data.items():
-        if data["debit_total"] > 0 or data["credit_total"] > 0:  # Solo cuentas con movimiento
-            trial_balance.append({
-                "account": data["account"],
-                "debit_total": data["debit_total"],
-                "credit_total": data["credit_total"],
-                "balance": data["balance"]
-            })
-            total_debits += data["debit_total"]
-            total_credits += data["credit_total"]
-    
-    return {
-        "accounts": trial_balance,
-        "total_debits": total_debits,
-        "total_credits": total_credits,
-        "is_balanced": abs(total_debits - total_credits) < 0.01
-    }
 
 # Rutas de compañías (multi-tenant)
 @app.post("/api/companies", response_model=CompanyCreationResponse)

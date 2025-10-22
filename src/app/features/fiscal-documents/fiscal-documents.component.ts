@@ -123,7 +123,7 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
             this.toastr.success('Documento fiscal eliminado exitosamente');
             this.loadDocuments();
           },
-          error: (error) => {
+          error: (error: any) => {
             console.error('Error deleting fiscal document:', error);
             this.toastr.error('Error al eliminar el documento fiscal');
           }
