@@ -322,10 +322,13 @@ def post_sale_to_accounting(sale: DBSale, db: Session) -> dict:
             "message": "Error al contabilizar la venta"
         }
 
-def generate_next_sku(db: Session) -> str:
+def generate_next_sku(db: Session, company_id: int = None) -> str:
     """Generar el siguiente SKU disponible de forma secuencial"""
     # Buscar todos los números de SKU existentes
-    products = db.query(DBProduct).filter(DBProduct.code.like("SKU%")).all()
+    query = db.query(DBProduct).filter(DBProduct.code.like("SKU%"))
+    if company_id:
+        query = query.filter(DBProduct.company_id == company_id)
+    products = query.all()
     sku_numbers = []
     
     for product in products:
@@ -558,10 +561,14 @@ async def get_product_by_barcode(barcode: str, db: Session = Depends(get_db)):
     )
 
 @app.post("/api/products", response_model=ProductResponse)
-async def create_product(product_data: ProductCreate, db: Session = Depends(get_db)):
+async def create_product(
+    product_data: ProductCreate, 
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
     """Crear nuevo producto con SKU automático secuencial"""
     # Siempre generar SKU automáticamente para mantener secuencia
-    product_code = generate_next_sku(db)
+    product_code = generate_next_sku(db, context.get("company_id"))
     
     # Crear el producto con el SKU generado automáticamente
     new_product = DBProduct(
@@ -578,6 +585,7 @@ async def create_product(product_data: ProductCreate, db: Session = Depends(get_
         barcode=product_data.barcode,
         taxRate=product_data.taxRate,
         isActive=product_data.isActive,
+        company_id=context.get("company_id"),
         createdAt=datetime.now(),
         updatedAt=datetime.now()
     )
