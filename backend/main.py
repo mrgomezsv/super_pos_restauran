@@ -37,7 +37,8 @@ from schemas import (
     CashSessionResponse, CashSessionOpen, CashSessionClose,
     AuditLogResponse,
     JournalEntryResponse, JournalEntryDetailResponse, JournalEntryCreate,
-    JournalLineResponse, JournalLineCreate
+    JournalLineResponse, JournalLineCreate,
+    LedgerEntryResponse, LedgerAccountDetailResponse, LedgerMovementResponse
 )
 
 # Importar servicio de compañías
@@ -1233,6 +1234,133 @@ async def create_journal_entry(payload: JournalEntryCreate, context: dict = Depe
         totalDebit=new_entry.totalDebit, totalCredit=new_entry.totalCredit,
         createdAt=new_entry.createdAt, lines=[]
     )
+
+# -----------------------------
+# Accounting - Mayor Contable
+# -----------------------------
+@app.get("/api/accounting/ledger", response_model=List[LedgerEntryResponse])
+async def get_ledger_entries(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    accountCode: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener movimientos del mayor contable"""
+    query = db.query(DBJournalLine)
+    query = query.join(DBJournalEntry).filter(DBJournalEntry.company_id == context.get("company", {}).get("id"))
+    
+    # Aplicar filtros
+    if startDate:
+        start = datetime.fromisoformat(startDate)
+        query = query.join(DBJournalEntry).filter(DBJournalEntry.date >= start)
+    
+    if endDate:
+        end = datetime.fromisoformat(endDate) + timedelta(days=1)
+        query = query.join(DBJournalEntry).filter(DBJournalEntry.date < end)
+    
+    if accountCode:
+        query = query.filter(DBJournalLine.accountCode == accountCode)
+    
+    # Obtener movimientos ordenados por fecha y número de asiento
+    movements = query.join(DBJournalEntry).order_by(
+        DBJournalEntry.date.asc(),
+        DBJournalEntry.entryNumber.asc(),
+        DBJournalLine.id.asc()
+    ).limit(500).all()
+    
+    # Agrupar por cuenta y calcular saldos
+    ledger_data = {}
+    for movement in movements:
+        account_code = movement.accountCode
+        if account_code not in ledger_data:
+            ledger_data[account_code] = {
+                'accountCode': account_code,
+                'accountName': movement.accountName,
+                'movements': [],
+                'totalDebit': 0,
+                'totalCredit': 0,
+                'balance': 0
+            }
+        
+        ledger_data[account_code]['movements'].append({
+            'date': movement.journalEntry.date,
+            'entryNumber': movement.journalEntry.entryNumber,
+            'description': movement.description or movement.journalEntry.description,
+            'debit': movement.debit,
+            'credit': movement.credit
+        })
+        
+        ledger_data[account_code]['totalDebit'] += movement.debit
+        ledger_data[account_code]['totalCredit'] += movement.credit
+    
+    # Calcular saldos
+    for account_code, data in ledger_data.items():
+        data['balance'] = data['totalDebit'] - data['totalCredit']
+    
+    return [LedgerEntryResponse(
+        accountCode=account_code,
+        accountName=data['accountName'],
+        movements=data['movements'],
+        totalDebit=data['totalDebit'],
+        totalCredit=data['totalCredit'],
+        balance=data['balance']
+    ) for account_code, data in ledger_data.items()]
+
+@app.get("/api/accounting/ledger/{account_code}", response_model=LedgerAccountDetailResponse)
+async def get_ledger_account_detail(
+    account_code: str,
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener detalle de una cuenta específica en el mayor"""
+    company_id = context.get("company", {}).get("id")
+    
+    query = db.query(DBJournalLine)
+    query = query.join(DBJournalEntry).filter(DBJournalEntry.company_id == company_id)
+    query = query.filter(DBJournalLine.accountCode == account_code)
+    
+    # Aplicar filtros de fecha
+    if startDate:
+        start = datetime.fromisoformat(startDate)
+        query = query.join(DBJournalEntry).filter(DBJournalEntry.date >= start)
+    
+    if endDate:
+        end = datetime.fromisoformat(endDate) + timedelta(days=1)
+        query = query.join(DBJournalEntry).filter(DBJournalEntry.date < end)
+    
+    movements = query.join(DBJournalEntry).order_by(
+        DBJournalEntry.date.asc(),
+        DBJournalEntry.entryNumber.asc(),
+        DBJournalLine.id.asc()
+    ).all()
+    
+    if not movements:
+        raise HTTPException(status_code=404, detail="No se encontraron movimientos para esta cuenta")
+    
+    # Calcular totales
+    total_debit = sum(m.debit for m in movements)
+    total_credit = sum(m.credit for m in movements)
+    balance = total_debit - total_credit
+    
+    return LedgerAccountDetailResponse(
+        accountCode=account_code,
+        accountName=movements[0].accountName,
+        movements=[LedgerMovementResponse(
+            date=movement.journalEntry.date,
+            entryNumber=movement.journalEntry.entryNumber,
+            description=movement.description or movement.journalEntry.description,
+            debit=movement.debit,
+            credit=movement.credit
+        ) for movement in movements],
+        totalDebit=total_debit,
+        totalCredit=total_credit,
+        balance=balance
+    )
+
+# Rutas de usuarios
 
 # Rutas de usuarios
 @app.get("/api/users", response_model=List[UserResponse])

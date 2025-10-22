@@ -155,6 +155,30 @@ class JournalEntryCreate(BaseModel):
     reference: Optional[str] = None
     lines: List[JournalLineCreate]
 
+# Ledger Schemas
+class LedgerMovementResponse(BaseModel):
+    date: datetime
+    entryNumber: int
+    description: str
+    debit: float
+    credit: float
+
+class LedgerEntryResponse(BaseModel):
+    accountCode: str
+    accountName: str
+    movements: List[LedgerMovementResponse]
+    totalDebit: float
+    totalCredit: float
+    balance: float
+
+class LedgerAccountDetailResponse(BaseModel):
+    accountCode: str
+    accountName: str
+    movements: List[LedgerMovementResponse]
+    totalDebit: float
+    totalCredit: float
+    balance: float
+
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int
