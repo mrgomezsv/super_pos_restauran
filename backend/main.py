@@ -28,14 +28,16 @@ from schemas import (
     ProductResponse, ProductCreate, ProductUpdate,
     SaleCreate, SaleResponse, SaleSummary,
     LoginResponse, CartItem as CartItemSchema,
-    ProductCategoryCreate,
+    ProductCategoryCreate, ProductCategoryResponse, ProductCategoryUpdate,
     FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate,
     CompanyResponse, CompanyWithAdminCreate, CompanyUpdate, CompanyStatusUpdate, 
     CompanyCreationResponse, CompanyContext,
     SupplierResponse, SupplierCreate, SupplierUpdate,
     DiscountResponse, DiscountCreate, DiscountUpdate,
     CashSessionResponse, CashSessionOpen, CashSessionClose,
-    AuditLogResponse
+    AuditLogResponse,
+    JournalEntryResponse, JournalEntryDetailResponse, JournalEntryCreate,
+    JournalLineResponse, JournalLineCreate
 )
 
 # Importar servicio de compañías
@@ -1103,6 +1105,134 @@ async def delete_fiscal_document(document_id: int, context: dict = Depends(get_c
     )
     
     return {"message": "Documento fiscal eliminado exitosamente"}
+
+# -----------------------------
+# Accounting - Diario Contable
+# -----------------------------
+@app.get("/api/accounting/journal-entries", response_model=List[JournalEntryResponse])
+async def get_journal_entries(
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
+    accountCode: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener asientos del diario contable"""
+    query = db.query(DBJournalEntry)
+    query = context_service.apply_company_filter(query, DBJournalEntry, context)
+    
+    # Aplicar filtros
+    if startDate:
+        start = datetime.fromisoformat(startDate)
+        query = query.filter(DBJournalEntry.date >= start)
+    
+    if endDate:
+        end = datetime.fromisoformat(endDate) + timedelta(days=1)
+        query = query.filter(DBJournalEntry.date < end)
+    
+    if accountCode:
+        query = query.join(DBJournalLine).filter(DBJournalLine.accountCode == accountCode)
+    
+    entries = query.order_by(DBJournalEntry.date.desc(), DBJournalEntry.entryNumber.desc()).limit(100).all()
+    
+    return [JournalEntryResponse(
+        id=entry.id, company_id=entry.company_id, entryNumber=entry.entryNumber,
+        date=entry.date, description=entry.description, reference=entry.reference,
+        totalDebit=entry.totalDebit, totalCredit=entry.totalCredit,
+        createdAt=entry.createdAt, lines=[]
+    ) for entry in entries]
+
+@app.get("/api/accounting/journal-entries/{entry_id}", response_model=JournalEntryDetailResponse)
+async def get_journal_entry_detail(entry_id: int, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Obtener detalle completo de un asiento contable"""
+    entry = db.query(DBJournalEntry).filter(DBJournalEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Asiento contable no encontrado")
+    if not context_service.validate_company_access(context, entry.company_id):
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    # Obtener líneas del asiento
+    lines = db.query(DBJournalLine).filter(DBJournalLine.journalEntryId == entry_id).all()
+    
+    return JournalEntryDetailResponse(
+        id=entry.id, company_id=entry.company_id, entryNumber=entry.entryNumber,
+        date=entry.date, description=entry.description, reference=entry.reference,
+        totalDebit=entry.totalDebit, totalCredit=entry.totalCredit,
+        createdAt=entry.createdAt,
+        lines=[JournalLineResponse(
+            id=line.id, journalEntryId=line.journalEntryId, accountCode=line.accountCode,
+            accountName=line.accountName, description=line.description,
+            debit=line.debit, credit=line.credit
+        ) for line in lines]
+    )
+
+@app.post("/api/accounting/journal-entries", response_model=JournalEntryResponse)
+async def create_journal_entry(payload: JournalEntryCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Crear nuevo asiento contable"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    # Validar que débitos = créditos
+    total_debit = sum(line.debit for line in payload.lines)
+    total_credit = sum(line.credit for line in payload.lines)
+    
+    if abs(total_debit - total_credit) > 0.01:  # Tolerancia de centavos
+        raise HTTPException(status_code=400, detail="Los débitos deben ser iguales a los créditos")
+    
+    # Generar número de asiento
+    last_entry = db.query(DBJournalEntry).filter(
+        DBJournalEntry.company_id == company_id
+    ).order_by(DBJournalEntry.entryNumber.desc()).first()
+    
+    next_number = (last_entry.entryNumber + 1) if last_entry else 1
+    
+    # Crear asiento
+    new_entry = DBJournalEntry(
+        company_id=company_id,
+        entryNumber=next_number,
+        date=payload.date,
+        description=payload.description.strip(),
+        reference=payload.reference.strip() if payload.reference else None,
+        totalDebit=total_debit,
+        totalCredit=total_credit,
+        createdAt=datetime.now()
+    )
+    db.add(new_entry)
+    db.flush()  # Para obtener el ID
+    
+    # Crear líneas
+    for line_data in payload.lines:
+        line = DBJournalLine(
+            journalEntryId=new_entry.id,
+            accountCode=line_data.accountCode,
+            accountName=line_data.accountName,
+            description=line_data.description.strip() if line_data.description else None,
+            debit=line_data.debit,
+            credit=line_data.credit
+        )
+        db.add(line)
+    
+    db.commit()
+    db.refresh(new_entry)
+    
+    # Registrar evento de auditoría
+    user_id = context.get("user", {}).get("id")
+    log_audit_event(
+        user_id=user_id,
+        action="JOURNAL_ENTRY_CREATE",
+        module="Accounting",
+        detail=f"Asiento contable creado: #{new_entry.entryNumber} - {new_entry.description}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return JournalEntryResponse(
+        id=new_entry.id, company_id=new_entry.company_id, entryNumber=new_entry.entryNumber,
+        date=new_entry.date, description=new_entry.description, reference=new_entry.reference,
+        totalDebit=new_entry.totalDebit, totalCredit=new_entry.totalCredit,
+        createdAt=new_entry.createdAt, lines=[]
+    )
 
 # Rutas de usuarios
 @app.get("/api/users", response_model=List[UserResponse])

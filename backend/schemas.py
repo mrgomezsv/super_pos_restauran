@@ -108,6 +108,53 @@ class ProductCategoryUpdate(BaseModel):
     description: Optional[str] = Field(None, max_length=300)
     isActive: Optional[bool] = None
 
+# Accounting Schemas
+class JournalLineResponse(BaseModel):
+    id: int
+    journalEntryId: int
+    accountCode: str
+    accountName: str
+    description: Optional[str] = None
+    debit: float
+    credit: float
+
+class JournalEntryResponse(BaseModel):
+    id: int
+    company_id: int
+    entryNumber: int
+    date: datetime
+    description: str
+    reference: Optional[str] = None
+    totalDebit: float
+    totalCredit: float
+    createdAt: datetime
+    lines: List[JournalLineResponse] = []
+
+class JournalEntryDetailResponse(BaseModel):
+    id: int
+    company_id: int
+    entryNumber: int
+    date: datetime
+    description: str
+    reference: Optional[str] = None
+    totalDebit: float
+    totalCredit: float
+    createdAt: datetime
+    lines: List[JournalLineResponse]
+
+class JournalLineCreate(BaseModel):
+    accountCode: str
+    accountName: str
+    description: Optional[str] = None
+    debit: float = 0.0
+    credit: float = 0.0
+
+class JournalEntryCreate(BaseModel):
+    date: datetime
+    description: str
+    reference: Optional[str] = None
+    lines: List[JournalLineCreate]
+
 # Esquemas de documentos fiscales
 class FiscalDocumentResponse(BaseModel):
     id: int
