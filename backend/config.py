@@ -2,7 +2,6 @@
 Configuración del sistema Super POS
 """
 
-import os
 from typing import List
 from pydantic_settings import BaseSettings
 
