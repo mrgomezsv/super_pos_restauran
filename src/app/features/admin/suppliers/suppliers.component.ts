@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-suppliers',
@@ -48,7 +49,7 @@ export class AdminSuppliersComponent implements OnInit {
   cols = ['name', 'taxId', 'email'];
   suppliers: any[] = [];
   form: any;
-  private readonly api = 'http://localhost:3000/api/suppliers';
+  private readonly api = `${environment.apiUrl}/suppliers`;
   
   constructor(private fb: FormBuilder, private toastr: ToastrService, private http: HttpClient) {
     this.form = this.fb.group({ 

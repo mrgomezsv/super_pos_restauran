@@ -572,47 +572,47 @@ async def create_product(
         product_code = generate_next_sku(db, context.get("company_id"))
     
         # Crear el producto
-    new_product = DBProduct(
-        code=product_code,
-        name=product_data.name,
-        description=product_data.description,
-        price=product_data.price,
-        cost=product_data.cost,
-        category=product_data.category,
-        brand=product_data.brand,
-        stock=product_data.stock,
-        minStock=product_data.minStock,
-        maxStock=product_data.maxStock,
-        barcode=product_data.barcode,
-        taxRate=product_data.taxRate,
-        isActive=product_data.isActive,
+        new_product = DBProduct(
+            code=product_code,
+            name=product_data.name,
+            description=product_data.description,
+            price=product_data.price,
+            cost=product_data.cost,
+            category=product_data.category,
+            brand=product_data.brand,
+            stock=product_data.stock,
+            minStock=product_data.minStock,
+            maxStock=product_data.maxStock,
+            barcode=product_data.barcode,
+            taxRate=product_data.taxRate,
+            isActive=product_data.isActive,
             company_id=context.get("company_id"),
-        createdAt=datetime.now(),
-        updatedAt=datetime.now()
-    )
-    
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
-    
-    return ProductResponse(
-        id=new_product.id,
-        code=new_product.code,
-        name=new_product.name,
-        description=new_product.description,
-        price=new_product.price,
-        cost=new_product.cost,
-        category=new_product.category,
-        brand=new_product.brand,
-        stock=new_product.stock,
-        minStock=new_product.minStock,
-        maxStock=new_product.maxStock,
-        barcode=new_product.barcode,
-        taxRate=new_product.taxRate,
-        isActive=new_product.isActive,
-        createdAt=new_product.createdAt,
-        updatedAt=new_product.updatedAt
-    )
+            createdAt=datetime.now(),
+            updatedAt=datetime.now()
+        )
+        
+        db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
+        
+        return ProductResponse(
+            id=new_product.id,
+            code=new_product.code,
+            name=new_product.name,
+            description=new_product.description,
+            price=new_product.price,
+            cost=new_product.cost,
+            category=new_product.category,
+            brand=new_product.brand,
+            stock=new_product.stock,
+            minStock=new_product.minStock,
+            maxStock=new_product.maxStock,
+            barcode=new_product.barcode,
+            taxRate=new_product.taxRate,
+            isActive=new_product.isActive,
+            createdAt=new_product.createdAt,
+            updatedAt=new_product.updatedAt
+        )
     except Exception as e:
         print(f"Error creating product: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")

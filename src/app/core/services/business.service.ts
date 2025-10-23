@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 import { 
   BusinessConfiguration, 
@@ -14,7 +15,7 @@ import {
   providedIn: 'root'
 })
 export class BusinessService {
-  private readonly API_URL = 'http://localhost:3000/api/business';
+  private readonly API_URL = `${environment.apiUrl}/business`;
   private businessConfigSubject = new BehaviorSubject<BusinessConfiguration | null>(null);
   
   public businessConfig$ = this.businessConfigSubject.asObservable();
