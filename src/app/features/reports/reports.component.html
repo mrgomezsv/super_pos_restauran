@@ -1,230 +1,436 @@
-<div class="reports-container">
-  <h1>Reportes de Ventas</h1>
-
-  <!-- Filters -->
-  <mat-card class="filters-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filters-form">
-        <div class="custom-date-field">
-          <label class="custom-date-label">
-            <mat-icon>calendar_today</mat-icon>
-            Fecha Inicio
-          </label>
-          <div class="date-wrapper">
-            <div 
-              class="custom-date-display"
-              (click)="startPicker.open()">
-              <span class="date-value">{{ getStartDateDisplayValue() }}</span>
-              <mat-icon class="date-icon">calendar_today</mat-icon>
-            </div>
-            <mat-datepicker #startPicker></mat-datepicker>
-            <input 
-              matInput 
-              [matDatepicker]="startPicker" 
-              formControlName="startDate"
-              style="display: none;">
-          </div>
+<div class="reports-dashboard">
+  <!-- Header del Dashboard -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <mat-icon class="header-icon">analytics</mat-icon>
+        <div class="title-text">
+          <h1>Reportes del Sistema</h1>
+          <p>Análisis y estadísticas del negocio</p>
         </div>
-
-        <div class="custom-date-field">
-          <label class="custom-date-label">
-            <mat-icon>calendar_today</mat-icon>
-            Fecha Fin
-          </label>
-          <div class="date-wrapper">
-            <div 
-              class="custom-date-display"
-              (click)="endPicker.open()">
-              <span class="date-value">{{ getEndDateDisplayValue() }}</span>
-              <mat-icon class="date-icon">calendar_today</mat-icon>
-            </div>
-            <mat-datepicker #endPicker></mat-datepicker>
-            <input 
-              matInput 
-              [matDatepicker]="endPicker" 
-              formControlName="endDate"
-              style="display: none;">
-          </div>
-        </div>
-
-        <div class="custom-select-field">
-          <label class="custom-select-label">
-            <mat-icon>payment</mat-icon>
-            Método de Pago
-          </label>
-          <div class="select-wrapper">
-            <div 
-              class="custom-select-display"
-              (click)="togglePaymentMethodDropdown()">
-              <span class="select-value">{{ getPaymentMethodDisplayValue() }}</span>
-              <span class="select-arrow" [class.open]="isPaymentMethodDropdownOpen">▼</span>
-            </div>
-            <div class="custom-dropdown" [class.open]="isPaymentMethodDropdownOpen">
-              <div 
-                class="dropdown-option" 
-                [class.selected]="filterForm.get('paymentMethod')?.value === ''"
-                (click)="selectPaymentMethod('')">
-                <mat-icon>all_inclusive</mat-icon>
-                <span>Todos los métodos</span>
-              </div>
-              <div 
-                class="dropdown-option" 
-                [class.selected]="filterForm.get('paymentMethod')?.value === 'cash'"
-                (click)="selectPaymentMethod('cash')">
-                <mat-icon>money</mat-icon>
-                <span>Efectivo</span>
-              </div>
-              <div 
-                class="dropdown-option" 
-                [class.selected]="filterForm.get('paymentMethod')?.value === 'card'"
-                (click)="selectPaymentMethod('card')">
-                <mat-icon>credit_card</mat-icon>
-                <span>Tarjeta</span>
-              </div>
-              <div 
-                class="dropdown-option" 
-                [class.selected]="filterForm.get('paymentMethod')?.value === 'transfer'"
-                (click)="selectPaymentMethod('transfer')">
-                <mat-icon>account_balance</mat-icon>
-                <span>Transferencia</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button mat-raised-button color="primary" (click)="generateReport()" class="generate-btn">
-          <mat-icon>assessment</mat-icon>
-          <span>Generar Reporte</span>
+      </div>
+      <div class="header-actions">
+        <button mat-stroked-button color="primary" (click)="exportReport()" [disabled]="isLoading">
+          <mat-icon>download</mat-icon>
+          Exportar
         </button>
+        <button mat-raised-button color="primary" (click)="refreshReports()" [disabled]="isLoading">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros del Dashboard -->
+  <mat-card class="filters-section">
+    <mat-card-content>
+      <div class="filters-header">
+        <mat-icon>filter_list</mat-icon>
+        <h3>Filtros de Búsqueda</h3>
+      </div>
+      
+      <form [formGroup]="filterForm" class="filters-grid">
+        <div class="filter-group">
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>Fecha Inicio</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>Fecha Fin</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="select-field">
+            <mat-label>Tipo de Reporte</mat-label>
+            <mat-select formControlName="reportType">
+              <mat-option value="all">Todos los Reportes</mat-option>
+              <mat-option value="sales">Ventas</mat-option>
+              <mat-option value="inventory">Inventario</mat-option>
+              <mat-option value="financial">Financiero</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" class="filter-button" (click)="applyFilters()" [disabled]="isLoading">
+            <mat-icon>search</mat-icon>
+            Generar Reportes
+          </button>
+        </div>
       </form>
     </mat-card-content>
   </mat-card>
 
-  <!-- Report Content -->
-  <div *ngIf="!isLoading; else loadingTemplate">
-    <mat-tab-group>
-      <!-- Summary Tab -->
-      <mat-tab label="Resumen">
-        <div class="tab-content">
-          <div class="summary-grid" *ngIf="reportData">
-            <mat-card class="summary-card">
-              <mat-card-content>
-                <div class="summary-content">
-                  <mat-icon class="summary-icon">attach_money</mat-icon>
-                  <div class="summary-info">
-                    <h3>Ventas Totales</h3>
-                    <p>${{ reportData.totalSales | number:'1.2-2' }}</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
+  <!-- Métricas Principales -->
+  <div class="metrics-grid" *ngIf="!isLoading">
+    <div class="metric-card sales">
+      <div class="metric-icon">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="metric-content">
+        <h3>Ventas Totales</h3>
+        <div class="metric-value">${{ getTotalSales() | number:'1.2-2' }}</div>
+        <div class="metric-change" [class.positive]="getSalesChange() >= 0">
+          <mat-icon>{{ getSalesChange() >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          {{ Math.abs(getSalesChange()) }}%
+        </div>
+      </div>
+    </div>
 
-            <mat-card class="summary-card">
-              <mat-card-content>
-                <div class="summary-content">
-                  <mat-icon class="summary-icon">receipt</mat-icon>
-                  <div class="summary-info">
-                    <h3>Transacciones</h3>
-                    <p>{{ reportData.totalTransactions }}</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
+    <div class="metric-card transactions">
+      <div class="metric-icon">
+        <mat-icon>receipt</mat-icon>
+      </div>
+      <div class="metric-content">
+        <h3>Transacciones</h3>
+        <div class="metric-value">{{ getTotalTransactions() }}</div>
+        <div class="metric-change" [class.positive]="getTransactionsChange() >= 0">
+          <mat-icon>{{ getTransactionsChange() >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          {{ Math.abs(getTransactionsChange()) }}%
+        </div>
+      </div>
+    </div>
 
-            <mat-card class="summary-card">
-              <mat-card-content>
-                <div class="summary-content">
-                  <mat-icon class="summary-icon">trending_up</mat-icon>
-                  <div class="summary-info">
-                    <h3>Ticket Promedio</h3>
-                    <p>${{ reportData.averageTicket | number:'1.2-2' }}</p>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
+    <div class="metric-card inventory">
+      <div class="metric-icon">
+        <mat-icon>inventory</mat-icon>
+      </div>
+      <div class="metric-content">
+        <h3>Valor Inventario</h3>
+        <div class="metric-value">${{ getInventoryValue() | number:'1.2-2' }}</div>
+        <div class="metric-change" [class.positive]="getInventoryChange() >= 0">
+          <mat-icon>{{ getInventoryChange() >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          {{ Math.abs(getInventoryChange()) }}%
+        </div>
+      </div>
+    </div>
 
-          <!-- Payment Methods Breakdown -->
-          <div class="payment-breakdown" *ngIf="reportData">
-            <h3>Ventas por Método de Pago</h3>
-            <div class="payment-methods">
-              <div class="payment-method">
-                <span>Efectivo:</span>
-                <span>${{ reportData.salesByPaymentMethod.cash | number:'1.2-2' }}</span>
-              </div>
-              <div class="payment-method">
-                <span>Tarjeta:</span>
-                <span>${{ reportData.salesByPaymentMethod.card | number:'1.2-2' }}</span>
-              </div>
-              <div class="payment-method">
-                <span>Transferencia:</span>
-                <span>${{ reportData.salesByPaymentMethod.transfer | number:'1.2-2' }}</span>
+    <div class="metric-card profit">
+      <div class="metric-icon">
+        <mat-icon>account_balance_wallet</mat-icon>
+      </div>
+      <div class="metric-content">
+        <h3>Utilidad</h3>
+        <div class="metric-value">${{ getProfit() | number:'1.2-2' }}</div>
+        <div class="metric-change" [class.positive]="getProfitChange() >= 0">
+          <mat-icon>{{ getProfitChange() >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          {{ Math.abs(getProfitChange()) }}%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos y Visualizaciones -->
+  <div class="charts-section" *ngIf="!isLoading">
+    <div class="chart-row">
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>bar_chart</mat-icon>
+            Ventas por Día
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <div class="chart-placeholder" *ngIf="!chartData">
+              <mat-icon>bar_chart</mat-icon>
+              <p>Selecciona un período para ver el gráfico</p>
+            </div>
+            <div class="chart-content" *ngIf="chartData">
+              <!-- Aquí iría el gráfico real con una librería como Chart.js -->
+              <div class="simple-chart">
+                <div class="chart-bar" *ngFor="let day of getDailySalesData()" 
+                     [style.height.%]="getBarHeight(day.totalAmount)">
+                  <div class="bar-value">${{ day.totalAmount | number:'1.0-0' }}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </mat-tab>
+        </mat-card-content>
+      </mat-card>
 
-      <!-- Sales List Tab -->
-      <mat-tab label="Ventas Detalladas">
-        <div class="tab-content">
-          <mat-card class="sales-table-card">
-            <mat-card-content>
-              <div class="table-container">
-                <table mat-table [dataSource]="sales" class="sales-table">
-                  <ng-container matColumnDef="invoiceNumber">
-                    <th mat-header-cell *matHeaderCellDef>Factura</th>
-                    <td mat-cell *matCellDef="let sale">{{ sale.invoiceNumber }}</td>
-                  </ng-container>
-
-                  <ng-container matColumnDef="customerName">
-                    <th mat-header-cell *matHeaderCellDef>Cliente</th>
-                    <td mat-cell *matCellDef="let sale">{{ sale.customerName || 'Consumidor Final' }}</td>
-                  </ng-container>
-
-                  <ng-container matColumnDef="total">
-                    <th mat-header-cell *matHeaderCellDef>Total</th>
-                    <td mat-cell *matCellDef="let sale">
-                      ${{ sale.total | number:'1.2-2' }}
-                    </td>
-                  </ng-container>
-
-                  <ng-container matColumnDef="paymentMethod">
-                    <th mat-header-cell *matHeaderCellDef>Método de Pago</th>
-                    <td mat-cell *matCellDef="let sale">
-                      <span [class]="getPaymentMethodClass(sale.paymentMethod)">
-                        {{ getPaymentMethodLabel(sale.paymentMethod) }}
-                      </span>
-                    </td>
-                  </ng-container>
-
-                  <ng-container matColumnDef="createdAt">
-                    <th mat-header-cell *matHeaderCellDef>Fecha</th>
-                    <td mat-cell *matCellDef="let sale">
-                      {{ sale.createdAt | date:'short' }}
-                    </td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                </table>
-
-                <div class="no-data" *ngIf="sales.length === 0">
-                  <mat-icon>assessment</mat-icon>
-                  <p>No se encontraron ventas para el período seleccionado</p>
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>pie_chart</mat-icon>
+            Ventas por Método de Pago
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <div class="payment-methods-chart">
+              <div class="payment-method-item" *ngFor="let method of getPaymentMethodsData()">
+                <div class="method-info">
+                  <div class="method-color" [style.background-color]="method.color"></div>
+                  <span class="method-name">{{ method.name }}</span>
                 </div>
+                <div class="method-value">${{ method.value | number:'1.2-2' }}</div>
+                <div class="method-percentage">{{ method.percentage }}%</div>
               </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 
-  <ng-template #loadingTemplate>
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Generando reporte...</p>
+  <!-- Tabs de Reportes Detallados -->
+  <mat-card class="reports-tabs-section">
+    <mat-card-content>
+      <mat-tab-group class="reports-tabs">
+        <!-- Tab de Ventas -->
+        <mat-tab label="Ventas">
+          <div class="tab-content">
+            <div class="tab-header">
+              <h3>Reporte de Ventas</h3>
+              <div class="tab-actions">
+                <button mat-icon-button (click)="exportSalesReport()" matTooltip="Exportar ventas">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <div class="sales-summary" *ngIf="salesReport">
+              <div class="summary-cards">
+                <div class="summary-card">
+                  <mat-icon>attach_money</mat-icon>
+                  <div class="card-content">
+                    <h4>Ventas Totales</h4>
+                    <p>${{ salesReport.totalAmount | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>receipt</mat-icon>
+                  <div class="card-content">
+                    <h4>Transacciones</h4>
+                    <p>{{ salesReport.totalSales }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>trending_up</mat-icon>
+                  <div class="card-content">
+                    <h4>Ticket Promedio</h4>
+                    <p>${{ salesReport.averageSaleAmount | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>local_offer</mat-icon>
+                  <div class="card-content">
+                    <h4>Descuentos</h4>
+                    <p>${{ salesReport.totalDiscount | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sales-table-section">
+                <h4>Ventas por Día</h4>
+                <div class="table-container">
+                  <table mat-table [dataSource]="salesReport.dailySales" class="sales-table">
+                    <ng-container matColumnDef="date">
+                      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                      <td mat-cell *matCellDef="let sale">{{ sale.date | date:'dd/MM/yyyy' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="salesCount">
+                      <th mat-header-cell *matHeaderCellDef>Ventas</th>
+                      <td mat-cell *matCellDef="let sale">{{ sale.salesCount }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="totalAmount">
+                      <th mat-header-cell *matHeaderCellDef>Monto</th>
+                      <td mat-cell *matCellDef="let sale">${{ sale.totalAmount | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="dailyColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: dailyColumns;"></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab de Inventario -->
+        <mat-tab label="Inventario">
+          <div class="tab-content">
+            <div class="tab-header">
+              <h3>Estado de Inventario</h3>
+              <div class="tab-actions">
+                <button mat-icon-button (click)="exportInventoryReport()" matTooltip="Exportar inventario">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <div class="inventory-summary" *ngIf="inventoryReport">
+              <div class="summary-cards">
+                <div class="summary-card">
+                  <mat-icon>inventory</mat-icon>
+                  <div class="card-content">
+                    <h4>Total Productos</h4>
+                    <p>{{ inventoryReport.totalProducts }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>attach_money</mat-icon>
+                  <div class="card-content">
+                    <h4>Valor Total</h4>
+                    <p>${{ inventoryReport.totalValue | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+                <div class="summary-card warning">
+                  <mat-icon>warning</mat-icon>
+                  <div class="card-content">
+                    <h4>Stock Bajo</h4>
+                    <p>{{ inventoryReport.lowStockCount }}</p>
+                  </div>
+                </div>
+                <div class="summary-card danger">
+                  <mat-icon>error</mat-icon>
+                  <div class="card-content">
+                    <h4>Sin Stock</h4>
+                    <p>{{ inventoryReport.outOfStockCount }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="inventory-table-section">
+                <h4>Productos con Stock Bajo</h4>
+                <div class="table-container">
+                  <table mat-table [dataSource]="inventoryReport.lowStockProducts" class="inventory-table">
+                    <ng-container matColumnDef="code">
+                      <th mat-header-cell *matHeaderCellDef>Código</th>
+                      <td mat-cell *matCellDef="let product">{{ product.code }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="name">
+                      <th mat-header-cell *matHeaderCellDef>Producto</th>
+                      <td mat-cell *matCellDef="let product">{{ product.name }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="stock">
+                      <th mat-header-cell *matHeaderCellDef>Stock</th>
+                      <td mat-cell *matCellDef="let product">
+                        <span class="stock-badge" [class.low]="product.stock <= inventoryReport.lowStockThreshold" 
+                              [class.out]="product.stock === 0">
+                          {{ product.stock }}
+                        </span>
+                      </td>
+                    </ng-container>
+                    <ng-container matColumnDef="value">
+                      <th mat-header-cell *matHeaderCellDef>Valor</th>
+                      <td mat-cell *matCellDef="let product">${{ product.value | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="inventoryColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: inventoryColumns;"></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab Financiero -->
+        <mat-tab label="Financiero">
+          <div class="tab-content">
+            <div class="tab-header">
+              <h3>Resumen Financiero</h3>
+              <div class="tab-actions">
+                <button mat-icon-button (click)="exportFinancialReport()" matTooltip="Exportar financiero">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </div>
+            
+            <div class="financial-summary" *ngIf="financialReport">
+              <div class="summary-cards">
+                <div class="summary-card">
+                  <mat-icon>trending_up</mat-icon>
+                  <div class="card-content">
+                    <h4>Ventas</h4>
+                    <p>{{ financialReport.salesMetrics.salesCount }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>attach_money</mat-icon>
+                  <div class="card-content">
+                    <h4>Monto Total</h4>
+                    <p>${{ financialReport.salesMetrics.totalAmount | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>account_balance</mat-icon>
+                  <div class="card-content">
+                    <h4>Asientos Contables</h4>
+                    <p>{{ financialReport.accountingMetrics.journalEntriesCount }}</p>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <mat-icon>list_alt</mat-icon>
+                  <div class="card-content">
+                    <h4>Cuentas Activas</h4>
+                    <p>{{ financialReport.accountingMetrics.accountsWithActivity }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="financial-table-section">
+                <h4>Resumen por Cuenta</h4>
+                <div class="table-container">
+                  <table mat-table [dataSource]="financialReport.accountTotals" class="financial-table">
+                    <ng-container matColumnDef="accountCode">
+                      <th mat-header-cell *matHeaderCellDef>Código</th>
+                      <td mat-cell *matCellDef="let account">{{ account.accountCode }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="accountName">
+                      <th mat-header-cell *matHeaderCellDef>Cuenta</th>
+                      <td mat-cell *matCellDef="let account">{{ account.accountName }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="totalDebit">
+                      <th mat-header-cell *matHeaderCellDef>Débito</th>
+                      <td mat-cell *matCellDef="let account">${{ account.totalDebit | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="totalCredit">
+                      <th mat-header-cell *matHeaderCellDef>Crédito</th>
+                      <td mat-cell *matCellDef="let account">${{ account.totalCredit | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="balance">
+                      <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                      <td mat-cell *matCellDef="let account">
+                        <span class="balance-badge" [class.positive]="account.balance >= 0" 
+                              [class.negative]="account.balance < 0">
+                          ${{ account.balance | number:'1.2-2' }}
+                        </span>
+                      </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="accountColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: accountColumns;"></tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div class="loading-section" *ngIf="isLoading">
+    <div class="loading-content">
+      <mat-spinner diameter="60"></mat-spinner>
+      <h3>Generando Reportes...</h3>
+      <p>Por favor espera mientras procesamos la información</p>
     </div>
-  </ng-template>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && !hasData()">
+    <mat-icon>assessment</mat-icon>
+    <h3>No hay datos disponibles</h3>
+    <p>Selecciona un período de fechas para generar los reportes</p>
+    <button mat-raised-button color="primary" (click)="applyFilters()">
+      <mat-icon>refresh</mat-icon>
+      Generar Reportes
+    </button>
+  </div>
 </div>
