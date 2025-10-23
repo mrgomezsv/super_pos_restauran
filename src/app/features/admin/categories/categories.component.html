@@ -1,0 +1,68 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon style="vertical-align:middle; margin-right:8px;">category</mat-icon>
+      Gestión de Categorías
+    </mat-card-title>
+    <mat-card-subtitle>Administra las categorías de productos</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="create()" style="display:flex; gap:16px; flex-wrap:wrap; margin:24px 0;">
+      <mat-form-field appearance="outline" style="flex:1 1 200px;">
+        <mat-label>Nombre de Categoría</mat-label>
+        <input matInput formControlName="name" placeholder="Ej. Electrónicos" />
+        <mat-error *ngIf="form.get('name')?.hasError('required')">El nombre es requerido</mat-error>
+        <mat-error *ngIf="form.get('name')?.hasError('minlength')">Mínimo 2 caracteres</mat-error>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" style="flex:1 1 300px;">
+        <mat-label>Descripción (Opcional)</mat-label>
+        <input matInput formControlName="description" placeholder="Descripción de la categoría" />
+      </mat-form-field>
+      
+      <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || isLoading">
+        <mat-icon>add</mat-icon>
+        Crear Categoría
+      </button>
+    </form>
+
+    <table mat-table [dataSource]="categories" class="mat-elevation-z2" style="width:100%;">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef> Nombre </th>
+        <td mat-cell *matCellDef="let c"> 
+          <div style="font-weight:500;">{{c.name}}</div>
+          <div style="font-size:11px; color:#757575;">Creada: {{c.createdAt | date:'dd/MM/yyyy'}}</div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef> Descripción </th>
+        <td mat-cell *matCellDef="let c"> 
+          <span style="font-size:13px;">{{c.description || '-'}}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+        <td mat-cell *matCellDef="let c">
+          <button mat-icon-button color="primary" (click)="edit(c)" [disabled]="isLoading" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="delete(c.id)" [disabled]="isLoading" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <div *ngIf="categories.length === 0" style="text-align:center; padding:32px; color:#757575;">
+      <mat-icon style="font-size:48px; width:48px; height:48px;">category</mat-icon>
+      <p>No hay categorías creadas</p>
+      <p style="font-size:12px;">Crea tu primera categoría para organizar los productos</p>
+    </div>
+  </mat-card-content>
+</mat-card>
