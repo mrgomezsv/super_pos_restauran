@@ -792,10 +792,13 @@ async def get_sales_summary(
         "bitcoin": sum(s.total for s in sales if s.paymentMethod == "bitcoin")
     }
     
-    sales_by_invoice_type = {
-        "consumidor_final": sum(s.total for s in sales if s.invoiceType == "consumidor_final"),
-        "credito_fiscal": sum(s.total for s in sales if s.invoiceType == "credito_fiscal")
-    }
+    # Calcular ventas por tipo de documento fiscal dinámicamente
+    sales_by_invoice_type = {}
+    for sale in sales:
+        invoice_type = sale.invoiceType
+        if invoice_type not in sales_by_invoice_type:
+            sales_by_invoice_type[invoice_type] = 0
+        sales_by_invoice_type[invoice_type] += sale.total
     
     return SaleSummary(
         totalSales=total_sales,

@@ -295,10 +295,14 @@ app.get('/api/sales/summary', (req, res) => {
     transfer: filteredSales.filter(s => s.paymentMethod === 'transfer').reduce((sum, sale) => sum + sale.total, 0)
   };
   
-  const salesByInvoiceType = {
-    consumidor_final: filteredSales.filter(s => s.invoiceType === 'consumidor_final').reduce((sum, sale) => sum + sale.total, 0),
-    credito_fiscal: filteredSales.filter(s => s.invoiceType === 'credito_fiscal').reduce((sum, sale) => sum + sale.total, 0)
-  };
+  // Calcular ventas por tipo de documento fiscal dinámicamente
+  const salesByInvoiceType = {};
+  filteredSales.forEach(sale => {
+    if (!salesByInvoiceType[sale.invoiceType]) {
+      salesByInvoiceType[sale.invoiceType] = 0;
+    }
+    salesByInvoiceType[sale.invoiceType] += sale.total;
+  });
   
   res.json({
     totalSales,

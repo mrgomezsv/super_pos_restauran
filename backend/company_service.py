@@ -81,6 +81,48 @@ class CompanyService:
                 "description": "Documento para cargos adicionales",
                 "prefix": "ND",
                 "initialCorrelative": 1
+            },
+            {
+                "code": "nota_remision",
+                "name": "Nota de Remisión",
+                "description": "Documento para entrega de bienes cuando el CCF no se emite simultáneamente",
+                "prefix": "NR",
+                "initialCorrelative": 1
+            },
+            {
+                "code": "comprobante_retencion",
+                "name": "Comprobante de Retención",
+                "description": "Documento para retención de IVA",
+                "prefix": "CR",
+                "initialCorrelative": 1
+            },
+            {
+                "code": "comprobante_liquidacion",
+                "name": "Comprobante de Liquidación",
+                "description": "Documento para ventas como mandatario en nombre de terceros",
+                "prefix": "CL",
+                "initialCorrelative": 1
+            },
+            {
+                "code": "factura_exportacion",
+                "name": "Factura de Exportación",
+                "description": "Documento para operaciones de exportación de bienes o servicios",
+                "prefix": "FE",
+                "initialCorrelative": 1
+            },
+            {
+                "code": "factura_sujeto_excluido",
+                "name": "Factura de Sujeto Excluido",
+                "description": "Documento para contribuyentes exentos de trasladar IVA",
+                "prefix": "FSE",
+                "initialCorrelative": 1
+            },
+            {
+                "code": "comprobante_donacion",
+                "name": "Comprobante de Donación",
+                "description": "Documento para respaldar donaciones realizadas",
+                "prefix": "CD",
+                "initialCorrelative": 1
             }
         ]
         

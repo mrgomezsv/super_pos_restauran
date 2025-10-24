@@ -176,7 +176,7 @@ class Sale(Base):
     customerName = Column(String(200), nullable=True)
     customerDocument = Column(String(50), nullable=True)
     customerEmail = Column(String(100), nullable=True)
-    invoiceType = Column(String(20), nullable=False)  # consumidor_final, credito_fiscal
+    invoiceType = Column(String(20), nullable=False)  # Código del documento fiscal (CF, CCF, NC, ND, NR, CR, CL, FE, FSE, CD)
     subtotal = Column(Float, nullable=False)
     taxAmount = Column(Float, nullable=False)
     discountAmount = Column(Float, default=0.0)

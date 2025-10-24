@@ -102,7 +102,7 @@ class Sale(BaseModel):
     customerName: Optional[str] = None
     customerDocument: Optional[str] = None
     customerEmail: Optional[str] = None
-    invoiceType: str  # consumidor_final, credito_fiscal
+    invoiceType: str  # Código del documento fiscal (consumidor_final, credito_fiscal, nota_credito, nota_debito, nota_remision, comprobante_retencion, comprobante_liquidacion, factura_exportacion, factura_sujeto_excluido, comprobante_donacion)
     items: List[CartItem]
     subtotal: float
     taxAmount: float
