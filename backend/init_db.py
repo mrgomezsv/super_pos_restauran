@@ -154,6 +154,39 @@ def init_demo_company_2(db: Session):
     else:
         print(f"❌ Error creando segunda compañía: {result['error']}")
 
+def init_cajero_user(db: Session):
+    """Crear usuario cajero para la primera compañía"""
+    print("\nCreando usuario cajero...")
+    
+    # Verificar si ya existe el usuario cajero1
+    if db.query(User).filter(User.username == "cajero1").count() > 0:
+        print("Usuario cajero1 ya existe, omitiendo...")
+        return
+    
+    # Obtener la primera compañía
+    company = db.query(Company).first()
+    if not company:
+        print("No hay compañías disponibles, no se puede crear el cajero")
+        return
+    
+    cajero_user = User(
+        company_id=company.id,
+        username="cajero1",
+        name="Juan Pérez",
+        email="juan@superpos.com",
+        password="cajero123",
+        role="cashier",
+        isActive=True,
+        createdAt=datetime.now()
+    )
+    
+    db.add(cajero_user)
+    db.commit()
+    print(f"✅ Usuario cajero creado exitosamente!")
+    print(f"   Company ID: {company.id}")
+    print(f"   Username: cajero1")
+    print(f"   Password: cajero123")
+
 def initialize_database():
     """Función principal para inicializar toda la base de datos"""
     print("=" * 60)
@@ -176,6 +209,9 @@ def initialize_database():
         # 3. Crear segunda compañía de demostración (opcional)
         init_demo_company_2(db)
         
+        # 4. Crear usuario cajero para la primera compañía
+        init_cajero_user(db)
+        
         print("\n" + "=" * 60)
         print("=== BASE DE DATOS INICIALIZADA EXITOSAMENTE ===")
         print("=" * 60)
@@ -194,6 +230,11 @@ def initialize_database():
         print("   Username: carlos")
         print("   Password: carlos123")
         print("   Rol: Administrador de la compañía El Buen Sabor")
+        
+        print("\n4️⃣  Usuario Cajero - Super POS Demo:")
+        print("   Username: cajero1")
+        print("   Password: cajero123")
+        print("   Rol: Cajero de la compañía Super POS Demo")
         
         print("\n" + "=" * 60)
         
