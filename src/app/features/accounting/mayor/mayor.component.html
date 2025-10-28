@@ -1,71 +1,144 @@
-<section class="page">
-  <header class="page-header">
-    <h1>Libro Mayor</h1>
-    <p class="subtitle">Saldos acumulados por cuenta contable</p>
-  </header>
-  
-  <div class="page-content">
-    <!-- Resumen -->
-    <div class="summary-section" *ngIf="ledgerData">
-      <div class="summary-card">
-        <h3>Total Débitos</h3>
-        <p class="amount">${{ totalDebits | number:'1.2-2' }}</p>
+<div class="mayor-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="title-icon">account_tree</mat-icon>
+        <div class="title-text">
+          <h1>Mayor General</h1>
+          <p>Libro mayor con saldos de cuentas contables</p>
+        </div>
       </div>
-      <div class="summary-card">
-        <h3>Total Créditos</h3>
-        <p class="amount">${{ totalCredits | number:'1.2-2' }}</p>
+      <div class="action-buttons">
+        <button mat-stroked-button (click)="exportToExcel()" [disabled]="isLoading">
+          <mat-icon>download</mat-icon>
+          Exportar a Excel
+        </button>
+        <button mat-raised-button color="primary" (click)="loadEntries()" [disabled]="isLoading">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
+        </button>
       </div>
-      <div class="summary-card" [class.balanced]="isBalanced">
-        <h3>Estado</h3>
-        <p>{{ isBalanced ? 'Balanceado ✓' : 'Desbalanceado ✗' }}</p>
-      </div>
-    </div>
-
-    <!-- Tabla de saldos -->
-    <div class="table-container" *ngIf="!loading">
-      <table class="ledger-table">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre de Cuenta</th>
-            <th>Tipo</th>
-            <th>Naturaleza</th>
-            <th>Total Débitos</th>
-            <th>Total Créditos</th>
-            <th>Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of ledgerItems" [class.has-movement]="hasMovement(item)">
-            <td>{{ item.account.code }}</td>
-            <td>{{ item.account.name }}</td>
-            <td>
-              <span class="type-badge" [class]="'type-' + item.account.accountType">
-                {{ getTypeLabel(item.account.accountType) }}
-              </span>
-            </td>
-            <td>
-              <span class="nature-badge" [class]="'nature-' + item.account.nature">
-                {{ getNatureLabel(item.account.nature) }}
-              </span>
-            </td>
-            <td class="amount">{{ item.debit_total | number:'1.2-2' }}</td>
-            <td class="amount">{{ item.credit_total | number:'1.2-2' }}</td>
-            <td class="amount" [class.positive]="item.balance > 0" [class.negative]="item.balance < 0">
-              ${{ item.balance | number:'1.2-2' }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div *ngIf="ledgerItems.length === 0" class="empty-state">
-        <p>No hay movimientos contables para mostrar</p>
-      </div>
-    </div>
-
-    <!-- Loading -->
-    <div *ngIf="loading" class="loading-state">
-      <p>Cargando saldos contables...</p>
     </div>
   </div>
-</section>
+
+  <div class="page-content">
+    <!-- Filtros -->
+    <mat-card class="filters-card">
+      <mat-card-header>
+        <mat-icon matPrefix>filter_list</mat-icon>
+        <mat-card-title>Filtros de Búsqueda</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="filterForm" class="filters-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha Inicio</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha Fin</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Código de Cuenta</mat-label>
+            <input matInput formControlName="accountCode">
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="button" (click)="applyFilters()" [disabled]="isLoading">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+
+          <button mat-stroked-button type="button" (click)="resetFilters()">
+            <mat-icon>clear</mat-icon>
+            Limpiar
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Tabla de Cuentas -->
+    <mat-card class="table-card">
+      <mat-card-content>
+        <div class="table-container" *ngIf="!isLoading; else loadingTemplate">
+          <table mat-table [dataSource]="entries" class="mayor-table">
+            <ng-container matColumnDef="accountCode">
+              <th mat-header-cell *matHeaderCellDef>Código</th>
+              <td mat-cell *matCellDef="let entry">
+                <div class="account-code">
+                  <span>{{ entry.accountCode }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="accountName">
+              <th mat-header-cell *matHeaderCellDef>Cuenta</th>
+              <td mat-cell *matCellDef="let entry">
+                <div class="account-name">
+                  <span>{{ entry.accountName }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="debitBalance">
+              <th mat-header-cell *matHeaderCellDef>Saldo Débito</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.debitBalance | currency }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="creditBalance">
+              <th mat-header-cell *matHeaderCellDef>Saldo Crédito</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.creditBalance | currency }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="netBalance">
+              <th mat-header-cell *matHeaderCellDef>Saldo Neto</th>
+              <td mat-cell *matCellDef="let entry" [class]="entry.netBalance >= 0 ? 'positive' : 'negative'">
+                {{ entry.netBalance | currency }}
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <div class="no-data" *ngIf="entries.length === 0">
+            <mat-icon>account_tree</mat-icon>
+            <p>No se encontraron cuentas contables</p>
+          </div>
+        </div>
+
+        <ng-template #loadingTemplate>
+          <div class="loading-container">
+            <mat-spinner diameter="50"></mat-spinner>
+            <p>Cargando mayor contable...</p>
+          </div>
+        </ng-template>
+
+        <!-- Totales -->
+        <div class="totals-section" *ngIf="!isLoading && entries.length > 0">
+          <div class="total-item">
+            <span class="total-label">Total Débitos:</span>
+            <span class="total-value">{{ totalDebit | currency }}</span>
+          </div>
+          <div class="total-item">
+            <span class="total-label">Total Créditos:</span>
+            <span class="total-value">{{ totalCredit | currency }}</span>
+          </div>
+          <div class="total-item total-grand">
+            <span class="total-label">Diferencia Neto:</span>
+            <span class="total-value" [class]="totalNet >= 0 ? 'positive' : 'negative'">
+              {{ totalNet | currency }}
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
