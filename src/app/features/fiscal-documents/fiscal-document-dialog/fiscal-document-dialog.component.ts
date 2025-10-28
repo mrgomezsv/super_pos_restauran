@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
@@ -24,15 +25,13 @@ import { FiscalDocument } from '../../../core/models/fiscal-document.model';
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDialogModule
   ],
   templateUrl: './fiscal-document-dialog.component.html',
   styleUrls: ['./fiscal-document-dialog.component.scss']
 })
 export class FiscalDocumentDialogComponent implements OnInit, OnDestroy {
-  @Input() document: FiscalDocument | null = null;
-  @Output() close = new EventEmitter<boolean>();
-
   documentForm!: FormGroup;
   isEdit = false;
   private destroy$ = new Subject<void>();
@@ -40,7 +39,9 @@ export class FiscalDocumentDialogComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private fiscalDocumentService: FiscalDocumentService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    public dialogRef: MatDialogRef<FiscalDocumentDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public document: FiscalDocument | null
   ) {
     this.initializeForm();
   }
@@ -83,7 +84,7 @@ export class FiscalDocumentDialogComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.toastr.success('Documento fiscal actualizado exitosamente');
-              this.close.emit(true);
+              this.dialogRef.close(true);
             },
             error: (error) => {
               console.error('Error updating fiscal document:', error);
@@ -97,7 +98,7 @@ export class FiscalDocumentDialogComponent implements OnInit, OnDestroy {
           .subscribe({
             next: (response) => {
               this.toastr.success(`✅ Documento fiscal creado exitosamente`, `${response.name} (${response.prefix})`);
-              this.close.emit(true);
+              this.dialogRef.close(true);
             },
             error: (error) => {
               console.error('Error creating fiscal document:', error);
@@ -113,7 +114,7 @@ export class FiscalDocumentDialogComponent implements OnInit, OnDestroy {
   }
 
   onCancel(): void {
-    this.close.emit(false);
+    this.dialogRef.close(false);
   }
 
   private markFormGroupTouched(): void {

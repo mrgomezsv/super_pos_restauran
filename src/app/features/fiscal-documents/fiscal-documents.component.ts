@@ -7,10 +7,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { FiscalDocumentDialogComponent } from './fiscal-document-dialog/fiscal-document-dialog.component';
 
 interface FiscalDocument {
   id: number;
@@ -83,8 +84,30 @@ export class FiscalDocumentsComponent implements OnInit, OnDestroy {
   }
 
   openDocumentDialog(fiscalDocument?: FiscalDocument): void {
-    // TODO: Implementar con MatDialog
-    console.log('Abrir diálogo para:', fiscalDocument);
+    const scrollY = window.scrollY;
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${scrollY}px`;
+    
+    const dialogRef = this.dialog.open(FiscalDocumentDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      panelClass: 'custom-dialog-container',
+      hasBackdrop: true,
+      disableClose: false,
+      autoFocus: true,
+      data: fiscalDocument || null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+      
+      if (result) {
+        this.loadDocuments();
+      }
+    });
   }
 
   editDocument(fiscalDocument: FiscalDocument): void {
