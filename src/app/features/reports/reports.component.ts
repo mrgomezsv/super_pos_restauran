@@ -11,7 +11,6 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient } from '@angular/common/http';
@@ -19,12 +18,6 @@ import { environment } from '../../../environments/environment';
 
 interface DailySales {
   date: string;
-  salesCount: number;
-  totalAmount: number;
-}
-
-interface UserSales {
-  userId: number;
   salesCount: number;
   totalAmount: number;
 }
@@ -38,7 +31,6 @@ interface SalesSummaryReport {
   totalDiscount: number;
   averageSaleAmount: number;
   dailySales: DailySales[];
-  userSales: UserSales[];
 }
 
 interface InventoryProduct {
@@ -110,28 +102,14 @@ interface FinancialSummaryReport {
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatTabsModule,
-    MatDividerModule,
     MatSelectModule
   ],
   templateUrl: './reports.component.html',
-  styles: [`
-    mat-card {
-      margin: 16px;
-    }
-    mat-card-header {
-      margin-bottom: 16px;
-    }
-    h3, h4 {
-      margin: 16px 0 8px 0;
-      font-weight: 500;
-    }
-    table {
-      margin-bottom: 16px;
-    }
-  `]
+  styleUrl: './reports.component.scss'
 })
 export class ReportsComponent implements OnInit {
   private readonly api = `${environment.apiUrl}/reports`;
+  
   dailyColumns = ['date', 'salesCount', 'totalAmount'];
   inventoryColumns = ['code', 'name', 'stock', 'value'];
   accountColumns = ['accountCode', 'accountName', 'totalDebit', 'totalCredit', 'balance'];
@@ -141,10 +119,8 @@ export class ReportsComponent implements OnInit {
   financialReport: FinancialSummaryReport | null = null;
   isLoading = false;
   filterForm: FormGroup;
-  chartData: any = null;
   Math = Math;
 
-  // Datos de ejemplo para las métricas
   previousPeriodData = {
     sales: 25000,
     transactions: 150,
@@ -176,7 +152,6 @@ export class ReportsComponent implements OnInit {
     if (filters.startDate) params.startDate = filters.startDate;
     if (filters.endDate) params.endDate = filters.endDate;
 
-    // Cargar todos los reportes en paralelo
     Promise.all([
       this.http.get<SalesSummaryReport>(`${this.api}/sales-summary`, { params }).toPromise(),
       this.http.get<InventoryStatusReport>(`${this.api}/inventory-status`, { params }).toPromise(),
@@ -185,7 +160,6 @@ export class ReportsComponent implements OnInit {
       this.salesReport = sales || null;
       this.inventoryReport = inventory || null;
       this.financialReport = financial || null;
-      this.chartData = this.generateChartData();
       this.isLoading = false;
     }).catch((err) => {
       console.error('Error cargando reportes:', err);
@@ -218,7 +192,6 @@ export class ReportsComponent implements OnInit {
     this.toastr.info('Exportando reporte financiero...');
   }
 
-  // Métricas principales
   getTotalSales(): number {
     return this.salesReport?.totalAmount || 0;
   }
@@ -232,10 +205,9 @@ export class ReportsComponent implements OnInit {
   }
 
   getProfit(): number {
-    return this.salesReport?.totalAmount ? this.salesReport.totalAmount * 0.3 : 0; // 30% de margen estimado
+    return this.salesReport?.totalAmount ? this.salesReport.totalAmount * 0.3 : 0;
   }
 
-  // Cambios porcentuales
   getSalesChange(): number {
     const current = this.getTotalSales();
     const previous = this.previousPeriodData.sales;
@@ -260,7 +232,6 @@ export class ReportsComponent implements OnInit {
     return previous > 0 ? ((current - previous) / previous) * 100 : 0;
   }
 
-  // Datos para gráficos
   getDailySalesData(): DailySales[] {
     return this.salesReport?.dailySales || [];
   }
@@ -279,13 +250,6 @@ export class ReportsComponent implements OnInit {
   getBarHeight(amount: number): number {
     const maxAmount = Math.max(...this.getDailySalesData().map(d => d.totalAmount));
     return maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
-  }
-
-  generateChartData(): any {
-    return {
-      dailySales: this.getDailySalesData(),
-      paymentMethods: this.getPaymentMethodsData()
-    };
   }
 
   hasData(): boolean {
