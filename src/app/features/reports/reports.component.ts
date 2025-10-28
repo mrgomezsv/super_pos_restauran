@@ -15,6 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import * as XLSX from 'xlsx';
 
 interface DailySales {
   date: string;
@@ -177,19 +178,187 @@ export class ReportsComponent implements OnInit {
   }
 
   exportReport(): void {
-    this.toastr.info('Funcionalidad de exportación en desarrollo');
+    // Exportar todos los reportes si existen
+    if (this.salesReport && this.inventoryReport && this.financialReport) {
+      try {
+        const wb = XLSX.utils.book_new();
+        
+        // Ventas
+        const salesData = this.salesReport.dailySales.map(s => ({
+          'Fecha': s.date,
+          'Cantidad Ventas': s.salesCount,
+          'Monto Total': s.totalAmount
+        }));
+        const ws1 = XLSX.utils.json_to_sheet(salesData);
+        XLSX.utils.book_append_sheet(wb, ws1, 'Ventas');
+        
+        // Inventario
+        const inventoryData = this.inventoryReport.lowStockProducts.map(p => ({
+          'Código': p.code,
+          'Producto': p.name,
+          'Stock': p.stock,
+          'Valor': p.value
+        }));
+        const ws2 = XLSX.utils.json_to_sheet(inventoryData);
+        XLSX.utils.book_append_sheet(wb, ws2, 'Inventario');
+        
+        // Financiero
+        const accountsData = this.financialReport.accountTotals.map(a => ({
+          'Código': a.accountCode,
+          'Nombre': a.accountName,
+          'Débito': a.totalDebit,
+          'Crédito': a.totalCredit,
+          'Saldo': a.balance
+        }));
+        const ws3 = XLSX.utils.json_to_sheet(accountsData);
+        XLSX.utils.book_append_sheet(wb, ws3, 'Financiero');
+        
+        // Exportar
+        const fileName = `reporte_completo_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        this.toastr.success('Reporte completo exportado exitosamente');
+      } catch (error) {
+        console.error('Error exportando reporte completo:', error);
+        this.toastr.error('Error al exportar el reporte completo');
+      }
+    } else {
+      this.toastr.warning('No hay datos suficientes para exportar el reporte completo');
+    }
   }
 
   exportSalesReport(): void {
-    this.toastr.info('Exportando reporte de ventas...');
+    if (!this.salesReport) {
+      this.toastr.warning('No hay datos de ventas para exportar');
+      return;
+    }
+
+    try {
+      const data = this.salesReport.dailySales.map(sale => ({
+        'Fecha': sale.date,
+        'Cantidad Ventas': sale.salesCount,
+        'Monto Total': sale.totalAmount
+      }));
+
+      // Crear workbook
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      
+      // Agregar datos
+      XLSX.utils.book_append_sheet(wb, ws, 'Ventas');
+      
+      // Agregar resumen en otra hoja
+      const summary = [
+        { 'Métrica': 'Total Ventas', 'Valor': this.salesReport.totalSales },
+        { 'Métrica': 'Monto Total', 'Valor': this.salesReport.totalAmount },
+        { 'Métrica': 'Ticket Promedio', 'Valor': this.salesReport.averageSaleAmount },
+        { 'Métrica': 'Total Descuentos', 'Valor': this.salesReport.totalDiscount }
+      ];
+      const ws2 = XLSX.utils.json_to_sheet(summary);
+      XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+      // Exportar
+      const fileName = `reporte_ventas_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      this.toastr.success('Reporte exportado exitosamente');
+    } catch (error) {
+      console.error('Error exportando reporte:', error);
+      this.toastr.error('Error al exportar el reporte');
+    }
   }
 
   exportInventoryReport(): void {
-    this.toastr.info('Exportando reporte de inventario...');
+    if (!this.inventoryReport) {
+      this.toastr.warning('No hay datos de inventario para exportar');
+      return;
+    }
+
+    try {
+      const data = [
+        ...this.inventoryReport.lowStockProducts.map(p => ({
+          'Código': p.code,
+          'Producto': p.name,
+          'Stock': p.stock,
+          'Valor': p.value,
+          'Estado': 'Stock Bajo'
+        })),
+        ...this.inventoryReport.outOfStockProducts.map(p => ({
+          'Código': p.code,
+          'Producto': p.name,
+          'Stock': p.stock,
+          'Valor': p.value,
+          'Estado': 'Sin Stock'
+        }))
+      ];
+
+      // Crear workbook
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+      
+      // Agregar resumen
+      const summary = [
+        { 'Métrica': 'Total Productos', 'Valor': this.inventoryReport.totalProducts },
+        { 'Métrica': 'Valor Total', 'Valor': this.inventoryReport.totalValue },
+        { 'Métrica': 'Stock Bajo', 'Valor': this.inventoryReport.lowStockCount },
+        { 'Métrica': 'Sin Stock', 'Valor': this.inventoryReport.outOfStockCount }
+      ];
+      const ws2 = XLSX.utils.json_to_sheet(summary);
+      XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+      // Exportar
+      const fileName = `reporte_inventario_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      this.toastr.success('Reporte exportado exitosamente');
+    } catch (error) {
+      console.error('Error exportando reporte:', error);
+      this.toastr.error('Error al exportar el reporte');
+    }
   }
 
   exportFinancialReport(): void {
-    this.toastr.info('Exportando reporte financiero...');
+    if (!this.financialReport) {
+      this.toastr.warning('No hay datos financieros para exportar');
+      return;
+    }
+
+    try {
+      const accountData = this.financialReport.accountTotals.map(account => ({
+        'Código Cuenta': account.accountCode,
+        'Nombre Cuenta': account.accountName,
+        'Débito': account.totalDebit,
+        'Crédito': account.totalCredit,
+        'Saldo': account.balance
+      }));
+
+      // Crear workbook
+      const ws = XLSX.utils.json_to_sheet(accountData);
+      const wb = XLSX.utils.book_new();
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'Cuentas');
+      
+      // Agregar resumen
+      const summary = [
+        { 'Métrica': 'Total Débitos', 'Valor': this.financialReport.accountingMetrics.totalDebits },
+        { 'Métrica': 'Total Créditos', 'Valor': this.financialReport.accountingMetrics.totalCredits },
+        { 'Métrica': 'Asientos Contables', 'Valor': this.financialReport.accountingMetrics.journalEntriesCount },
+        { 'Métrica': 'Cuentas Activas', 'Valor': this.financialReport.accountingMetrics.accountsWithActivity }
+      ];
+      const ws2 = XLSX.utils.json_to_sheet(summary);
+      XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+      // Exportar
+      const fileName = `reporte_financiero_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      this.toastr.success('Reporte exportado exitosamente');
+    } catch (error) {
+      console.error('Error exportando reporte:', error);
+      this.toastr.error('Error al exportar el reporte');
+    }
   }
 
   getTotalSales(): number {
