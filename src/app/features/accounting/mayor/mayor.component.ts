@@ -44,7 +44,7 @@ interface LedgerEntry {
   templateUrl: './mayor.component.html',
   styleUrls: ['./mayor.component.scss']
 })
-export class MayorComponent implements OnInit {
+export class AccountingMayorComponent implements OnInit {
   private readonly api = `${environment.apiUrl}/accounting/ledger`;
   
   displayedColumns = ['accountCode', 'accountName', 'debitBalance', 'creditBalance', 'netBalance'];

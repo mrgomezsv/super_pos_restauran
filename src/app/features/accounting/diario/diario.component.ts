@@ -47,7 +47,7 @@ interface JournalEntry {
   templateUrl: './diario.component.html',
   styleUrls: ['./diario.component.scss']
 })
-export class DiarioComponent implements OnInit {
+export class AccountingDiarioComponent implements OnInit {
   private readonly api = `${environment.apiUrl}/accounting/journal`;
   
   displayedColumns = ['date', 'reference', 'description', 'accountCode', 'accountName', 'debit', 'credit', 'balance'];
