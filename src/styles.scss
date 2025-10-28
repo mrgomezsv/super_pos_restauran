@@ -1,5 +1,8 @@
 /* Super POS - Estilos Globales */
 
+/* Angular Material Theme */
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
 /* Estilos globales para modales de Angular Material */
 .receipt-modal-dialog {
   position: fixed !important;

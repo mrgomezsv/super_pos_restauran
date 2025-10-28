@@ -67,7 +67,7 @@ export const routes: Routes = [
   {
     path: 'reports',
     loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent),
-    canActivate: [companyGuard]
+    canActivate: [authWithCompanyGuard]
   },
   // Admin routes (requieren permisos de administración en la compañía)
   {

@@ -386,6 +386,7 @@
           transition: all var(--transition-fast);
           position: relative;
           overflow: hidden;
+          cursor: pointer;
           
           &::before {
             content: '';

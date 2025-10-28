@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptors, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { provideToastr } from 'ngx-toastr';
+import { provideNativeDateAdapter } from '@angular/material/core';
 // import { provideNgxSpinner } from 'ngx-spinner';
 
 import { routes } from './app.routes';
@@ -14,6 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(),
+    provideNativeDateAdapter(),
     provideToastr({
       timeOut: 3000,
       positionClass: 'toast-top-right',
