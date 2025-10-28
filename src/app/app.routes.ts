@@ -114,12 +114,12 @@ export const routes: Routes = [
   {
     path: 'sudo/empresas-clientes',
     loadComponent: () => import('./features/sudo/empresas-clientes/empresas-clientes.component').then(m => m.EmpresasClientesComponent),
-    canActivate: [sudoGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'sudo/usuario-sudo',
     loadComponent: () => import('./features/sudo/usuario-sudo/usuario-sudo.component').then(m => m.UsuarioSudoComponent),
-    canActivate: [sudoGuard]
+    canActivate: [companyGuard]
   },
   {
     path: '**',
