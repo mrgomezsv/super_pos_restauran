@@ -73,42 +73,42 @@ export const routes: Routes = [
   {
     path: 'admin/business-config',
     loadComponent: () => import('./features/admin/business-config/business-config.component').then(m => m.BusinessConfigComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/categories',
     loadComponent: () => import('./features/admin/categories/categories.component').then(m => m.AdminCategoriesComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/suppliers',
     loadComponent: () => import('./features/admin/suppliers/suppliers.component').then(m => m.AdminSuppliersComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/cash-register',
     loadComponent: () => import('./features/admin/cash-register/cash-register.component').then(m => m.AdminCashRegisterComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/discounts',
     loadComponent: () => import('./features/admin/discounts/discounts.component').then(m => m.AdminDiscountsComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/inventory-alerts',
     loadComponent: () => import('./features/admin/inventory-alerts/inventory-alerts.component').then(m => m.AdminInventoryAlertsComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/audit-logs',
     loadComponent: () => import('./features/admin/audit-logs/audit-logs.component').then(m => m.AdminAuditLogsComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   {
     path: 'admin/fiscal-documents',
     loadComponent: () => import('./features/fiscal-documents/fiscal-documents.component').then(m => m.FiscalDocumentsComponent),
-    canActivate: [companyAdminGuard]
+    canActivate: [companyGuard]
   },
   // SUDO routes (solo para usuarios SUDO)
   {
