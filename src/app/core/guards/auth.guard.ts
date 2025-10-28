@@ -3,6 +3,9 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CompanyContextService } from '../services/company-context.service';
 
+// Modo desarrollo: permite acceso sin autenticación
+const DEVELOPMENT_MODE = false; // Cambiar a false en producción
+
 /**
  * Guard básico de autenticación
  * Verifica que el usuario esté autenticado
@@ -10,6 +13,12 @@ import { CompanyContextService } from '../services/company-context.service';
 export const authGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
+
+  // En desarrollo, permitir acceso
+  if (DEVELOPMENT_MODE) {
+    console.warn('⚠️ DEVELOPMENT MODE: Acceso sin autenticación');
+    return true;
+  }
 
   if (authService.isAuthenticated()) {
     return true;
@@ -27,6 +36,12 @@ export const authWithCompanyGuard = () => {
   const authService = inject(AuthService);
   const companyContextService = inject(CompanyContextService);
   const router = inject(Router);
+
+  // En desarrollo, permitir acceso
+  if (DEVELOPMENT_MODE) {
+    console.warn('⚠️ DEVELOPMENT MODE: Acceso sin verificación de compañía');
+    return true;
+  }
 
   // Verificar autenticación primero
   if (!authService.isAuthenticated()) {

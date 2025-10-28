@@ -9,10 +9,19 @@ import { CompanyContextService } from '../services/company-context.service';
  * Guard para verificar que el usuario tenga acceso a una compañía
  * y que haya seleccionado una compañía válida para trabajar
  */
+// Modo desarrollo
+const DEVELOPMENT_MODE = false; // Cambiar a false en producción
+
 export const companyGuard = () => {
   const authService = inject(AuthService);
   const companyContextService = inject(CompanyContextService);
   const router = inject(Router);
+
+  // En desarrollo, permitir acceso
+  if (DEVELOPMENT_MODE) {
+    console.warn('⚠️ DEVELOPMENT MODE: Acceso sin verificación de compañía');
+    return true;
+  }
 
   // Primero verificar autenticación
   if (!authService.isAuthenticated()) {
