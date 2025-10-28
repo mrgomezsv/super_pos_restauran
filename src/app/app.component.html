@@ -149,7 +149,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier'">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>analytics</mat-icon>
@@ -161,11 +161,11 @@
           </ul>
         </div>
         
-        <div class="nav-section" *ngIf="currentUser?.role === 'admin'">
+        <div class="nav-section" *ngIf="currentUser?.role !== 'cashier'">
           <h3 class="nav-section-title">Administración</h3>
           <ul class="nav-list">
             <!-- Gestión de Personal -->
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier'">
               <a routerLink="/users" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>people</mat-icon>
@@ -262,7 +262,7 @@
         </div>
 
         <!-- Contabilidad -->
-        <div class="nav-section" *ngIf="currentUser">
+        <div class="nav-section" *ngIf="currentUser && currentUser.role !== 'cashier'">
           <h3 class="nav-section-title">Contabilidad</h3>
           <ul class="nav-list">
             <li class="nav-item">
