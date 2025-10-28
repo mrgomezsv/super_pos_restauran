@@ -661,7 +661,7 @@ export class PosComponent implements OnInit, OnDestroy {
   getKeypadPlaceholder(): string {
     switch (this.keypadMode) {
       case 'search':
-        return 'Ingrese código o SKU...';
+        return 'Ingrese código o SKU';
       case 'quantity':
         return 'Cantidad...';
       default:
