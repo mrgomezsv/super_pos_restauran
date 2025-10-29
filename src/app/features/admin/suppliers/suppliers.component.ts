@@ -24,7 +24,7 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./suppliers.component.scss'],
 })
 export class AdminSuppliersComponent implements OnInit, OnDestroy {
-  cols = ['name', 'taxId', 'email', 'actions'];
+  cols = ['name', 'nit', 'nrc', 'contact_person', 'phone', 'actions'];
   suppliers: any[] = [];
   form: FormGroup;
   loading = false;
@@ -41,21 +41,30 @@ export class AdminSuppliersComponent implements OnInit, OnDestroy {
   ) {
     this.form = this.fb.group({ 
       name: ['', [Validators.required, Validators.minLength(2)]], 
-      taxId: [''], 
-      email: ['', []]  // Email opcional sin validación (se validará solo si tiene valor)
+      nit: [''],
+      nrc: [''],
+      email: ['', []],  // Email principal opcional
+      email2: ['', []], // Email secundario opcional
+      email3: ['', []], // Email adicional opcional
+      phone: ['', []],  // Teléfono principal opcional
+      phone2: ['', []], // Teléfono secundario opcional
+      phone3: ['', []], // Teléfono adicional opcional
+      address: [''],
+      contact_person: [''],
+      business_activity: ['']
     });
     
-    // Validación condicional del email: solo validar si tiene valor
-    this.emailSubscription = this.form.get('email')?.valueChanges.subscribe(value => {
-      const emailControl = this.form.get('email');
-      if (value && value.trim()) {
-        // Si hay valor, validar formato de email
-        emailControl?.setValidators([Validators.email]);
-      } else {
-        // Si está vacío, no validar
-        emailControl?.clearValidators();
-      }
-      emailControl?.updateValueAndValidity({ emitEvent: false });
+    // Validación condicional para todos los emails: solo validar si tienen valor
+    ['email', 'email2', 'email3'].forEach(emailField => {
+      const emailControl = this.form.get(emailField);
+      emailControl?.valueChanges.subscribe(value => {
+        if (value && value.trim()) {
+          emailControl?.setValidators([Validators.email]);
+        } else {
+          emailControl?.clearValidators();
+        }
+        emailControl?.updateValueAndValidity({ emitEvent: false });
+      });
     });
   }
 
@@ -86,9 +95,18 @@ export class AdminSuppliersComponent implements OnInit, OnDestroy {
     this.editingSupplier = supplier || null;
     if (supplier) {
       this.form.patchValue({
-        name: supplier.name,
-        taxId: supplier.taxId || '',
-        email: supplier.email || ''
+        name: supplier.name || '',
+        nit: supplier.nit || '',
+        nrc: supplier.nrc || '',
+        email: supplier.email || '',
+        email2: supplier.email2 || '',
+        email3: supplier.email3 || '',
+        phone: supplier.phone || '',
+        phone2: supplier.phone2 || '',
+        phone3: supplier.phone3 || '',
+        address: supplier.address || '',
+        contact_person: supplier.contact_person || '',
+        business_activity: supplier.business_activity || ''
       });
     } else {
       this.form.reset();
@@ -123,10 +141,17 @@ export class AdminSuppliersComponent implements OnInit, OnDestroy {
     this.loading = true;
     const formValue = {
       name: this.form.value.name?.trim() || '',
-      taxId: this.form.value.taxId?.trim() || null,
+      nit: this.form.value.nit?.trim() || null,
+      nrc: this.form.value.nrc?.trim() || null,
       email: this.form.value.email?.trim() || null,
-      phone: null,
-      address: null,
+      email2: this.form.value.email2?.trim() || null,
+      email3: this.form.value.email3?.trim() || null,
+      phone: this.form.value.phone?.trim() || null,
+      phone2: this.form.value.phone2?.trim() || null,
+      phone3: this.form.value.phone3?.trim() || null,
+      address: this.form.value.address?.trim() || null,
+      contact_person: this.form.value.contact_person?.trim() || null,
+      business_activity: this.form.value.business_activity?.trim() || null,
       isActive: true
     };
 

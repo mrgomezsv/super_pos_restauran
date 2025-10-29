@@ -115,7 +115,59 @@
   .supplier-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
+
+    .form-section {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 0;
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #017E84;
+        margin: 0 0 20px 0;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e2e8f0;
+
+        mat-icon {
+          color: #017E84;
+          font-size: 24px;
+          background: rgba(1, 126, 132, 0.1);
+          border-radius: 50%;
+          padding: 6px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .form-field {
+        width: 100%;
+      }
+    }
 
     .full-width {
       width: 100%;
