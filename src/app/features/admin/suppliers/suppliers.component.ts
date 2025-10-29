@@ -7,7 +7,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatError } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -16,14 +19,17 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-admin-suppliers',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatError],
+  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatIconModule, MatMenuModule, MatTooltipModule, MatError],
   templateUrl: './suppliers.component.html',
+  styleUrls: ['./suppliers.component.scss'],
 })
 export class AdminSuppliersComponent implements OnInit, OnDestroy {
-  cols = ['name', 'taxId', 'email'];
+  cols = ['name', 'taxId', 'email', 'actions'];
   suppliers: any[] = [];
   form: FormGroup;
   loading = false;
+  showDialog = false;
+  editingSupplier: any = null;
   private emailSubscription?: Subscription;
   private readonly api = `${environment.apiUrl}/suppliers`;
   
@@ -76,6 +82,28 @@ export class AdminSuppliersComponent implements OnInit, OnDestroy {
     });
   }
 
+  openDialog(supplier?: any) {
+    this.editingSupplier = supplier || null;
+    if (supplier) {
+      this.form.patchValue({
+        name: supplier.name,
+        taxId: supplier.taxId || '',
+        email: supplier.email || ''
+      });
+    } else {
+      this.form.reset();
+      this.form.markAsUntouched();
+    }
+    this.showDialog = true;
+  }
+
+  closeDialog() {
+    this.showDialog = false;
+    this.editingSupplier = null;
+    this.form.reset();
+    this.form.markAsUntouched();
+  }
+
   create() {
     if (this.form.invalid) {
       // Marcar todos los campos como touched para mostrar errores
@@ -102,17 +130,43 @@ export class AdminSuppliersComponent implements OnInit, OnDestroy {
       isActive: true
     };
 
-    this.http.post<any>(this.api, formValue).subscribe({
+    const request = this.editingSupplier
+      ? this.http.put<any>(`${this.api}/${this.editingSupplier.id}`, formValue)
+      : this.http.post<any>(this.api, formValue);
+
+    request.subscribe({
       next: () => {
-        this.toastr.success('Proveedor agregado exitosamente');
-        this.form.reset();
-        this.form.markAsUntouched();
+        this.toastr.success(this.editingSupplier ? 'Proveedor actualizado exitosamente' : 'Proveedor agregado exitosamente');
+        this.closeDialog();
         this.load();
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Error creando proveedor:', err);
-        const errorMessage = err.error?.detail || err.error?.message || 'Error al agregar proveedor';
+        console.error('Error guardando proveedor:', err);
+        const errorMessage = err.error?.detail || err.error?.message || (this.editingSupplier ? 'Error al actualizar proveedor' : 'Error al agregar proveedor');
         this.toastr.error(errorMessage);
+        this.loading = false;
+      }
+    });
+  }
+
+  editSupplier(supplier: any) {
+    this.openDialog(supplier);
+  }
+
+  deleteSupplier(supplier: any) {
+    if (!confirm(`¿Estás seguro de eliminar el proveedor "${supplier.name}"?`)) {
+      return;
+    }
+
+    this.loading = true;
+    this.http.delete(`${this.api}/${supplier.id}`).subscribe({
+      next: () => {
+        this.toastr.success('Proveedor eliminado exitosamente');
+        this.load();
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error eliminando proveedor:', err);
+        this.toastr.error(err.error?.detail || 'Error al eliminar proveedor');
         this.loading = false;
       }
     });

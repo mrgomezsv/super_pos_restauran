@@ -1,39 +1,145 @@
-<mat-card>
-  <mat-card-title>Proveedores</mat-card-title>
-  <mat-card-subtitle>Gestión de proveedores (para compras futuras y control fiscal)</mat-card-subtitle>
+<div style="padding: 24px;">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>local_shipping</mat-icon>
+        Proveedores
+      </mat-card-title>
+      <mat-card-subtitle>Gestión de proveedores (para compras futuras y control fiscal)</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div style="display: flex; gap: 16px; margin-bottom: 16px; align-items: center;">
+        <button mat-flat-button color="primary" (click)="openDialog()" [disabled]="loading">
+          <mat-icon>add</mat-icon>
+          Nuevo Proveedor
+        </button>
+        
+        <button mat-stroked-button (click)="load()" [disabled]="loading">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
+        </button>
+      </div>
 
-  <form [formGroup]="form" (ngSubmit)="create()" style="display:flex; gap:16px; flex-wrap:wrap; margin:16px 0;">
-    <mat-form-field appearance="outline" style="flex:1 1 220px;">
-      <mat-label>Nombre</mat-label>
-      <input matInput formControlName="name" placeholder="Nombre del proveedor" />
-      <mat-error *ngIf="form.get('name')?.hasError('required') && form.get('name')?.touched">
-        El nombre es requerido
-      </mat-error>
-      <mat-error *ngIf="form.get('name')?.hasError('minlength') && form.get('name')?.touched">
-        El nombre debe tener al menos 2 caracteres
-      </mat-error>
-    </mat-form-field>
-    <mat-form-field appearance="outline" style="flex:1 1 180px;">
-      <mat-label>NRC / NIT</mat-label>
-      <input matInput formControlName="taxId" placeholder="Opcional" />
-    </mat-form-field>
-    <mat-form-field appearance="outline" style="flex:1 1 260px;">
-      <mat-label>Email</mat-label>
-      <input matInput formControlName="email" type="email" placeholder="email@ejemplo.com" />
-      <mat-error *ngIf="form.get('email')?.hasError('email') && form.get('email')?.touched">
-        Email inválido
-      </mat-error>
-    </mat-form-field>
-    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading">
-      {{ loading ? 'Agregando...' : 'Agregar' }}
-    </button>
-  </form>
+      <!-- Tabla de proveedores -->
+      <div class="table-container" style="overflow-x: auto;">
+        <table mat-table [dataSource]="suppliers" class="mat-elevation-z2">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let supplier">{{ supplier.name }}</td>
+          </ng-container>
 
-  <table mat-table [dataSource]="suppliers" class="mat-elevation-z1" style="width:100%;">
-    <ng-container matColumnDef="name"><th mat-header-cell *matHeaderCellDef>Nombre</th><td mat-cell *matCellDef="let s">{{s.name}}</td></ng-container>
-    <ng-container matColumnDef="taxId"><th mat-header-cell *matHeaderCellDef>NRC/NIT</th><td mat-cell *matCellDef="let s">{{s.taxId}}</td></ng-container>
-    <ng-container matColumnDef="email"><th mat-header-cell *matHeaderCellDef>Email</th><td mat-cell *matCellDef="let s">{{s.email || '-'}}</td></ng-container>
-    <tr mat-header-row *matHeaderRowDef="cols"></tr>
-    <tr mat-row *matRowDef="let row; columns: cols;"></tr>
-  </table>
-</mat-card>
+          <ng-container matColumnDef="taxId">
+            <th mat-header-cell *matHeaderCellDef>NRC/NIT</th>
+            <td mat-cell *matCellDef="let supplier">{{ supplier.taxId || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let supplier">{{ supplier.email || '-' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let supplier">
+              <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Opciones">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="editSupplier(supplier)">
+                  <mat-icon>edit</mat-icon>
+                  Editar
+                </button>
+                <button mat-menu-item (click)="deleteSupplier(supplier)">
+                  <mat-icon>delete</mat-icon>
+                  Eliminar
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="cols.length" style="text-align: center; padding: 24px;">
+              {{ loading ? 'Cargando...' : 'No hay proveedores registrados' }}
+            </td>
+          </tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Modal para crear/editar proveedor -->
+  <div class="modal-overlay" *ngIf="showDialog" (click)="closeDialog()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <!-- Header del Modal -->
+      <div class="modal-header">
+        <div class="header-content">
+          <mat-icon class="header-icon">{{ editingSupplier ? 'edit' : 'add_circle' }}</mat-icon>
+          <div class="header-text">
+            <h2 class="modal-title">{{ editingSupplier ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h2>
+            <p class="modal-subtitle">
+              {{ editingSupplier ? 'Modifica la información del proveedor' : 'Agrega un nuevo proveedor al sistema' }}
+            </p>
+          </div>
+        </div>
+        <button mat-icon-button class="close-btn" (click)="closeDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="modal-content">
+        <form [formGroup]="form" class="supplier-form" (ngSubmit)="create()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nombre del Proveedor *</mat-label>
+            <input matInput formControlName="name" placeholder="Ej: Distribuidora ABC S.A." />
+            <mat-icon matSuffix>business</mat-icon>
+            <mat-error *ngIf="form.get('name')?.hasError('required') && form.get('name')?.touched">
+              El nombre es requerido
+            </mat-error>
+            <mat-error *ngIf="form.get('name')?.hasError('minlength') && form.get('name')?.touched">
+              El nombre debe tener al menos 2 caracteres
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>NRC / NIT</mat-label>
+            <input matInput formControlName="taxId" placeholder="Ej: 12345678-9" />
+            <mat-icon matSuffix>badge</mat-icon>
+            <mat-hint>Número de registro comercial o identificación tributaria</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="proveedor@ejemplo.com" />
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error *ngIf="form.get('email')?.hasError('email') && form.get('email')?.touched">
+              Email inválido
+            </mat-error>
+            <mat-hint>Email para comunicación y envío de facturas</mat-hint>
+          </mat-form-field>
+        </form>
+      </div>
+
+      <!-- Acciones del Modal -->
+      <div class="modal-actions">
+        <button mat-button (click)="closeDialog()" class="cancel-btn">
+          <mat-icon>close</mat-icon>
+          Cancelar
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary"
+          (click)="create()"
+          [disabled]="form.invalid || loading"
+          class="save-btn">
+          <mat-icon>{{ editingSupplier ? 'save' : 'add' }}</mat-icon>
+          {{ loading ? (editingSupplier ? 'Actualizando...' : 'Agregando...') : (editingSupplier ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
