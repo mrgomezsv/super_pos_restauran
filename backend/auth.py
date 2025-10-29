@@ -25,21 +25,41 @@ except Exception:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verificar contraseña contra hash"""
+    # 1. Intentar con passlib (para bcrypt)
     try:
-        # Intentar con passlib primero
         result = pwd_context.verify(plain_password, hashed_password)
-        return result
+        if result:
+            return True
     except Exception:
-        # Fallback: usar bcrypt directamente
-        try:
-            import bcrypt
-            # Si el hash parece ser bcrypt (empieza con $2a$ o $2b$)
-            if hashed_password.startswith('$2a$') or hashed_password.startswith('$2b$') or hashed_password.startswith('$2y$'):
+        pass
+    
+    # 2. Intentar con bcrypt directamente
+    try:
+        import bcrypt
+        # Si el hash parece ser bcrypt (empieza con $2a$, $2b$, $2y$)
+        if hashed_password.startswith('$2a$') or hashed_password.startswith('$2b$') or hashed_password.startswith('$2y$'):
+            try:
                 return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-        except Exception:
-            pass
-        # Último fallback: comparación directa solo para migración (texto plano)
-        return False
+            except Exception:
+                pass
+    except Exception:
+        pass
+    
+    # 3. Verificar si es SHA256 (fallback temporal)
+    try:
+        import hashlib
+        if len(hashed_password) == 64:  # SHA256 hex tiene 64 caracteres
+            test_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+            if test_hash == hashed_password:
+                return True
+    except Exception:
+        pass
+    
+    # 4. Comparación directa (solo para migración de texto plano)
+    if len(hashed_password) < 50 and hashed_password == plain_password:
+        return True
+    
+    return False
 
 def get_password_hash(password: str) -> str:
     """Hashear contraseña"""
