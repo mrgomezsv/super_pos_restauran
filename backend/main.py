@@ -19,7 +19,8 @@ from database import (
     Account as DBAccount, JournalEntry as DBJournalEntry, JournalLine as DBJournalLine,
     InventoryMovement as DBInventoryMovement, ArInvoice as DBArInvoice, ApInvoice as DBApInvoice,
     Supplier as DBSupplier, Discount as DBDiscount, CashSession as DBCashSession, AuditLog as DBAuditLog,
-    Company as DBCompany
+    Company as DBCompany, PurchaseOrder as DBPurchaseOrder, PurchaseOrderItem as DBPurchaseOrderItem,
+    GoodsReceipt as DBGoodsReceipt, GoodsReceiptItem as DBGoodsReceiptItem
 )
 
 # Importar modelos Pydantic para requests/responses
@@ -145,24 +146,33 @@ def calculate_totals(items: List[CartItemSchema]) -> dict:
     }
 
 def create_accounting_entry(source: str, reference: str, description: str, lines_data: List[dict], created_by: int, company_id: int, db: Session) -> DBJournalEntry:
-    """Crear póliza contable automática desde POS"""
+    """Crear póliza contable automática"""
     
     # Generar número de asiento
     last_entry = db.query(DBJournalEntry).filter(
         DBJournalEntry.company_id == company_id
     ).order_by(DBJournalEntry.entryNumber.desc()).first()
     
-    next_number = (last_entry.entryNumber + 1) if last_entry else 1
+    if last_entry:
+        try:
+            next_number = str(int(last_entry.entryNumber) + 1)
+        except ValueError:
+            next_number = "1"
+    else:
+        next_number = "1"
     
     # Crear asiento
     journal_entry = DBJournalEntry(
         company_id=company_id,
         entryNumber=next_number,
         date=datetime.now(),
-        description=description,
+        source=source,
         reference=reference,
-        totalDebit=sum(line.get("debit", 0.0) for line in lines_data),
-        totalCredit=sum(line.get("credit", 0.0) for line in lines_data),
+        description=description,
+        createdBy=created_by,
+        status="posted",
+        postedBy=created_by,
+        postedAt=datetime.now(),
         createdAt=datetime.now()
     )
     
@@ -171,23 +181,36 @@ def create_accounting_entry(source: str, reference: str, description: str, lines
     
     # Crear líneas del asiento
     for line_data in lines_data:
-        journal_line = DBJournalLine(
-            journalEntryId=journal_entry.id,
-            accountCode=line_data["accountCode"],
-            accountName=line_data["accountName"],
-            description=line_data["description"],
-            debit=line_data.get("debit", 0.0),
-            credit=line_data.get("credit", 0.0)
-        )
-        db.add(journal_line)
+        # Buscar cuenta por código o usar accountId si está disponible
+        account_id = line_data.get("accountId")
+        if not account_id:
+            account_code = line_data.get("accountCode")
+            if account_code:
+                account = db.query(DBAccount).filter(
+                    DBAccount.code == account_code,
+                    DBAccount.company_id == company_id
+                ).first()
+                if account:
+                    account_id = account.id
+        
+        if account_id:
+            journal_line = DBJournalLine(
+                journalEntryId=journal_entry.id,
+                accountId=account_id,
+                description=line_data.get("description", ""),
+                debit=line_data.get("debit", 0.0),
+                credit=line_data.get("credit", 0.0)
+            )
+            db.add(journal_line)
     
     db.commit()
     return journal_entry
 
-def create_inventory_movement(product_id: int, movement_type: str, quantity: int, unit_cost: float, reference: str, reference_id: Optional[int], db: Session) -> DBInventoryMovement:
+def create_inventory_movement(product_id: int, movement_type: str, quantity: int, unit_cost: float, reference: str, reference_id: Optional[int], company_id: int, db: Session) -> DBInventoryMovement:
     """Crear movimiento de inventario"""
     
     movement = DBInventoryMovement(
+        company_id=company_id,
         productId=product_id,
         movementType=movement_type,
         quantity=quantity,
@@ -265,6 +288,7 @@ def post_sale_to_accounting(sale: DBSale, db: Session) -> dict:
                     unit_cost=product.cost,
                     reference=sale.invoiceNumber,
                     reference_id=sale.id,
+                    company_id=company_id,
                     db=db
                 )
         
@@ -296,7 +320,7 @@ def post_sale_to_accounting(sale: DBSale, db: Session) -> dict:
                 db=db
             )
         
-        # 3. Crear registro de factura AR
+        # 3. Crear registro de factura AR (Accounts Receivable)
         ar_invoice = DBArInvoice(
             company_id=company_id,
             invoiceNumber=sale.invoiceNumber,
@@ -328,6 +352,92 @@ def post_sale_to_accounting(sale: DBSale, db: Session) -> dict:
             "success": False,
             "error": str(e),
             "message": "Error al contabilizar la venta"
+        }
+
+def post_purchase_to_accounting(goods_receipt: DBGoodsReceipt, supplier: DBSupplier, db: Session) -> dict:
+    """Contabilizar compra en libros contables"""
+    
+    try:
+        company_id = goods_receipt.company_id
+        
+        if goods_receipt.is_accounted:
+            return {
+                "success": False,
+                "error": "Esta recepción ya fue contabilizada",
+                "message": "La recepción ya fue contabilizada anteriormente"
+            }
+        
+        # Crear asiento contable de compra
+        # Débito: Inventario, IVA Crédito Fiscal
+        # Crédito: Cuentas por Pagar
+        purchase_lines = [
+            {
+                "accountCode": "1201",  # Inventario de Mercaderías
+                "accountName": "Inventario de Mercaderías",
+                "description": f"Compra {goods_receipt.receipt_number}",
+                "debit": goods_receipt.subtotal,
+                "credit": 0.0
+            },
+            {
+                "accountCode": "2102",  # IVA Crédito Fiscal
+                "accountName": "IVA Crédito Fiscal",
+                "description": f"IVA Compra {goods_receipt.receipt_number}",
+                "debit": goods_receipt.tax_amount,
+                "credit": 0.0
+            },
+            {
+                "accountCode": "2101",  # Cuentas por Pagar
+                "accountName": "Cuentas por Pagar",
+                "description": f"Pagar a {supplier.name} - {goods_receipt.receipt_number}",
+                "debit": 0.0,
+                "credit": goods_receipt.total
+            }
+        ]
+        
+        # Crear asiento contable
+        journal_entry = create_accounting_entry(
+            source="purchase",
+            reference=goods_receipt.receipt_number,
+            description=f"Compra de {supplier.name} - {goods_receipt.receipt_number}",
+            lines_data=purchase_lines,
+            created_by=goods_receipt.received_by,
+            company_id=company_id,
+            db=db
+        )
+        
+        # Actualizar goods_receipt con el journal_entry_id
+        goods_receipt.journal_entry_id = journal_entry.id
+        goods_receipt.is_accounted = True
+        
+        # Crear documento AP (Accounts Payable)
+        ap_invoice = DBApInvoice(
+            company_id=company_id,
+            invoiceNumber=goods_receipt.receipt_number,
+            supplierName=supplier.name,
+            supplierNrc=supplier.taxId,
+            subtotal=goods_receipt.subtotal,
+            taxAmount=goods_receipt.tax_amount,
+            total=goods_receipt.total,
+            invoiceType="FC",  # Factura de Compra
+            journalEntryId=journal_entry.id,
+            createdAt=datetime.now()
+        )
+        db.add(ap_invoice)
+        db.commit()
+        
+        return {
+            "success": True,
+            "journal_entry_id": journal_entry.id,
+            "ap_invoice_id": ap_invoice.id,
+            "message": "Compra contabilizada exitosamente"
+        }
+        
+    except Exception as e:
+        db.rollback()
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Error al contabilizar la compra"
         }
 
 def generate_next_sku(db: Session, company_id: int = None) -> str:
