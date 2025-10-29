@@ -393,18 +393,19 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
             detail="Credenciales inválidas"
         )
     
-    # Verificar contraseña (soporta tanto hash bcrypt como texto plano para migración)
-    password_valid = False
-    if user.password.startswith("$2b$") or user.password.startswith("$2a$"):
-        # Contraseña hasheada con bcrypt
-        password_valid = verify_password(user_data.password, user.password)
-    else:
-        # Contraseña en texto plano (para migración desde mock tokens)
-        password_valid = (user.password == user_data.password)
-        # Si es válida, hashearla y guardarla
-        if password_valid:
-            user.password = get_password_hash(user_data.password)
-            db.commit()
+    # Verificar contraseña (soporta bcrypt, SHA256, y texto plano para migración)
+    password_valid = verify_password(user_data.password, user.password)
+    
+    # Si la verificación falla pero la contraseña parece ser texto plano (migración)
+    # y coincide, entonces hashearla y guardarla
+    if not password_valid and len(user.password) < 50 and user.password == user_data.password:
+        # Es texto plano, hashearla con bcrypt y guardarla
+        user.password = get_password_hash(user_data.password)
+        db.commit()
+        password_valid = True
+    
+    # Si es SHA256 y funciona, podemos migrar a bcrypt (opcional)
+    # Por ahora lo dejamos como está para no cambiar contraseñas existentes
     
     if not password_valid:
         # Registrar intento fallido de login
