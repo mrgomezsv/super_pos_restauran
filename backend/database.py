@@ -1,5 +1,6 @@
 """
-Configuración de base de datos SQLite para Super POS
+Configuración de base de datos para Super POS
+Soporta SQLite (desarrollo) y PostgreSQL (producción)
 """
 
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, UniqueConstraint
@@ -7,15 +8,33 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.sql import func
 
-# Configuración de SQLite
-DATABASE_URL = "sqlite:///./superpos.db"
+# Importar configuración
+from config import settings
 
-# Crear engine
-engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False},
-    echo=False  # Cambiar a True para debug SQL
-)
+# Detectar tipo de base de datos desde DATABASE_URL
+DATABASE_URL = settings.database_url
+is_postgresql = DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")
+
+# Crear engine según el tipo de base de datos
+if is_postgresql:
+    # Configuración para PostgreSQL (producción)
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        pool_pre_ping=True,  # Verificar conexiones antes de usar
+        pool_recycle=3600,  # Reciclar conexiones después de 1 hora
+        echo=settings.debug
+    )
+    print(f"✓ Conectado a PostgreSQL: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'configurado'}")
+else:
+    # Configuración para SQLite (desarrollo)
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=settings.debug
+    )
+    print(f"✓ Conectado a SQLite: {DATABASE_URL}")
 
 # Crear sesión
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
