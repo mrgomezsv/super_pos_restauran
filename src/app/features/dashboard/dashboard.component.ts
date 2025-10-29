@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
@@ -93,7 +94,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.loadMetrics();
+    
+    // Esperar a que la autenticación esté completamente lista antes de cargar métricas
+    // Esto evita errores 401 cuando el token aún no está disponible
+    this.authService.isAuthenticated$.pipe(
+      takeUntil(this.destroy$),
+      filter(isAuth => isAuth === true),
+      take(1)
+    ).subscribe(() => {
+      // Pequeño delay para asegurar que el token esté disponible en el interceptor
+      setTimeout(() => {
+        this.loadMetrics();
+      }, 100);
+    });
   }
 
   ngOnDestroy(): void {
