@@ -2829,6 +2829,713 @@ async def delete_supplier(supplier_id: int, context: dict = Depends(get_current_
     return {"message": "Proveedor eliminado"}
 
 # -----------------------------
+# Purchase Orders (Órdenes de Compra)
+# -----------------------------
+def generate_next_po_number(db: Session, company_id: int) -> str:
+    """Generar siguiente número de orden de compra: OC-001, OC-002, etc."""
+    last_po = db.query(DBPurchaseOrder).filter(
+        DBPurchaseOrder.company_id == company_id
+    ).order_by(DBPurchaseOrder.po_number.desc()).first()
+    
+    if last_po and last_po.po_number.startswith("OC-"):
+        try:
+            next_num = int(last_po.po_number.split("-")[1]) + 1
+            return f"OC-{next_num:03d}"
+        except (ValueError, IndexError):
+            pass
+    return "OC-001"
+
+@app.get("/api/purchase-orders", response_model=List[PurchaseOrderResponse])
+async def get_purchase_orders(
+    status: Optional[str] = None,
+    supplier_id: Optional[int] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener órdenes de compra"""
+    query = db.query(DBPurchaseOrder).options(joinedload(DBPurchaseOrder.items))
+    query = context_service.apply_company_filter(query, DBPurchaseOrder, context)
+    
+    if status:
+        query = query.filter(DBPurchaseOrder.status == status)
+    if supplier_id:
+        query = query.filter(DBPurchaseOrder.supplier_id == supplier_id)
+    
+    orders = query.order_by(DBPurchaseOrder.createdAt.desc()).all()
+    
+    result = []
+    for po in orders:
+        supplier = db.query(DBSupplier).filter(DBSupplier.id == po.supplier_id).first()
+        result.append(PurchaseOrderResponse(
+            id=po.id,
+            company_id=po.company_id,
+            po_number=po.po_number,
+            supplier_id=po.supplier_id,
+            supplier_name=supplier.name if supplier else None,
+            order_date=po.order_date,
+            expected_delivery_date=po.expected_delivery_date,
+            status=po.status,
+            subtotal=po.subtotal,
+            tax_amount=po.tax_amount,
+            total=po.total,
+            notes=po.notes,
+            created_by=po.created_by,
+            approved_by=po.approved_by,
+            approved_at=po.approved_at,
+            createdAt=po.createdAt,
+            updatedAt=po.updatedAt,
+            items=[PurchaseOrderItemResponse(
+                id=item.id,
+                purchase_order_id=item.purchase_order_id,
+                product_id=item.product_id,
+                product_name=item.product_name,
+                product_sku=item.product_sku,
+                quantity=item.quantity,
+                unit_cost=item.unit_cost,
+                tax_rate=item.tax_rate,
+                subtotal=item.subtotal,
+                tax_amount=item.tax_amount,
+                total=item.total,
+                received_quantity=item.received_quantity
+            ) for item in po.items]
+        ))
+    
+    return result
+
+@app.get("/api/purchase-orders/{po_id}", response_model=PurchaseOrderResponse)
+async def get_purchase_order(
+    po_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener orden de compra por ID"""
+    po = db.query(DBPurchaseOrder).options(joinedload(DBPurchaseOrder.items)).filter(
+        DBPurchaseOrder.id == po_id
+    ).first()
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Orden de compra no encontrada")
+    
+    # Validar acceso
+    context_service.ensure_company_access(context, po.company_id)
+    
+    supplier = db.query(DBSupplier).filter(DBSupplier.id == po.supplier_id).first()
+    
+    return PurchaseOrderResponse(
+        id=po.id,
+        company_id=po.company_id,
+        po_number=po.po_number,
+        supplier_id=po.supplier_id,
+        supplier_name=supplier.name if supplier else None,
+        order_date=po.order_date,
+        expected_delivery_date=po.expected_delivery_date,
+        status=po.status,
+        subtotal=po.subtotal,
+        tax_amount=po.tax_amount,
+        total=po.total,
+        notes=po.notes,
+        created_by=po.created_by,
+        approved_by=po.approved_by,
+        approved_at=po.approved_at,
+        createdAt=po.createdAt,
+        updatedAt=po.updatedAt,
+        items=[PurchaseOrderItemResponse(
+            id=item.id,
+            purchase_order_id=item.purchase_order_id,
+            product_id=item.product_id,
+            product_name=item.product_name,
+            product_sku=item.product_sku,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            tax_rate=item.tax_rate,
+            subtotal=item.subtotal,
+            tax_amount=item.tax_amount,
+            total=item.total,
+            received_quantity=item.received_quantity
+        ) for item in po.items]
+    )
+
+@app.post("/api/purchase-orders", response_model=PurchaseOrderResponse)
+async def create_purchase_order(
+    po_data: PurchaseOrderCreate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Crear nueva orden de compra"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    user_id = context.get("user", {}).get("id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Usuario no identificado")
+    
+    # Verificar que el proveedor existe y pertenece a la compañía
+    supplier = db.query(DBSupplier).filter(
+        DBSupplier.id == po_data.supplier_id,
+        DBSupplier.company_id == company_id,
+        DBSupplier.isActive == True
+    ).first()
+    
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Proveedor no encontrado o inactivo")
+    
+    # Generar número de PO
+    po_number = generate_next_po_number(db, company_id)
+    
+    # Calcular totales
+    subtotal = 0.0
+    tax_amount = 0.0
+    
+    # Crear la orden
+    new_po = DBPurchaseOrder(
+        company_id=company_id,
+        po_number=po_number,
+        supplier_id=po_data.supplier_id,
+        order_date=po_data.order_date,
+        expected_delivery_date=po_data.expected_delivery_date,
+        status="pending",
+        notes=po_data.notes,
+        created_by=user_id,
+        createdAt=datetime.now(),
+        updatedAt=datetime.now()
+    )
+    
+    db.add(new_po)
+    db.flush()  # Para obtener el ID
+    
+    # Crear items
+    for item_data in po_data.items:
+        item_subtotal = item_data.quantity * item_data.unit_cost
+        item_tax = item_subtotal * (item_data.tax_rate / 100)
+        item_total = item_subtotal + item_tax
+        
+        subtotal += item_subtotal
+        tax_amount += item_tax
+        
+        # Si el producto existe, obtener su SKU
+        product_sku = item_data.product_sku
+        if item_data.product_id:
+            product = db.query(DBProduct).filter(DBProduct.id == item_data.product_id).first()
+            if product:
+                product_sku = product.code
+        
+        po_item = DBPurchaseOrderItem(
+            purchase_order_id=new_po.id,
+            product_id=item_data.product_id,
+            product_name=item_data.product_name,
+            product_sku=product_sku,
+            quantity=item_data.quantity,
+            unit_cost=item_data.unit_cost,
+            tax_rate=item_data.tax_rate,
+            subtotal=item_subtotal,
+            tax_amount=item_tax,
+            total=item_total,
+            received_quantity=0
+        )
+        db.add(po_item)
+    
+    # Actualizar totales
+    new_po.subtotal = subtotal
+    new_po.tax_amount = tax_amount
+    new_po.total = subtotal + tax_amount
+    
+    db.commit()
+    db.refresh(new_po)
+    
+    # Cargar items
+    new_po = db.query(DBPurchaseOrder).options(joinedload(DBPurchaseOrder.items)).filter(
+        DBPurchaseOrder.id == new_po.id
+    ).first()
+    
+    supplier = db.query(DBSupplier).filter(DBSupplier.id == new_po.supplier_id).first()
+    
+    return PurchaseOrderResponse(
+        id=new_po.id,
+        company_id=new_po.company_id,
+        po_number=new_po.po_number,
+        supplier_id=new_po.supplier_id,
+        supplier_name=supplier.name if supplier else None,
+        order_date=new_po.order_date,
+        expected_delivery_date=new_po.expected_delivery_date,
+        status=new_po.status,
+        subtotal=new_po.subtotal,
+        tax_amount=new_po.tax_amount,
+        total=new_po.total,
+        notes=new_po.notes,
+        created_by=new_po.created_by,
+        approved_by=new_po.approved_by,
+        approved_at=new_po.approved_at,
+        createdAt=new_po.createdAt,
+        updatedAt=new_po.updatedAt,
+        items=[PurchaseOrderItemResponse(
+            id=item.id,
+            purchase_order_id=item.purchase_order_id,
+            product_id=item.product_id,
+            product_name=item.product_name,
+            product_sku=item.product_sku,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            tax_rate=item.tax_rate,
+            subtotal=item.subtotal,
+            tax_amount=item.tax_amount,
+            total=item.total,
+            received_quantity=item.received_quantity
+        ) for item in new_po.items]
+    )
+
+@app.put("/api/purchase-orders/{po_id}/status", response_model=PurchaseOrderResponse)
+async def update_purchase_order_status(
+    po_id: int,
+    status_data: PurchaseOrderStatusUpdate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Actualizar estado de orden de compra (aprobar, cancelar)"""
+    po = db.query(DBPurchaseOrder).filter(DBPurchaseOrder.id == po_id).first()
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Orden de compra no encontrada")
+    
+    # Validar acceso
+    context_service.ensure_company_access(context, po.company_id)
+    
+    user_id = context.get("user", {}).get("id")
+    
+    # Validar cambio de estado
+    if status_data.status == "approved":
+        if po.status != "pending":
+            raise HTTPException(status_code=400, detail="Solo se pueden aprobar órdenes pendientes")
+        po.approved_by = user_id
+        po.approved_at = datetime.now()
+    elif status_data.status == "cancelled":
+        if po.status in ["received", "cancelled"]:
+            raise HTTPException(status_code=400, detail=f"No se puede cancelar una orden con estado {po.status}")
+    
+    po.status = status_data.status
+    po.updatedAt = datetime.now()
+    
+    if status_data.notes:
+        po.notes = (po.notes or "") + f"\n[{status_data.status.upper()}] {status_data.notes}"
+    
+    db.commit()
+    db.refresh(po)
+    
+    supplier = db.query(DBSupplier).filter(DBSupplier.id == po.supplier_id).first()
+    po = db.query(DBPurchaseOrder).options(joinedload(DBPurchaseOrder.items)).filter(
+        DBPurchaseOrder.id == po.id
+    ).first()
+    
+    return PurchaseOrderResponse(
+        id=po.id,
+        company_id=po.company_id,
+        po_number=po.po_number,
+        supplier_id=po.supplier_id,
+        supplier_name=supplier.name if supplier else None,
+        order_date=po.order_date,
+        expected_delivery_date=po.expected_delivery_date,
+        status=po.status,
+        subtotal=po.subtotal,
+        tax_amount=po.tax_amount,
+        total=po.total,
+        notes=po.notes,
+        created_by=po.created_by,
+        approved_by=po.approved_by,
+        approved_at=po.approved_at,
+        createdAt=po.createdAt,
+        updatedAt=po.updatedAt,
+        items=[PurchaseOrderItemResponse(
+            id=item.id,
+            purchase_order_id=item.purchase_order_id,
+            product_id=item.product_id,
+            product_name=item.product_name,
+            product_sku=item.product_sku,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            tax_rate=item.tax_rate,
+            subtotal=item.subtotal,
+            tax_amount=item.tax_amount,
+            total=item.total,
+            received_quantity=item.received_quantity
+        ) for item in po.items]
+    )
+
+@app.delete("/api/purchase-orders/{po_id}")
+async def delete_purchase_order(
+    po_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Cancelar/Eliminar orden de compra"""
+    po = db.query(DBPurchaseOrder).filter(DBPurchaseOrder.id == po_id).first()
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Orden de compra no encontrada")
+    
+    # Validar acceso
+    context_service.ensure_company_access(context, po.company_id)
+    
+    # Solo se pueden eliminar órdenes pendientes
+    if po.status not in ["pending", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Solo se pueden eliminar órdenes pendientes o canceladas")
+    
+    # Si tiene recepciones, no se puede eliminar
+    receipts_count = db.query(DBGoodsReceipt).filter(DBGoodsReceipt.purchase_order_id == po_id).count()
+    if receipts_count > 0:
+        raise HTTPException(status_code=400, detail="No se puede eliminar una orden que ya tiene recepciones")
+    
+    db.delete(po)
+    db.commit()
+    
+    return {"message": "Orden de compra eliminada exitosamente"}
+
+# -----------------------------
+# Goods Receipts (Recepciones de Mercancía)
+# -----------------------------
+def generate_next_receipt_number(db: Session, company_id: int) -> str:
+    """Generar siguiente número de recepción: GR-001, GR-002, etc."""
+    last_receipt = db.query(DBGoodsReceipt).filter(
+        DBGoodsReceipt.company_id == company_id
+    ).order_by(DBGoodsReceipt.receipt_number.desc()).first()
+    
+    if last_receipt and last_receipt.receipt_number.startswith("GR-"):
+        try:
+            next_num = int(last_receipt.receipt_number.split("-")[1]) + 1
+            return f"GR-{next_num:03d}"
+        except (ValueError, IndexError):
+            pass
+    return "GR-001"
+
+@app.get("/api/goods-receipts", response_model=List[GoodsReceiptResponse])
+async def get_goods_receipts(
+    purchase_order_id: Optional[int] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener recepciones de mercancía"""
+    query = db.query(DBGoodsReceipt).options(joinedload(DBGoodsReceipt.items))
+    query = context_service.apply_company_filter(query, DBGoodsReceipt, context)
+    
+    if purchase_order_id:
+        query = query.filter(DBGoodsReceipt.purchase_order_id == purchase_order_id)
+    
+    receipts = query.order_by(DBGoodsReceipt.createdAt.desc()).all()
+    
+    result = []
+    for receipt in receipts:
+        supplier = db.query(DBSupplier).filter(DBSupplier.id == receipt.supplier_id).first()
+        po = db.query(DBPurchaseOrder).filter(DBPurchaseOrder.id == receipt.purchase_order_id).first()
+        receiver = db.query(DBUser).filter(DBUser.id == receipt.received_by).first()
+        
+        result.append(GoodsReceiptResponse(
+            id=receipt.id,
+            company_id=receipt.company_id,
+            purchase_order_id=receipt.purchase_order_id,
+            purchase_order_number=po.po_number if po else None,
+            receipt_number=receipt.receipt_number,
+            receipt_date=receipt.receipt_date,
+            supplier_id=receipt.supplier_id,
+            supplier_name=supplier.name if supplier else None,
+            received_by=receipt.received_by,
+            received_by_name=receiver.name if receiver else None,
+            subtotal=receipt.subtotal,
+            tax_amount=receipt.tax_amount,
+            total=receipt.total,
+            notes=receipt.notes,
+            is_accounted=receipt.is_accounted,
+            journal_entry_id=receipt.journal_entry_id,
+            createdAt=receipt.createdAt,
+            items=[GoodsReceiptItemResponse(
+                id=item.id,
+                goods_receipt_id=item.goods_receipt_id,
+                purchase_order_item_id=item.purchase_order_item_id,
+                product_id=item.product_id,
+                product_name=item.product.name if item.product else None,
+                product_sku=item.product.code if item.product else None,
+                quantity=item.quantity,
+                unit_cost=item.unit_cost,
+                total_cost=item.total_cost
+            ) for item in receipt.items]
+        ))
+    
+    return result
+
+@app.get("/api/goods-receipts/{receipt_id}", response_model=GoodsReceiptResponse)
+async def get_goods_receipt(
+    receipt_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener recepción por ID"""
+    receipt = db.query(DBGoodsReceipt).options(joinedload(DBGoodsReceipt.items)).filter(
+        DBGoodsReceipt.id == receipt_id
+    ).first()
+    
+    if not receipt:
+        raise HTTPException(status_code=404, detail="Recepción no encontrada")
+    
+    # Validar acceso
+    context_service.ensure_company_access(context, receipt.company_id)
+    
+    supplier = db.query(DBSupplier).filter(DBSupplier.id == receipt.supplier_id).first()
+    po = db.query(DBPurchaseOrder).filter(DBPurchaseOrder.id == receipt.purchase_order_id).first()
+    receiver = db.query(DBUser).filter(DBUser.id == receipt.received_by).first()
+    
+    return GoodsReceiptResponse(
+        id=receipt.id,
+        company_id=receipt.company_id,
+        purchase_order_id=receipt.purchase_order_id,
+        purchase_order_number=po.po_number if po else None,
+        receipt_number=receipt.receipt_number,
+        receipt_date=receipt.receipt_date,
+        supplier_id=receipt.supplier_id,
+        supplier_name=supplier.name if supplier else None,
+        received_by=receipt.received_by,
+        received_by_name=receiver.name if receiver else None,
+        subtotal=receipt.subtotal,
+        tax_amount=receipt.tax_amount,
+        total=receipt.total,
+        notes=receipt.notes,
+        is_accounted=receipt.is_accounted,
+        journal_entry_id=receipt.journal_entry_id,
+        createdAt=receipt.createdAt,
+        items=[GoodsReceiptItemResponse(
+            id=item.id,
+            goods_receipt_id=item.goods_receipt_id,
+            purchase_order_item_id=item.purchase_order_item_id,
+            product_id=item.product_id,
+            product_name=item.product.name if item.product else None,
+            product_sku=item.product.code if item.product else None,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            total_cost=item.total_cost
+        ) for item in receipt.items]
+    )
+
+@app.post("/api/goods-receipts", response_model=GoodsReceiptResponse)
+async def create_goods_receipt(
+    receipt_data: GoodsReceiptCreate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Crear recepción de mercancía (puede crear productos nuevos automáticamente)"""
+    company_id = context.get("company", {}).get("id")
+    if not company_id and not context.get("user", {}).get("is_sudo"):
+        raise HTTPException(status_code=400, detail="ID de compañía requerido")
+    
+    user_id = context.get("user", {}).get("id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Usuario no identificado")
+    
+    # Verificar que la orden de compra existe
+    po = db.query(DBPurchaseOrder).options(joinedload(DBPurchaseOrder.items)).filter(
+        DBPurchaseOrder.id == receipt_data.purchase_order_id
+    ).first()
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Orden de compra no encontrada")
+    
+    # Validar acceso
+    context_service.ensure_company_access(context, po.company_id)
+    
+    if po.status == "cancelled":
+        raise HTTPException(status_code=400, detail="No se puede recibir mercancía de una orden cancelada")
+    
+    supplier = db.query(DBSupplier).filter(DBSupplier.id == po.supplier_id).first()
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+    
+    # Generar número de recepción
+    receipt_number = generate_next_receipt_number(db, company_id)
+    
+    # Validar y procesar items
+    subtotal = 0.0
+    tax_amount = 0.0
+    
+    # Crear la recepción
+    new_receipt = DBGoodsReceipt(
+        company_id=company_id,
+        purchase_order_id=receipt_data.purchase_order_id,
+        receipt_number=receipt_number,
+        receipt_date=receipt_data.receipt_date,
+        supplier_id=po.supplier_id,
+        received_by=user_id,
+        notes=receipt_data.notes,
+        createdAt=datetime.now()
+    )
+    
+    db.add(new_receipt)
+    db.flush()  # Para obtener el ID
+    
+    # Procesar cada item de recepción
+    for item_data in receipt_data.items:
+        # Obtener el item de la orden de compra
+        po_item = db.query(DBPurchaseOrderItem).filter(
+            DBPurchaseOrderItem.id == item_data.purchase_order_item_id
+        ).first()
+        
+        if not po_item or po_item.purchase_order_id != po.id:
+            raise HTTPException(status_code=400, detail=f"Item de orden de compra inválido: {item_data.purchase_order_item_id}")
+        
+        # Validar cantidad recibida
+        remaining_qty = po_item.quantity - po_item.received_quantity
+        if item_data.quantity > remaining_qty:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cantidad recibida ({item_data.quantity}) excede la cantidad pendiente ({remaining_qty}) para {po_item.product_name}"
+            )
+        
+        # Determinar el producto
+        product_id = item_data.product_id
+        product = None
+        
+        # Si no se proporciona product_id, crear producto nuevo
+        if not product_id:
+            # Generar SKU para el producto nuevo
+            new_sku = generate_next_sku(db, company_id)
+            
+            # Buscar categoría por defecto o crear una genérica
+            category = db.query(DBProductCategory).filter(
+                DBProductCategory.company_id == company_id,
+                DBProductCategory.name == "General"
+            ).first()
+            
+            # Crear el producto nuevo
+            new_product = DBProduct(
+                company_id=company_id,
+                code=new_sku,
+                name=po_item.product_name,
+                description=f"Producto creado desde compra {po.po_number}",
+                price=po_item.unit_cost * 1.5,  # Precio sugerido: 50% margen sobre costo
+                cost=item_data.unit_cost,
+                category="General",
+                stock=item_data.quantity,
+                minStock=0,
+                maxStock=0,
+                taxRate=po_item.tax_rate,
+                isActive=True,
+                createdAt=datetime.now(),
+                updatedAt=datetime.now()
+            )
+            
+            db.add(new_product)
+            db.flush()  # Para obtener el ID
+            product_id = new_product.id
+            product = new_product
+            
+            # Actualizar el SKU en el PO item si estaba vacío
+            if not po_item.product_sku:
+                po_item.product_sku = new_sku
+                po_item.product_id = product_id
+        else:
+            # Obtener producto existente
+            product = db.query(DBProduct).filter(DBProduct.id == product_id).first()
+            if not product:
+                raise HTTPException(status_code=404, detail=f"Producto {product_id} no encontrado")
+            
+            # Validar que el producto pertenece a la compañía
+            if product.company_id != company_id:
+                raise HTTPException(status_code=403, detail="Producto no pertenece a esta compañía")
+            
+            # Actualizar stock del producto existente
+            product.stock += item_data.quantity
+            product.cost = item_data.unit_cost  # Actualizar costo al último precio de compra
+            product.updatedAt = datetime.now()
+        
+        # Calcular totales del item
+        item_subtotal = item_data.quantity * item_data.unit_cost
+        item_tax = item_subtotal * (po_item.tax_rate / 100)
+        item_total = item_subtotal + item_tax
+        
+        subtotal += item_subtotal
+        tax_amount += item_tax
+        
+        # Crear item de recepción
+        receipt_item = DBGoodsReceiptItem(
+            goods_receipt_id=new_receipt.id,
+            purchase_order_item_id=item_data.purchase_order_item_id,
+            product_id=product_id,
+            quantity=item_data.quantity,
+            unit_cost=item_data.unit_cost,
+            total_cost=item_total
+        )
+        db.add(receipt_item)
+        
+        # Actualizar cantidad recibida en el PO item
+        po_item.received_quantity += item_data.quantity
+        
+        # Crear movimiento de inventario (entrada)
+        create_inventory_movement(
+            product_id=product_id,
+            movement_type="entrada",
+            quantity=item_data.quantity,
+            unit_cost=item_data.unit_cost,
+            reference=receipt_number,
+            reference_id=new_receipt.id,
+            company_id=company_id,
+            db=db
+        )
+    
+    # Actualizar totales de la recepción
+    new_receipt.subtotal = subtotal
+    new_receipt.tax_amount = tax_amount
+    new_receipt.total = subtotal + tax_amount
+    
+    # Verificar si la orden está completamente recibida
+    all_received = all(item.received_quantity >= item.quantity for item in po.items)
+    if all_received:
+        po.status = "received"
+        po.updatedAt = datetime.now()
+    
+    db.commit()
+    
+    # Contabilizar la compra automáticamente
+    accounting_result = post_purchase_to_accounting(new_receipt, supplier, db)
+    
+    if accounting_result["success"]:
+        print(f"Recepción {receipt_number} contabilizada exitosamente")
+    else:
+        print(f"Error al contabilizar recepción {receipt_number}: {accounting_result.get('error')}")
+    
+    # Cargar la recepción completa con items
+    new_receipt = db.query(DBGoodsReceipt).options(joinedload(DBGoodsReceipt.items)).filter(
+        DBGoodsReceipt.id == new_receipt.id
+    ).first()
+    
+    receiver = db.query(DBUser).filter(DBUser.id == new_receipt.received_by).first()
+    
+    return GoodsReceiptResponse(
+        id=new_receipt.id,
+        company_id=new_receipt.company_id,
+        purchase_order_id=new_receipt.purchase_order_id,
+        purchase_order_number=po.po_number,
+        receipt_number=new_receipt.receipt_number,
+        receipt_date=new_receipt.receipt_date,
+        supplier_id=new_receipt.supplier_id,
+        supplier_name=supplier.name,
+        received_by=new_receipt.received_by,
+        received_by_name=receiver.name if receiver else None,
+        subtotal=new_receipt.subtotal,
+        tax_amount=new_receipt.tax_amount,
+        total=new_receipt.total,
+        notes=new_receipt.notes,
+        is_accounted=new_receipt.is_accounted,
+        journal_entry_id=new_receipt.journal_entry_id,
+        createdAt=new_receipt.createdAt,
+        items=[GoodsReceiptItemResponse(
+            id=item.id,
+            goods_receipt_id=item.goods_receipt_id,
+            purchase_order_item_id=item.purchase_order_item_id,
+            product_id=item.product_id,
+            product_name=item.product.name if item.product else None,
+            product_sku=item.product.code if item.product else None,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            total_cost=item.total_cost
+        ) for item in new_receipt.items]
+    )
+
+# -----------------------------
 # Discounts (Descuentos)
 # -----------------------------
 @app.get("/api/discounts", response_model=List[DiscountResponse])
