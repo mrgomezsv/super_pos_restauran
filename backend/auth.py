@@ -26,9 +26,19 @@ except Exception:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verificar contraseña contra hash"""
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        # Intentar con passlib primero
+        result = pwd_context.verify(plain_password, hashed_password)
+        return result
     except Exception:
-        # Fallback: comparación directa si el hash falla (solo para migración)
+        # Fallback: usar bcrypt directamente
+        try:
+            import bcrypt
+            # Si el hash parece ser bcrypt (empieza con $2a$ o $2b$)
+            if hashed_password.startswith('$2a$') or hashed_password.startswith('$2b$') or hashed_password.startswith('$2y$'):
+                return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        except Exception:
+            pass
+        # Último fallback: comparación directa solo para migración (texto plano)
         return False
 
 def get_password_hash(password: str) -> str:
