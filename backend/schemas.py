@@ -324,10 +324,6 @@ class InventoryDashboardMetrics(BaseModel):
 class AccountingDashboardMetrics(BaseModel):
     journalEntriesCount: int
 
-class DailySalesResponse(BaseModel):
-    date: str
-    amount: float
-
 class TopProductResponse(BaseModel):
     productName: str
     totalQuantity: int
@@ -671,15 +667,6 @@ class ProductCategoryResponse(BaseModel):
     description: Optional[str] = None
     isActive: bool
     createdAt: datetime
-
-class ProductCategoryCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-
-class ProductCategoryUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    isActive: Optional[bool] = None
 
 # Esquemas de compañía (multi-tenant)
 class CompanyResponse(BaseModel):
