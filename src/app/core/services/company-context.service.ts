@@ -116,26 +116,57 @@ export class CompanyContextService {
    * Cargar compañías disponibles para el usuario
    */
   loadAvailableCompanies(): Observable<AvailableCompany[]> {
-    const context = this.getCurrentContext();
-    if (!context) {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
       return of([]);
     }
 
-    // Simular endpoint que retorna compañías basado en el contexto del usuario
-    return this.http.get<AvailableCompany[]>(`${this.apiUrl}/companies`, {
-      params: { 
-        active_only: 'true',
-        // Agregar parámetros de contexto si es necesario
-      }
-    }).pipe(
-      tap(companies => {
-        this.availableCompaniesSubject.next(companies);
-      }),
-      catchError(error => {
-        console.error('Error al cargar compañías disponibles:', error);
-        return of([]);
-      })
-    );
+    // Para SUDO, cargar todas las compañías sin filtro de contexto
+    // Para otros usuarios, usar su compañía asignada
+    if (currentUser.role === 'sudo') {
+      return this.http.get<any[]>(`${this.apiUrl}/companies`, {
+        params: { 
+          active_only: 'false'  // Cargar todas para SUDO
+        }
+      }).pipe(
+        map(companies => companies.map(c => ({
+          id: c.id,
+          nombre: c.nombre,
+          razonSocial: c.razonSocial,
+          nit: c.nit,
+          estado: c.estado
+        }))),
+        tap(companies => {
+          this.availableCompaniesSubject.next(companies);
+        }),
+        catchError(error => {
+          console.error('Error al cargar compañías disponibles:', error);
+          return of([]);
+        })
+      );
+    }
+
+    // Para usuarios normales, retornar su compañía asignada
+    if (currentUser.company_id) {
+      return this.http.get<any>(`${this.apiUrl}/companies/${currentUser.company_id}`).pipe(
+        map(company => [{
+          id: company.id,
+          nombre: company.nombre,
+          razonSocial: company.razonSocial,
+          nit: company.nit,
+          estado: company.estado
+        }]),
+        tap(companies => {
+          this.availableCompaniesSubject.next(companies);
+        }),
+        catchError(error => {
+          console.error('Error al cargar compañía del usuario:', error);
+          return of([]);
+        })
+      );
+    }
+
+    return of([]);
   }
 
   /**
