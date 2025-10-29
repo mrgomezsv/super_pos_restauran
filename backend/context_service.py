@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
 from database import get_db, get_db_session, User as DBUser, Company as DBCompany
+from auth import extract_user_from_token
 
 class CompanyContextService:
     """Servicio para gestión del contexto de compañía multi-tenant"""
@@ -20,17 +21,30 @@ class CompanyContextService:
     
     def extract_user_from_token(self, token: str, db: Session) -> Optional[DBUser]:
         """
-        Extraer usuario del token (simplificado para desarrollo)
-        En producción usar JWT real con validación
+        Extraer usuario del token JWT o mock (compatibilidad)
+        Usa JWT real con validación
         """
         try:
-            # Token format: mock_token_{user_id}_{timestamp}
-            if token.startswith("mock_token_"):
-                parts = token.split("_")
-                if len(parts) >= 3:
-                    user_id = int(parts[2])
-                    user = db.query(DBUser).filter(DBUser.id == user_id).first()
-                    return user
+            # Intentar extraer información del token usando auth.py
+            token_data = extract_user_from_token(token)
+            user_id = token_data.get("user_id")
+            
+            if user_id:
+                user = db.query(DBUser).filter(DBUser.id == int(user_id)).first()
+                return user
+            
+            return None
+        except HTTPException:
+            # Si falla JWT, intentar formato mock (compatibilidad temporal)
+            try:
+                if token.startswith("mock_token_"):
+                    parts = token.split("_")
+                    if len(parts) >= 3:
+                        user_id = int(parts[2])
+                        user = db.query(DBUser).filter(DBUser.id == user_id).first()
+                        return user
+            except Exception:
+                pass
             return None
         except Exception:
             return None
