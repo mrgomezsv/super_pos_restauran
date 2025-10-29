@@ -381,6 +381,108 @@ class Supplier(Base):
         UniqueConstraint('name', 'company_id', name='unique_supplier_name_per_company'),
     )
 
+# Órdenes de Compra
+class PurchaseOrder(Base):
+    __tablename__ = "purchase_orders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    po_number = Column(String(50), nullable=False, index=True)  # OC-001
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False, index=True)
+    order_date = Column(DateTime, nullable=False, default=func.now())
+    expected_delivery_date = Column(DateTime, nullable=True)
+    status = Column(String(20), default="pending", index=True)  # pending, approved, received, cancelled
+    subtotal = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
+    total = Column(Float, default=0.0)
+    notes = Column(Text, nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    createdAt = Column(DateTime, default=func.now())
+    updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    company = relationship("Company", backref="purchase_orders")
+    supplier = relationship("Supplier", backref="purchase_orders")
+    creator = relationship("User", foreign_keys=[created_by], backref="created_purchase_orders")
+    approver = relationship("User", foreign_keys=[approved_by], backref="approved_purchase_orders")
+    items = relationship("PurchaseOrderItem", back_populates="purchase_order", cascade="all, delete-orphan")
+    goods_receipts = relationship("GoodsReceipt", back_populates="purchase_order")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('po_number', 'company_id', name='unique_po_number_per_company'),
+    )
+
+class PurchaseOrderItem(Base):
+    __tablename__ = "purchase_order_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)  # Null si producto nuevo
+    product_name = Column(String(200), nullable=False)
+    product_sku = Column(String(20), nullable=True)  # SKU si existe o se generará
+    quantity = Column(Integer, nullable=False)
+    unit_cost = Column(Float, nullable=False)
+    tax_rate = Column(Float, default=15.0)
+    subtotal = Column(Float, nullable=False)
+    tax_amount = Column(Float, nullable=False)
+    total = Column(Float, nullable=False)
+    received_quantity = Column(Integer, default=0)  # Cantidad recibida acumulada
+    
+    # Relaciones
+    purchase_order = relationship("PurchaseOrder", back_populates="items")
+    product = relationship("Product", backref="purchase_order_items")
+
+# Recepciones de Mercancía
+class GoodsReceipt(Base):
+    __tablename__ = "goods_receipts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=False, index=True)
+    receipt_number = Column(String(50), nullable=False, index=True)  # GR-001
+    receipt_date = Column(DateTime, nullable=False, default=func.now())
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False, index=True)
+    received_by = Column(Integer, ForeignKey("users.id"))
+    subtotal = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
+    total = Column(Float, default=0.0)
+    notes = Column(Text, nullable=True)
+    is_accounted = Column(Boolean, default=False)  # Si ya fue contabilizado
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
+    createdAt = Column(DateTime, default=func.now())
+    
+    # Relaciones
+    company = relationship("Company", backref="goods_receipts")
+    purchase_order = relationship("PurchaseOrder", back_populates="goods_receipts")
+    supplier = relationship("Supplier", backref="goods_receipts")
+    receiver = relationship("User", backref="goods_receipts")
+    journal_entry = relationship("JournalEntry", backref="goods_receipts")
+    items = relationship("GoodsReceiptItem", back_populates="goods_receipt", cascade="all, delete-orphan")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('receipt_number', 'company_id', name='unique_receipt_number_per_company'),
+    )
+
+class GoodsReceiptItem(Base):
+    __tablename__ = "goods_receipt_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    goods_receipt_id = Column(Integer, ForeignKey("goods_receipts.id"), nullable=False, index=True)
+    purchase_order_item_id = Column(Integer, ForeignKey("purchase_order_items.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    quantity = Column(Integer, nullable=False)
+    unit_cost = Column(Float, nullable=False)
+    total_cost = Column(Float, nullable=False)
+    
+    # Relaciones
+    goods_receipt = relationship("GoodsReceipt", back_populates="items")
+    purchase_order_item = relationship("PurchaseOrderItem", backref="goods_receipt_items")
+    product = relationship("Product", backref="goods_receipt_items")
+
 # Descuentos
 class Discount(Base):
     __tablename__ = "discounts"
