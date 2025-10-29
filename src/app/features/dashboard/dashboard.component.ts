@@ -96,17 +96,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentUser = this.authService.getCurrentUser();
     
     // Esperar a que la autenticación esté completamente lista antes de cargar métricas
-    // Esto evita errores 401 cuando el token aún no está disponible
-    this.authService.isAuthenticated$.pipe(
-      takeUntil(this.destroy$),
-      filter(isAuth => isAuth === true),
-      take(1)
-    ).subscribe(() => {
-      // Pequeño delay para asegurar que el token esté disponible en el interceptor
-      setTimeout(() => {
-        this.loadMetrics();
-      }, 100);
-    });
+    // Esto evita errores 401 cuando el token aún no está disponible después del login
+    const isCurrentlyAuth = this.authService.isAuthenticated();
+    
+    if (isCurrentlyAuth && this.authService.getToken()) {
+      // Si ya está autenticado (p.ej. recarga de página), cargar métricas inmediatamente
+      this.loadMetrics();
+    } else {
+      // Si no está autenticado todavía, esperar a que se complete el login
+      this.authService.isAuthenticated$.pipe(
+        takeUntil(this.destroy$),
+        filter(isAuth => isAuth === true),
+        take(1)
+      ).subscribe(() => {
+        // Pequeño delay para asegurar que el token esté disponible en el interceptor
+        setTimeout(() => {
+          this.loadMetrics();
+        }, 100);
+      });
+    }
   }
 
   ngOnDestroy(): void {
