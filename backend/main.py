@@ -446,14 +446,14 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     
     # Generar tokens JWT
     access_token = create_access_token(data=token_data)
-    refresh_token = create_refresh_token(data={"sub": str(user.id), "company_id": user.company_id})
+    refresh_token_jwt = create_refresh_token(data={"sub": str(user.id), "company_id": user.company_id})
     
     # Calcular tiempo de expiración en segundos
     expires_in = settings.access_token_expire_minutes * 60
     
     return LoginResponse(
         token=access_token,
-        refreshToken=refresh_token,
+        refreshToken=refresh_token_jwt,
         user=UserResponse(
             id=user.id,
             company_id=user.company_id,
