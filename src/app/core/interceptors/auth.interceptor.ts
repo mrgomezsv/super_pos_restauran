@@ -12,6 +12,8 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private auth: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Leer token directamente de localStorage para evitar problemas de timing
+    // Esto asegura que siempre tengamos el token más reciente
     const token = this.auth.getToken();
     
     // En desarrollo, si no hay token, hacer la request sin autenticación
@@ -26,11 +28,18 @@ export class AuthInterceptor implements HttpInterceptor {
       );
     }
     
+    // Si no hay token, permitir la request (puede ser un endpoint público o el login)
     if (!token) {
       return next.handle(req);
     }
     
-    const authReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+    // Clonar la request y agregar el header de autorización
+    const authReq = req.clone({ 
+      setHeaders: { 
+        Authorization: `Bearer ${token}` 
+      } 
+    });
+    
     return next.handle(authReq);
   }
 }

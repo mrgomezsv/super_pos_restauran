@@ -109,10 +109,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
         filter(isAuth => isAuth === true),
         take(1)
       ).subscribe(() => {
-        // Pequeño delay para asegurar que el token esté disponible en el interceptor
-        setTimeout(() => {
-          this.loadMetrics();
-        }, 100);
+        // Verificar que el token esté disponible antes de hacer la petición
+        // Usar un pequeño delay y verificación para asegurar sincronización
+        const checkToken = () => {
+          const token = this.authService.getToken();
+          if (token) {
+            this.loadMetrics();
+          } else {
+            // Si aún no hay token, esperar un poco más
+            setTimeout(checkToken, 50);
+          }
+        };
+        setTimeout(checkToken, 100);
       });
     }
   }
