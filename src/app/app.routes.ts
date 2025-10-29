@@ -87,6 +87,16 @@ export const routes: Routes = [
     canActivate: [companyGuard, noCashierGuard]
   },
   {
+    path: 'admin/purchase-orders',
+    loadComponent: () => import('./features/admin/purchase-orders/purchase-orders.component').then(m => m.AdminPurchaseOrdersComponent),
+    canActivate: [companyGuard, noCashierGuard]
+  },
+  {
+    path: 'admin/goods-receipts',
+    loadComponent: () => import('./features/admin/goods-receipts/goods-receipts.component').then(m => m.AdminGoodsReceiptsComponent),
+    canActivate: [companyGuard, noCashierGuard]
+  },
+  {
     path: 'admin/cash-register',
     loadComponent: () => import('./features/admin/cash-register/cash-register.component').then(m => m.AdminCashRegisterComponent),
     canActivate: [companyGuard, noCashierGuard]

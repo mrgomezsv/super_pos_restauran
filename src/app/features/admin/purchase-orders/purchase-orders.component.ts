@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -65,7 +65,7 @@ interface PurchaseOrder {
   selector: 'app-admin-purchase-orders',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatCardModule, MatButtonModule,
+    CommonModule, ReactiveFormsModule, FormsModule, MatCardModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatTableModule, MatSelectModule,
     MatDatepickerModule, MatNativeDateModule, MatIconModule, MatChipsModule,
     MatTooltipModule, MatDialogModule
