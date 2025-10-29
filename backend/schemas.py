@@ -519,6 +519,104 @@ class SupplierUpdate(BaseModel):
     address: Optional[str] = None
     isActive: Optional[bool] = None
 
+# Purchase Orders (Órdenes de Compra)
+class PurchaseOrderItemCreate(BaseModel):
+    product_id: Optional[int] = None  # Null si producto nuevo
+    product_name: str
+    product_sku: Optional[str] = None
+    quantity: int = Field(..., gt=0)
+    unit_cost: float = Field(..., gt=0)
+    tax_rate: float = Field(default=15.0, ge=0, le=100)
+
+class PurchaseOrderItemResponse(BaseModel):
+    id: int
+    purchase_order_id: int
+    product_id: Optional[int] = None
+    product_name: str
+    product_sku: Optional[str] = None
+    quantity: int
+    unit_cost: float
+    tax_rate: float
+    subtotal: float
+    tax_amount: float
+    total: float
+    received_quantity: int
+
+class PurchaseOrderCreate(BaseModel):
+    supplier_id: int
+    order_date: datetime
+    expected_delivery_date: Optional[datetime] = None
+    notes: Optional[str] = None
+    items: List[PurchaseOrderItemCreate] = Field(..., min_items=1)
+
+class PurchaseOrderResponse(BaseModel):
+    id: int
+    company_id: int
+    po_number: str
+    supplier_id: int
+    supplier_name: Optional[str] = None
+    order_date: datetime
+    expected_delivery_date: Optional[datetime] = None
+    status: str
+    subtotal: float
+    tax_amount: float
+    total: float
+    notes: Optional[str] = None
+    created_by: int
+    approved_by: Optional[int] = None
+    approved_at: Optional[datetime] = None
+    createdAt: datetime
+    updatedAt: datetime
+    items: List[PurchaseOrderItemResponse] = []
+
+class PurchaseOrderStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(pending|approved|cancelled)$")
+    notes: Optional[str] = None
+
+# Goods Receipts (Recepciones de Mercancía)
+class GoodsReceiptItemCreate(BaseModel):
+    purchase_order_item_id: int
+    product_id: Optional[int] = None  # Null si producto nuevo, se creará
+    quantity: int = Field(..., gt=0)
+    unit_cost: float = Field(..., gt=0)
+
+class GoodsReceiptItemResponse(BaseModel):
+    id: int
+    goods_receipt_id: int
+    purchase_order_item_id: int
+    product_id: int
+    product_name: Optional[str] = None
+    product_sku: Optional[str] = None
+    quantity: int
+    unit_cost: float
+    total_cost: float
+
+class GoodsReceiptCreate(BaseModel):
+    purchase_order_id: int
+    receipt_date: datetime
+    notes: Optional[str] = None
+    items: List[GoodsReceiptItemCreate] = Field(..., min_items=1)
+
+class GoodsReceiptResponse(BaseModel):
+    id: int
+    company_id: int
+    purchase_order_id: int
+    purchase_order_number: Optional[str] = None
+    receipt_number: str
+    receipt_date: datetime
+    supplier_id: int
+    supplier_name: Optional[str] = None
+    received_by: int
+    received_by_name: Optional[str] = None
+    subtotal: float
+    tax_amount: float
+    total: float
+    notes: Optional[str] = None
+    is_accounted: bool
+    journal_entry_id: Optional[int] = None
+    createdAt: datetime
+    items: List[GoodsReceiptItemResponse] = []
+
 # Descuentos
 class DiscountResponse(BaseModel):
     id: int
