@@ -84,7 +84,7 @@
           </div>
           <div class="user-details">
             <span class="user-name">{{ currentUser?.name }}</span>
-            <span class="user-role">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cajero' }}</span>
+            <span class="user-role">{{ currentUser?.role === 'sudo' ? 'Administrador SUDO' : (currentUser?.role === 'admin' ? 'Administrador' : 'Cajero') }}</span>
           </div>
           <div class="user-menu-arrow">
             <mat-icon>keyboard_arrow_down</mat-icon>
@@ -102,7 +102,7 @@
                 </div>
                 <div class="menu-user-details">
                   <span class="menu-user-name">{{ currentUser?.name }}</span>
-                  <span class="menu-user-role">{{ currentUser?.role === 'admin' ? 'Administrador' : 'Cajero' }}</span>
+                  <span class="menu-user-role">{{ currentUser?.role === 'sudo' ? 'Administrador SUDO' : (currentUser?.role === 'admin' ? 'Administrador' : 'Cajero') }}</span>
                 </div>
               </div>
             </div>
@@ -343,7 +343,7 @@
         </div>
 
         <!-- SUDO Section -->
-        <div class="nav-section" *ngIf="currentUser?.role === 'admin'">
+        <div class="nav-section" *ngIf="currentUser?.role === 'sudo'">
           <h3 class="nav-section-title">SUDO</h3>
           <ul class="nav-list">
             <li class="nav-item">
