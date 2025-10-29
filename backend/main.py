@@ -417,7 +417,7 @@ def post_purchase_to_accounting(goods_receipt: DBGoodsReceipt, supplier: DBSuppl
             company_id=company_id,
             invoiceNumber=goods_receipt.receipt_number,
             supplierName=supplier.name,
-            supplierNrc=supplier.taxId,
+            supplierNrc=supplier.nrc,  # Usar nrc en lugar de taxId (ahora son campos separados)
             subtotal=goods_receipt.subtotal,
             taxAmount=goods_receipt.tax_amount,
             total=goods_receipt.total,
