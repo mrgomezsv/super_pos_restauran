@@ -492,27 +492,48 @@ class SupplierResponse(BaseModel):
     id: int
     company_id: Optional[int] = None
     name: str
-    taxId: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
+    nit: Optional[str] = None  # NIT
+    nrc: Optional[str] = None  # NRC
+    email: Optional[str] = None  # Email principal
+    email2: Optional[str] = None  # Email secundario
+    email3: Optional[str] = None  # Email adicional
+    phone: Optional[str] = None  # Teléfono principal
+    phone2: Optional[str] = None  # Teléfono secundario
+    phone3: Optional[str] = None  # Teléfono adicional
     address: Optional[str] = None
+    contact_person: Optional[str] = None  # Vendedor o Contacto
+    business_activity: Optional[str] = None  # Giro
     isActive: bool
     createdAt: datetime
 
 class SupplierCreate(BaseModel):
     name: str
-    taxId: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
+    nit: Optional[str] = None  # NIT
+    nrc: Optional[str] = None  # NRC
+    email: Optional[str] = None  # Email principal
+    email2: Optional[str] = None  # Email secundario
+    email3: Optional[str] = None  # Email adicional
+    phone: Optional[str] = None  # Teléfono principal
+    phone2: Optional[str] = None  # Teléfono secundario
+    phone3: Optional[str] = None  # Teléfono adicional
     address: Optional[str] = None
+    contact_person: Optional[str] = None  # Vendedor o Contacto
+    business_activity: Optional[str] = None  # Giro
     isActive: bool = True
 
 class SupplierUpdate(BaseModel):
     name: Optional[str] = None
-    taxId: Optional[str] = None
+    nit: Optional[str] = None
+    nrc: Optional[str] = None
     email: Optional[str] = None
+    email2: Optional[str] = None
+    email3: Optional[str] = None
     phone: Optional[str] = None
+    phone2: Optional[str] = None
+    phone3: Optional[str] = None
     address: Optional[str] = None
+    contact_person: Optional[str] = None
+    business_activity: Optional[str] = None
     isActive: Optional[bool] = None
 
 # Purchase Orders (Órdenes de Compra)

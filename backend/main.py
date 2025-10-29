@@ -2778,8 +2778,13 @@ async def get_suppliers(context: dict = Depends(get_current_context), db: Sessio
     query = context_service.apply_company_filter(query, DBSupplier, context)
     rows = query.order_by(DBSupplier.createdAt.desc()).all()
     return [SupplierResponse(
-        id=r.id, company_id=r.company_id, name=r.name, taxId=r.taxId, email=r.email,
-        phone=r.phone, address=r.address, isActive=r.isActive, createdAt=r.createdAt
+        id=r.id, company_id=r.company_id, name=r.name,
+        nit=r.nit, nrc=r.nrc,
+        email=r.email, email2=r.email2, email3=r.email3,
+        phone=r.phone, phone2=r.phone2, phone3=r.phone3,
+        address=r.address, contact_person=r.contact_person,
+        business_activity=r.business_activity,
+        isActive=r.isActive, createdAt=r.createdAt
     ) for r in rows]
 
 @app.post("/api/suppliers", response_model=SupplierResponse)
@@ -2789,15 +2794,29 @@ async def create_supplier(payload: SupplierCreate, context: dict = Depends(get_c
         raise HTTPException(status_code=400, detail="ID de compañía requerido")
     new_sup = DBSupplier(
         company_id=company_id,
-        name=payload.name.strip(), taxId=(payload.taxId or '').strip() or None,
-        email=(payload.email or '').strip() or None, phone=(payload.phone or '').strip() or None,
-        address=(payload.address or '').strip() or None, isActive=payload.isActive,
+        name=payload.name.strip(),
+        nit=(payload.nit or '').strip() or None,
+        nrc=(payload.nrc or '').strip() or None,
+        email=(payload.email or '').strip() or None,
+        email2=(payload.email2 or '').strip() or None,
+        email3=(payload.email3 or '').strip() or None,
+        phone=(payload.phone or '').strip() or None,
+        phone2=(payload.phone2 or '').strip() or None,
+        phone3=(payload.phone3 or '').strip() or None,
+        address=(payload.address or '').strip() or None,
+        contact_person=(payload.contact_person or '').strip() or None,
+        business_activity=(payload.business_activity or '').strip() or None,
+        isActive=payload.isActive,
         createdAt=datetime.now()
     )
     db.add(new_sup); db.commit(); db.refresh(new_sup)
     return SupplierResponse(
-        id=new_sup.id, company_id=new_sup.company_id, name=new_sup.name, taxId=new_sup.taxId,
-        email=new_sup.email, phone=new_sup.phone, address=new_sup.address,
+        id=new_sup.id, company_id=new_sup.company_id, name=new_sup.name,
+        nit=new_sup.nit, nrc=new_sup.nrc,
+        email=new_sup.email, email2=new_sup.email2, email3=new_sup.email3,
+        phone=new_sup.phone, phone2=new_sup.phone2, phone3=new_sup.phone3,
+        address=new_sup.address, contact_person=new_sup.contact_person,
+        business_activity=new_sup.business_activity,
         isActive=new_sup.isActive, createdAt=new_sup.createdAt
     )
 
@@ -2813,8 +2832,12 @@ async def update_supplier(supplier_id: int, payload: SupplierUpdate, context: di
         setattr(sup, field, value)
     db.commit(); db.refresh(sup)
     return SupplierResponse(
-        id=sup.id, company_id=sup.company_id, name=sup.name, taxId=sup.taxId,
-        email=sup.email, phone=sup.phone, address=sup.address,
+        id=sup.id, company_id=sup.company_id, name=sup.name,
+        nit=sup.nit, nrc=sup.nrc,
+        email=sup.email, email2=sup.email2, email3=sup.email3,
+        phone=sup.phone, phone2=sup.phone2, phone3=sup.phone3,
+        address=sup.address, contact_person=sup.contact_person,
+        business_activity=sup.business_activity,
         isActive=sup.isActive, createdAt=sup.createdAt
     )
 

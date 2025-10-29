@@ -369,10 +369,17 @@ class Supplier(Base):
     id = Column(Integer, primary_key=True, index=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
     name = Column(String(200), nullable=False)
-    taxId = Column(String(50), nullable=True)  # NRC/NIT
-    email = Column(String(120), nullable=True)
-    phone = Column(String(30), nullable=True)
-    address = Column(Text, nullable=True)
+    nit = Column(String(50), nullable=True)  # NIT separado
+    nrc = Column(String(50), nullable=True)  # NRC separado
+    email = Column(String(120), nullable=True)  # Email principal
+    email2 = Column(String(120), nullable=True)  # Email secundario
+    email3 = Column(String(120), nullable=True)  # Email adicional
+    phone = Column(String(30), nullable=True)  # Teléfono principal
+    phone2 = Column(String(30), nullable=True)  # Teléfono secundario
+    phone3 = Column(String(30), nullable=True)  # Teléfono adicional
+    address = Column(Text, nullable=True)  # Dirección completa
+    contact_person = Column(String(200), nullable=True)  # Vendedor o Contacto
+    business_activity = Column(String(200), nullable=True)  # Giro o actividad económica
     isActive = Column(Boolean, default=True)
     createdAt = Column(DateTime, default=func.now())
 
