@@ -34,7 +34,20 @@ export class AdminSuppliersComponent implements OnInit {
     this.form = this.fb.group({ 
       name: ['', [Validators.required, Validators.minLength(2)]], 
       taxId: [''], 
-      email: ['', [Validators.email]]
+      email: ['', []]  // Email opcional sin validación (se validará solo si tiene valor)
+    });
+    
+    // Validación condicional del email: solo validar si tiene valor
+    this.form.get('email')?.valueChanges.subscribe(value => {
+      const emailControl = this.form.get('email');
+      if (value && value.trim()) {
+        // Si hay valor, validar formato de email
+        emailControl?.setValidators([Validators.email]);
+      } else {
+        // Si está vacío, no validar
+        emailControl?.clearValidators();
+      }
+      emailControl?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
