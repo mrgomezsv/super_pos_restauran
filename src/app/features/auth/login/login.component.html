@@ -32,6 +32,12 @@
 
       <!-- Demo Accounts as Social Buttons -->
       <div class="socials-row">
+        <a href="#" title="Cuenta Cajero" (click)="fillDemoAccount('cajero1', 'cajero123'); $event.preventDefault()">
+          <!-- <mat-icon>point_of_sale</mat-icon> -->
+          Continuar como Cajero
+        </a>
+      </div>
+      <div class="socials-row">
         <a href="#" title="Cuenta Administrador" (click)="fillDemoAccount('admin', 'admin123'); $event.preventDefault()">
           <!-- <mat-icon>admin_panel_settings</mat-icon> -->
           Continuar como Administrador
@@ -40,15 +46,10 @@
       <div class="socials-row">
         <a href="#" title="Cuenta Administrador SUDO" (click)="fillDemoAccount('sudo', 'sudo123'); $event.preventDefault()">
           <!-- <mat-icon>admin_panel_settings</mat-icon> -->
-          Administrador SUDO
+          Continuar como Administrador SUDO
         </a>
       </div>
-      <div class="socials-row">
-        <a href="#" title="Cuenta Cajero" (click)="fillDemoAccount('cajero1', 'cajero123'); $event.preventDefault()">
-          <!-- <mat-icon>point_of_sale</mat-icon> -->
-          Continuar como Cajero
-        </a>
-      </div>
+
 
       <div class="divider">
         <div class="divider-line"></div>
