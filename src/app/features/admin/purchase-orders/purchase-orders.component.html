@@ -127,7 +127,7 @@
                   </mat-form-field>
 
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: bold;">Total: ${{ getItemTotal(item as any) | number:'1.2-2' }}</span>
+                    <span style="font-weight: bold;">Total: ${{ getItemTotalFromControl(item) | number:'1.2-2' }}</span>
                   </div>
 
                   <button type="button" mat-icon-button color="warn" (click)="removeItem(i)">

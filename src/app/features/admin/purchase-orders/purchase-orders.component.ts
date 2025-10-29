@@ -217,6 +217,12 @@ export class AdminPurchaseOrdersComponent implements OnInit {
     return (itemGroup as any)._total || 0;
   }
 
+  // Método helper para usar en templates (acepta AbstractControl)
+  getItemTotalFromControl(control: any): number {
+    const itemGroup = control as FormGroup;
+    return this.getItemTotal(itemGroup);
+  }
+
   getFormTotal(): number {
     return this.itemsFormArray.controls.reduce((sum, control) => {
       const itemGroup = control as FormGroup;

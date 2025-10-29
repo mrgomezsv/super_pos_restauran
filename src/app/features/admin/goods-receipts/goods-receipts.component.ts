@@ -188,6 +188,12 @@ export class AdminGoodsReceiptsComponent implements OnInit {
     return this.selectedPO?.items.find(item => item.id === poItemId);
   }
 
+  // Métodos helper para usar en templates (aceptan AbstractControl)
+  getItemInfoFromControl(control: any): PurchaseOrderItem | undefined {
+    const itemGroup = control as FormGroup;
+    return this.getItemInfo(itemGroup);
+  }
+
   getItemTotal(itemGroup: FormGroup): number {
     const quantity = itemGroup.get('quantity')?.value || 0;
     const unitCost = itemGroup.get('unit_cost')?.value || 0;
@@ -197,6 +203,12 @@ export class AdminGoodsReceiptsComponent implements OnInit {
     const subtotal = quantity * unitCost;
     const taxAmount = subtotal * (poItem.tax_rate / 100);
     return subtotal + taxAmount;
+  }
+
+  // Método helper para usar en templates (acepta AbstractControl)
+  getItemTotalFromControl(control: any): number {
+    const itemGroup = control as FormGroup;
+    return this.getItemTotal(itemGroup);
   }
 
   getFormTotal(): number {
@@ -212,8 +224,9 @@ export class AdminGoodsReceiptsComponent implements OnInit {
         this.form.get(key)?.markAsTouched();
       });
       this.itemsFormArray.controls.forEach(control => {
-        Object.keys(control['controls']).forEach(key => {
-          control.get(key)?.markAsTouched();
+        const itemControl = control as FormGroup;
+        Object.keys(itemControl.controls).forEach(key => {
+          itemControl.get(key)?.markAsTouched();
         });
       });
       this.toastr.warning('Por favor completa todos los campos requeridos');

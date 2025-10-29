@@ -66,16 +66,16 @@
                    style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px; margin-bottom: 12px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: center;">
                   <div>
-                    <strong>{{ getItemInfo(item as any)?.product_name }}</strong><br>
+                    <strong>{{ getItemInfoFromControl(item)?.product_name }}</strong><br>
                     <span style="color: #666; font-size: 0.9em;">
-                      SKU: {{ getItemInfo(item as any)?.product_sku || 'Se generará' }} |
-                      Pendiente: {{ (getItemInfo(item as any)?.quantity || 0) - (getItemInfo(item as any)?.received_quantity || 0) }}
+                      SKU: {{ getItemInfoFromControl(item)?.product_sku || 'Se generará' }} |
+                      Pendiente: {{ (getItemInfoFromControl(item)?.quantity || 0) - (getItemInfoFromControl(item)?.received_quantity || 0) }}
                     </span>
                   </div>
 
                   <mat-form-field appearance="outline">
                     <mat-label>Cantidad a Recibir *</mat-label>
-                    <input matInput type="number" formControlName="quantity" min="1" [max]="(getItemInfo(item as any)?.quantity || 0) - (getItemInfo(item as any)?.received_quantity || 0)">
+                    <input matInput type="number" formControlName="quantity" min="1" [max]="(getItemInfoFromControl(item)?.quantity || 0) - (getItemInfoFromControl(item)?.received_quantity || 0)">
                     <mat-error *ngIf="item.get('quantity')?.hasError('required') && item.get('quantity')?.touched">
                       Requerido
                     </mat-error>
@@ -94,7 +94,7 @@
                   </mat-form-field>
 
                   <div style="font-weight: bold;">
-                    Total: ${{ getItemTotal(item as any) | number:'1.2-2' }}
+                    Total: ${{ getItemTotalFromControl(item) | number:'1.2-2' }}
                   </div>
                 </div>
               </div>
