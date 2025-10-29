@@ -322,37 +322,19 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Crear contenido del reporte
-    let reportContent = 'REPORTE DE EMPRESAS CLIENTES\n';
-    reportContent += '================================\n\n';
-    reportContent += `Fecha: ${new Date().toLocaleDateString('es-SV')}\n`;
-    reportContent += `Total Empresas: ${this.filteredEmpresas.length}\n`;
-    reportContent += `Empresas Activas: ${this.empresasActivas}\n\n`;
-    reportContent += 'DETALLE DE EMPRESAS:\n';
-    reportContent += '================================\n\n';
-
-    this.filteredEmpresas.forEach((empresa, index) => {
-      reportContent += `${index + 1}. ${empresa.nombre}\n`;
-      reportContent += `   Razón Social: ${empresa.razonSocial}\n`;
-      reportContent += `   NIT: ${empresa.nit}\n`;
-      reportContent += `   Tipo: ${this.getTipoEmpresaLabel(empresa.tipoEmpresa)}\n`;
-      reportContent += `   Estado: ${empresa.estado.toUpperCase()}\n`;
-      reportContent += `   Email: ${empresa.email}\n`;
-      reportContent += `   Teléfono: ${empresa.telefono || 'N/A'}\n`;
-      reportContent += `   Crédito: ${this.formatCurrency(empresa.limiteCredito)}\n`;
-      reportContent += `   Saldo: ${this.formatCurrency(empresa.saldoActual)}\n\n`;
-    });
-
-    // Crear y descargar el archivo
-    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `reporte_empresas_${new Date().getTime()}.txt`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-
-    this.toastr.success('Reporte generado exitosamente');
+    // Preguntar al usuario qué formato desea
+    const format = prompt('¿Qué formato desea para el reporte?\n\n1. Escriba "PDF" para formato impreso\n2. Escriba "EXCEL" para tabla de datos');
+    
+    if (!format) return;
+    
+    const formatUpper = format.toUpperCase().trim();
+    if (formatUpper === 'PDF' || formatUpper === '1') {
+      this.generarPDFReporte();
+    } else if (formatUpper === 'EXCEL' || formatUpper === '2') {
+      this.generarExcelReporte();
+    } else {
+      this.toastr.warning('Formato no válido. Seleccione PDF o EXCEL');
+    }
   }
 
   exportarDatos(): void {
@@ -361,23 +343,160 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Crear CSV
+    // Preguntar al usuario qué formato desea
+    const format = prompt('¿Qué formato desea para la exportación?\n\n1. Escriba "PDF" para formato impreso\n2. Escriba "EXCEL" para tabla de datos');
+    
+    if (!format) return;
+    
+    const formatUpper = format.toUpperCase().trim();
+    if (formatUpper === 'PDF' || formatUpper === '1') {
+      this.exportarPDF();
+    } else if (formatUpper === 'EXCEL' || formatUpper === '2') {
+      this.exportarExcel();
+    } else {
+      this.toastr.warning('Formato no válido. Seleccione PDF o EXCEL');
+    }
+  }
+
+  private generarPDFReporte(): void {
+    // Crear contenido HTML para el PDF
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #017E84; border-bottom: 3px solid #20C997; padding-bottom: 10px; }
+          h2 { color: #333; margin-top: 30px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background-color: #017E84; color: white; padding: 12px; text-align: left; }
+          td { padding: 10px; border-bottom: 1px solid #ddd; }
+          .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+          .stat-box { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+          .stat-number { font-size: 24px; font-weight: bold; color: #017E84; }
+          .stat-label { color: #666; margin-top: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>📊 REPORTE DE EMPRESAS CLIENTES</h1>
+        <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-SV', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        
+        <div class="stats">
+          <div class="stat-box">
+            <div class="stat-number">${this.filteredEmpresas.length}</div>
+            <div class="stat-label">Total Empresas</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">${this.empresasActivas}</div>
+            <div class="stat-label">Empresas Activas</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">${this.filteredEmpresas.filter(e => e.estado === 'inactiva').length}</div>
+            <div class="stat-label">Empresas Inactivas</div>
+          </div>
+        </div>
+
+        <h2>📋 Detalle de Empresas</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Empresa</th>
+              <th>NIT</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Email</th>
+              <th>Crédito</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    this.filteredEmpresas.forEach((empresa, index) => {
+      htmlContent += `
+            <tr>
+              <td>${index + 1}</td>
+              <td><strong>${empresa.nombre}</strong><br><small>${empresa.razonSocial}</small></td>
+              <td>${empresa.nit}</td>
+              <td>${this.getTipoEmpresaLabel(empresa.tipoEmpresa)}</td>
+              <td><span style="color: ${this.getStatusColor(empresa.estado)};">${empresa.estado.toUpperCase()}</span></td>
+              <td>${empresa.email}</td>
+              <td>${this.formatCurrency(empresa.limiteCredito)}</td>
+              <td>${this.formatCurrency(empresa.saldoActual)}</td>
+            </tr>
+      `;
+    });
+
+    htmlContent += `
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    // Crear ventana e imprimir
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+      this.toastr.success('Reporte PDF generado');
+    }
+  }
+
+  private generarExcelReporte(): void {
+    // Crear CSV que se puede abrir en Excel
+    let csvContent = 'Número,Empresa,Razón Social,NIT,Tipo,Estado,Email,Teléfono,Crédito Límite,Saldo Actual\n';
+    
+    this.filteredEmpresas.forEach((empresa, index) => {
+      csvContent += `${index + 1},"${empresa.nombre}","${empresa.razonSocial}","${empresa.nit}","${this.getTipoEmpresaLabel(empresa.tipoEmpresa)}","${empresa.estado}","${empresa.email}","${empresa.telefono || 'N/A'}","${empresa.limiteCredito}","${empresa.saldoActual}"\n`;
+    });
+
+    this.downloadFile(csvContent, 'reporte_empresas', 'csv');
+    this.toastr.success('Reporte Excel generado exitosamente');
+  }
+
+  private exportarPDF(): void {
+    // Similar a generarPDFReporte pero más compacto
+    this.generarPDFReporte();
+  }
+
+  private exportarExcel(): void {
+    // Crear CSV para Excel
     let csvContent = 'Nombre,Razón Social,NIT,Tipo,Estado,Email,Teléfono,Crédito,Saldo\n';
     
     this.filteredEmpresas.forEach(empresa => {
       csvContent += `"${empresa.nombre}","${empresa.razonSocial}","${empresa.nit}","${this.getTipoEmpresaLabel(empresa.tipoEmpresa)}","${empresa.estado}","${empresa.email}","${empresa.telefono}","${empresa.limiteCredito}","${empresa.saldoActual}"\n`;
     });
 
-    // Descargar CSV
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    this.downloadFile(csvContent, 'empresas_exportadas', 'csv');
+    this.toastr.success('Datos exportados exitosamente');
+  }
+
+  private downloadFile(content: string, filename: string, type: string): void {
+    const blob = new Blob([content], { 
+      type: type === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8' 
+    });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `empresas_exportadas_${new Date().getTime()}.csv`;
+    link.download = `${filename}_${new Date().getTime()}.${type}`;
     link.click();
     window.URL.revokeObjectURL(url);
+  }
 
-    this.toastr.success('Datos exportados exitosamente');
+  private getStatusColor(estado: string): string {
+    switch (estado) {
+      case 'activa': return '#4caf50';
+      case 'inactiva': return '#f44336';
+      case 'suspendida': return '#ff9800';
+      default: return '#757575';
+    }
   }
 
   get empresasActivas(): number {
