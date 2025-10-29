@@ -670,3 +670,102 @@
   }
 }
 
+
+/* Modal para seleccionar formato */
+.format-dialog {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 500px;
+  animation: modalSlideIn 0.3s ease-out;
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+
+    h3 {
+      margin: 0;
+      color: #017E84;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      color: #666;
+    }
+  }
+
+  .dialog-content {
+    padding: 24px;
+
+    .dialog-message {
+      margin: 0 0 24px 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .format-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+
+      .format-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 24px;
+        min-height: 140px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 2px solid #e2e8f0;
+
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          margin-bottom: 12px;
+        }
+
+        .format-btn-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+
+          strong {
+            font-size: 18px;
+            color: #333;
+          }
+
+          span {
+            font-size: 13px;
+            color: #666;
+          }
+        }
+
+        &.pdf-btn {
+          &:hover {
+            border-color: #f44336;
+            background: #ffebee;
+          }
+        }
+
+        &.excel-btn {
+          &:hover {
+            border-color: #4caf50;
+            background: #e8f5e9;
+          }
+        }
+      }
+    }
+  }
+}

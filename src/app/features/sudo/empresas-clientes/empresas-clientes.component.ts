@@ -66,6 +66,8 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   companyForm: FormGroup;
   isLoading = false;
   showDialog = false;
+  showFormatDialog = false;
+  formatDialogType: 'report' | 'export' = 'report';
   
   displayedColumns: string[] = ['nombre', 'razonSocial', 'nit', 'contacto', 'estado', 'saldo', 'acciones'];
   
@@ -322,19 +324,8 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Preguntar al usuario qué formato desea
-    const format = prompt('¿Qué formato desea para el reporte?\n\n1. Escriba "PDF" para formato impreso\n2. Escriba "EXCEL" para tabla de datos');
-    
-    if (!format) return;
-    
-    const formatUpper = format.toUpperCase().trim();
-    if (formatUpper === 'PDF' || formatUpper === '1') {
-      this.generarPDFReporte();
-    } else if (formatUpper === 'EXCEL' || formatUpper === '2') {
-      this.generarExcelReporte();
-    } else {
-      this.toastr.warning('Formato no válido. Seleccione PDF o EXCEL');
-    }
+    this.formatDialogType = 'report';
+    this.showFormatDialog = true;
   }
 
   exportarDatos(): void {
@@ -343,18 +334,29 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Preguntar al usuario qué formato desea
-    const format = prompt('¿Qué formato desea para la exportación?\n\n1. Escriba "PDF" para formato impreso\n2. Escriba "EXCEL" para tabla de datos');
+    this.formatDialogType = 'export';
+    this.showFormatDialog = true;
+  }
+
+  closeFormatDialog(): void {
+    this.showFormatDialog = false;
+  }
+
+  selectFormat(format: 'pdf' | 'excel'): void {
+    this.closeFormatDialog();
     
-    if (!format) return;
-    
-    const formatUpper = format.toUpperCase().trim();
-    if (formatUpper === 'PDF' || formatUpper === '1') {
-      this.exportarPDF();
-    } else if (formatUpper === 'EXCEL' || formatUpper === '2') {
-      this.exportarExcel();
+    if (this.formatDialogType === 'report') {
+      if (format === 'pdf') {
+        this.generarPDFReporte();
+      } else {
+        this.generarExcelReporte();
+      }
     } else {
-      this.toastr.warning('Formato no válido. Seleccione PDF o EXCEL');
+      if (format === 'pdf') {
+        this.exportarPDF();
+      } else {
+        this.exportarExcel();
+      }
     }
   }
 

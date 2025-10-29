@@ -475,3 +475,39 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para Seleccionar Formato -->
+<div class="modal-overlay" *ngIf="showFormatDialog" (click)="closeFormatDialog()">
+  <div class="format-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Seleccionar Formato</h3>
+      <button mat-icon-button (click)="closeFormatDialog()" class="close-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <p class="dialog-message">
+        ¿En qué formato desea {{ formatDialogType === 'report' ? 'generar el reporte' : 'exportar los datos' }}?
+      </p>
+      
+      <div class="format-options">
+        <button mat-raised-button (click)="selectFormat('pdf')" class="format-btn pdf-btn">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <div class="format-btn-info">
+            <strong>PDF</strong>
+            <span>Formato impreso</span>
+          </div>
+        </button>
+        
+        <button mat-raised-button (click)="selectFormat('excel')" class="format-btn excel-btn">
+          <mat-icon>table_chart</mat-icon>
+          <div class="format-btn-info">
+            <strong>Excel / CSV</strong>
+            <span>Tabla de datos</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
