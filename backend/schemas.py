@@ -39,8 +39,16 @@ class UserLogin(BaseModel):
     password: str = Field(..., min_length=6, max_length=100)
 
 class LoginResponse(BaseModel):
-    token: str
+    token: str  # Access token JWT
+    refreshToken: Optional[str] = None  # Refresh token JWT
     user: UserResponse
+    expiresIn: int
+
+class RefreshTokenRequest(BaseModel):
+    refreshToken: str = Field(..., description="Refresh token para renovar access token")
+
+class RefreshTokenResponse(BaseModel):
+    token: str  # Nuevo access token
     expiresIn: int
 
 # Esquemas de producto

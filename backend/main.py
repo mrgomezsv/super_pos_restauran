@@ -28,7 +28,7 @@ from schemas import (
     UserLogin, UserResponse, UserCreate, UserUpdate,
     ProductResponse, ProductCreate, ProductUpdate,
     SaleCreate, SaleResponse, SaleSummary,
-    LoginResponse, CartItem as CartItemSchema,
+    LoginResponse, RefreshTokenRequest, RefreshTokenResponse, CartItem as CartItemSchema,
     ProductCategoryCreate, ProductCategoryResponse, ProductCategoryUpdate,
     FiscalDocumentResponse, FiscalDocumentCreate, FiscalDocumentUpdate,
     CompanyResponse, CompanyWithAdminCreate, CompanyUpdate, CompanyStatusUpdate, 
@@ -54,19 +54,27 @@ from schemas import (
 from company_service import company_service
 from context_service import get_current_context, context_service
 
+# Importar configuración y autenticación
+from config import settings
+from auth import (
+    create_access_token, create_refresh_token, decode_token,
+    verify_password, get_password_hash
+)
+
 # Crear aplicación FastAPI
 app = FastAPI(
     title="Super POS API con SQLite",
     description="API para Sistema de Punto de Ventas con Persistencia SQLite",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    debug=settings.debug
 )
 
-# Configurar CORS
+# Configurar CORS dinámicamente desde configuración
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],  # Frontend Angular
+    allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -362,25 +370,52 @@ def generate_next_sku(db: Session, company_id: int = None) -> str:
 # Rutas de autenticación
 @app.post("/api/auth/login", response_model=LoginResponse)
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):
-    """Iniciar sesión de usuario"""
+    """Iniciar sesión de usuario con JWT"""
+    # Buscar usuario
     user = db.query(DBUser).filter(
         DBUser.username == user_data.username,
-        DBUser.password == user_data.password,
         DBUser.isActive == True
     ).first()
     
     if not user:
         # Registrar intento fallido de login
-        failed_user = db.query(DBUser).filter(DBUser.username == user_data.username).first()
-        if failed_user:
-            log_audit_event(
-                user_id=failed_user.id,
-                action="LOGIN_FAILED",
-                module="Authentication",
-                detail=f"Intento de login fallido para usuario {user_data.username}",
-                company_id=failed_user.company_id,
-                db=db
-            )
+        log_audit_event(
+            user_id=None,
+            action="LOGIN_FAILED",
+            module="Authentication",
+            detail=f"Intento de login fallido para usuario {user_data.username} - Usuario no encontrado",
+            company_id=None,
+            db=db
+        )
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas"
+        )
+    
+    # Verificar contraseña (soporta tanto hash bcrypt como texto plano para migración)
+    password_valid = False
+    if user.password.startswith("$2b$") or user.password.startswith("$2a$"):
+        # Contraseña hasheada con bcrypt
+        password_valid = verify_password(user_data.password, user.password)
+    else:
+        # Contraseña en texto plano (para migración desde mock tokens)
+        password_valid = (user.password == user_data.password)
+        # Si es válida, hashearla y guardarla
+        if password_valid:
+            user.password = get_password_hash(user_data.password)
+            db.commit()
+    
+    if not password_valid:
+        # Registrar intento fallido de login
+        log_audit_event(
+            user_id=user.id,
+            action="LOGIN_FAILED",
+            module="Authentication",
+            detail=f"Intento de login fallido para usuario {user_data.username} - Contraseña incorrecta",
+            company_id=user.company_id,
+            db=db
+        )
         
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -401,11 +436,24 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         db=db
     )
     
-    # Generar token (en producción usar JWT real)
-    token = f"mock_token_{user.id}_{int(datetime.now().timestamp())}"
+    # Crear payload para tokens JWT
+    token_data = {
+        "sub": str(user.id),  # Subject (user ID)
+        "username": user.username,
+        "company_id": user.company_id,
+        "role": user.role
+    }
+    
+    # Generar tokens JWT
+    access_token = create_access_token(data=token_data)
+    refresh_token = create_refresh_token(data={"sub": str(user.id), "company_id": user.company_id})
+    
+    # Calcular tiempo de expiración en segundos
+    expires_in = settings.access_token_expire_minutes * 60
     
     return LoginResponse(
-        token=token,
+        token=access_token,
+        refreshToken=refresh_token,
         user=UserResponse(
             id=user.id,
             company_id=user.company_id,
@@ -417,8 +465,54 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
             createdAt=user.createdAt,
             lastLogin=user.lastLogin
         ),
-        expiresIn=3600
+        expiresIn=expires_in
     )
+
+@app.post("/api/auth/refresh", response_model=RefreshTokenResponse)
+async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends(get_db)):
+    """Renovar access token usando refresh token"""
+    try:
+        # Decodificar refresh token
+        payload = decode_token(refresh_data.refreshToken, token_type="refresh")
+        
+        # Obtener user_id del payload
+        user_id = int(payload.get("sub"))
+        
+        # Verificar que el usuario existe y está activo
+        user = db.query(DBUser).filter(
+            DBUser.id == user_id,
+            DBUser.isActive == True
+        ).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuario no encontrado o inactivo"
+            )
+        
+        # Crear nuevo access token
+        token_data = {
+            "sub": str(user.id),
+            "username": user.username,
+            "company_id": user.company_id,
+            "role": user.role
+        }
+        
+        access_token = create_access_token(data=token_data)
+        expires_in = settings.access_token_expire_minutes * 60
+        
+        return RefreshTokenResponse(
+            token=access_token,
+            expiresIn=expires_in
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token de refresco inválido: {str(e)}"
+        )
 
 # Rutas de productos
 @app.get("/api/products", response_model=List[ProductResponse])
