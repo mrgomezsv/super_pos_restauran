@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,11 +19,12 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatError],
   templateUrl: './suppliers.component.html',
 })
-export class AdminSuppliersComponent implements OnInit {
+export class AdminSuppliersComponent implements OnInit, OnDestroy {
   cols = ['name', 'taxId', 'email'];
   suppliers: any[] = [];
   form: FormGroup;
   loading = false;
+  private emailSubscription?: Subscription;
   private readonly api = `${environment.apiUrl}/suppliers`;
   
   constructor(
@@ -38,7 +40,7 @@ export class AdminSuppliersComponent implements OnInit {
     });
     
     // Validación condicional del email: solo validar si tiene valor
-    this.form.get('email')?.valueChanges.subscribe(value => {
+    this.emailSubscription = this.form.get('email')?.valueChanges.subscribe(value => {
       const emailControl = this.form.get('email');
       if (value && value.trim()) {
         // Si hay valor, validar formato de email
@@ -53,6 +55,10 @@ export class AdminSuppliersComponent implements OnInit {
 
   ngOnInit() { 
     this.load(); 
+  }
+
+  ngOnDestroy() {
+    this.emailSubscription?.unsubscribe();
   }
 
   load() { 
