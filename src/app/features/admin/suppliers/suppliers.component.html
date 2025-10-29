@@ -5,17 +5,28 @@
   <form [formGroup]="form" (ngSubmit)="create()" style="display:flex; gap:16px; flex-wrap:wrap; margin:16px 0;">
     <mat-form-field appearance="outline" style="flex:1 1 220px;">
       <mat-label>Nombre</mat-label>
-      <input matInput formControlName="name" />
+      <input matInput formControlName="name" placeholder="Nombre del proveedor" />
+      <mat-error *ngIf="form.get('name')?.hasError('required') && form.get('name')?.touched">
+        El nombre es requerido
+      </mat-error>
+      <mat-error *ngIf="form.get('name')?.hasError('minlength') && form.get('name')?.touched">
+        El nombre debe tener al menos 2 caracteres
+      </mat-error>
     </mat-form-field>
     <mat-form-field appearance="outline" style="flex:1 1 180px;">
       <mat-label>NRC / NIT</mat-label>
-      <input matInput formControlName="taxId" />
+      <input matInput formControlName="taxId" placeholder="Opcional" />
     </mat-form-field>
     <mat-form-field appearance="outline" style="flex:1 1 260px;">
       <mat-label>Email</mat-label>
-      <input matInput formControlName="email" />
+      <input matInput formControlName="email" type="email" placeholder="email@ejemplo.com" />
+      <mat-error *ngIf="form.get('email')?.hasError('email') && form.get('email')?.touched">
+        Email inválido
+      </mat-error>
     </mat-form-field>
-    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Agregar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading">
+      {{ loading ? 'Agregando...' : 'Agregar' }}
+    </button>
   </form>
 
   <table mat-table [dataSource]="suppliers" class="mat-elevation-z1" style="width:100%;">
