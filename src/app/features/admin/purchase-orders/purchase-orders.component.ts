@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { ToastrService } from 'ngx-toastr';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -22,6 +23,7 @@ interface Supplier {
   id: number;
   name: string;
   taxId?: string;
+  isActive?: boolean;
 }
 
 interface Product {
@@ -30,6 +32,7 @@ interface Product {
   name: string;
   cost: number;
   taxRate: number;
+  isActive?: boolean;
 }
 
 interface PurchaseOrderItem {
@@ -68,7 +71,7 @@ interface PurchaseOrder {
     CommonModule, ReactiveFormsModule, FormsModule, MatCardModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatTableModule, MatSelectModule,
     MatDatepickerModule, MatNativeDateModule, MatIconModule, MatChipsModule,
-    MatTooltipModule, MatDialogModule
+    MatTooltipModule, MatDialogModule, MatMenuModule
   ],
   templateUrl: './purchase-orders.component.html',
 })
@@ -204,15 +207,14 @@ export class AdminPurchaseOrdersComponent implements OnInit {
     const taxAmount = subtotal * (taxRate / 100);
     const total = subtotal + taxAmount;
 
-    // Los valores calculados no se guardan en el formulario
-    // pero se usan para mostrar en la tabla
-    itemGroup['subtotal'] = subtotal;
-    itemGroup['tax_amount'] = taxAmount;
-    itemGroup['total'] = total;
+    // Almacenar valores calculados en el FormGroup usando una propiedad personalizada
+    (itemGroup as any)._subtotal = subtotal;
+    (itemGroup as any)._tax_amount = taxAmount;
+    (itemGroup as any)._total = total;
   }
 
   getItemTotal(itemGroup: FormGroup): number {
-    return itemGroup['total'] || 0;
+    return (itemGroup as any)._total || 0;
   }
 
   getFormTotal(): number {
@@ -228,8 +230,9 @@ export class AdminPurchaseOrdersComponent implements OnInit {
         this.form.get(key)?.markAsTouched();
       });
       this.itemsFormArray.controls.forEach(control => {
-        Object.keys(control['controls']).forEach(key => {
-          control.get(key)?.markAsTouched();
+        const itemControl = control as FormGroup;
+        Object.keys(itemControl.controls).forEach(key => {
+          itemControl.get(key)?.markAsTouched();
         });
       });
       this.toastr.warning('Por favor completa todos los campos requeridos');
