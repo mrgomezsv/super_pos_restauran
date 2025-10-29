@@ -63,7 +63,9 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   empresas: EmpresaCliente[] = [];
   filteredEmpresas: EmpresaCliente[] = [];
   searchForm: FormGroup;
+  companyForm: FormGroup;
   isLoading = false;
+  showDialog = false;
   
   displayedColumns: string[] = ['nombre', 'razonSocial', 'nit', 'contacto', 'estado', 'saldo', 'acciones'];
   
@@ -94,6 +96,30 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
       search: [''],
       tipoEmpresa: [''],
       estado: ['']
+    });
+    
+    this.companyForm = this.fb.group({
+      // Datos de la empresa
+      nombre: ['', [Validators.required, Validators.minLength(2)]],
+      razonSocial: ['', [Validators.required]],
+      nit: ['', [Validators.required]],
+      dui: [''],
+      telefono: [''],
+      email: ['', [Validators.required, Validators.email]],
+      direccion: [''],
+      ciudad: ['San Salvador'],
+      tipoEmpresa: ['retail', [Validators.required]],
+      contactoPrincipal: [''],
+      limiteCredito: [0],
+      subscriptionPlan: ['basic'],
+      maxUsers: [5],
+      maxProducts: [1000],
+      maxSalesPerMonth: [500],
+      // Datos del usuario administrador
+      admin_username: ['', [Validators.required, Validators.minLength(3)]],
+      admin_name: ['', [Validators.required, Validators.minLength(2)]],
+      admin_email: ['', [Validators.required, Validators.email]],
+      admin_password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -193,7 +219,74 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   }
 
   nuevaEmpresa(): void {
-    this.toastr.info('Funcionalidad en desarrollo', 'Nueva Empresa');
+    this.showDialog = true;
+    this.companyForm.reset();
+    this.companyForm.patchValue({
+      ciudad: 'San Salvador',
+      tipoEmpresa: 'retail',
+      limiteCredito: 0,
+      subscriptionPlan: 'basic',
+      maxUsers: 5,
+      maxProducts: 1000,
+      maxSalesPerMonth: 500
+    });
+  }
+
+  closeDialog(): void {
+    this.showDialog = false;
+    this.companyForm.reset();
+  }
+
+  createCompany(): void {
+    if (this.companyForm.invalid) {
+      Object.keys(this.companyForm.controls).forEach(key => {
+        this.companyForm.get(key)?.markAsTouched();
+      });
+      this.toastr.warning('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    const formValue = this.companyForm.value;
+    const payload = {
+      company: {
+        nombre: formValue.nombre,
+        razonSocial: formValue.razonSocial,
+        nit: formValue.nit,
+        dui: formValue.dui || null,
+        telefono: formValue.telefono || null,
+        email: formValue.email,
+        direccion: formValue.direccion || null,
+        ciudad: formValue.ciudad,
+        pais: 'El Salvador',
+        tipoEmpresa: formValue.tipoEmpresa,
+        contactoPrincipal: formValue.contactoPrincipal || null,
+        limiteCredito: formValue.limiteCredito || 0,
+        subscriptionPlan: formValue.subscriptionPlan,
+        maxUsers: formValue.maxUsers,
+        maxProducts: formValue.maxProducts,
+        maxSalesPerMonth: formValue.maxSalesPerMonth
+      },
+      admin_username: formValue.admin_username,
+      admin_name: formValue.admin_name,
+      admin_email: formValue.admin_email,
+      admin_password: formValue.admin_password
+    };
+
+    this.isLoading = true;
+    this.http.post<any>(this.api, payload).subscribe({
+      next: (response) => {
+        this.toastr.success('Empresa creada exitosamente');
+        this.closeDialog();
+        this.loadEmpresas();
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error creando empresa:', err);
+        const errorMessage = err.error?.detail || err.error?.message || 'Error al crear empresa';
+        this.toastr.error(errorMessage);
+        this.isLoading = false;
+      }
+    });
   }
 
   editarEmpresa(empresa: EmpresaCliente): void {
@@ -224,11 +317,67 @@ export class EmpresasClientesComponent implements OnInit, OnDestroy {
   }
 
   generarReporte(): void {
-    this.toastr.info('Generando reporte de empresas clientes...', 'Reporte');
+    if (this.filteredEmpresas.length === 0) {
+      this.toastr.warning('No hay empresas para generar reporte');
+      return;
+    }
+
+    // Crear contenido del reporte
+    let reportContent = 'REPORTE DE EMPRESAS CLIENTES\n';
+    reportContent += '================================\n\n';
+    reportContent += `Fecha: ${new Date().toLocaleDateString('es-SV')}\n`;
+    reportContent += `Total Empresas: ${this.filteredEmpresas.length}\n`;
+    reportContent += `Empresas Activas: ${this.empresasActivas}\n\n`;
+    reportContent += 'DETALLE DE EMPRESAS:\n';
+    reportContent += '================================\n\n';
+
+    this.filteredEmpresas.forEach((empresa, index) => {
+      reportContent += `${index + 1}. ${empresa.nombre}\n`;
+      reportContent += `   Razón Social: ${empresa.razonSocial}\n`;
+      reportContent += `   NIT: ${empresa.nit}\n`;
+      reportContent += `   Tipo: ${this.getTipoEmpresaLabel(empresa.tipoEmpresa)}\n`;
+      reportContent += `   Estado: ${empresa.estado.toUpperCase()}\n`;
+      reportContent += `   Email: ${empresa.email}\n`;
+      reportContent += `   Teléfono: ${empresa.telefono || 'N/A'}\n`;
+      reportContent += `   Crédito: ${this.formatCurrency(empresa.limiteCredito)}\n`;
+      reportContent += `   Saldo: ${this.formatCurrency(empresa.saldoActual)}\n\n`;
+    });
+
+    // Crear y descargar el archivo
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `reporte_empresas_${new Date().getTime()}.txt`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    this.toastr.success('Reporte generado exitosamente');
   }
 
   exportarDatos(): void {
-    this.toastr.info('Exportando datos de empresas...', 'Exportar');
+    if (this.filteredEmpresas.length === 0) {
+      this.toastr.warning('No hay empresas para exportar');
+      return;
+    }
+
+    // Crear CSV
+    let csvContent = 'Nombre,Razón Social,NIT,Tipo,Estado,Email,Teléfono,Crédito,Saldo\n';
+    
+    this.filteredEmpresas.forEach(empresa => {
+      csvContent += `"${empresa.nombre}","${empresa.razonSocial}","${empresa.nit}","${this.getTipoEmpresaLabel(empresa.tipoEmpresa)}","${empresa.estado}","${empresa.email}","${empresa.telefono}","${empresa.limiteCredito}","${empresa.saldoActual}"\n`;
+    });
+
+    // Descargar CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `empresas_exportadas_${new Date().getTime()}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    this.toastr.success('Datos exportados exitosamente');
   }
 
   get empresasActivas(): number {
