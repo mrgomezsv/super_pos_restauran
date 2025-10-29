@@ -2439,18 +2439,26 @@ async def get_users(db: Session = Depends(get_db)):
     ) for user in users]
 
 @app.post("/api/users", response_model=UserResponse)
-async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
-    """Crear nuevo usuario"""
-    # Verificar que el username no exista
-    existing_user = db.query(DBUser).filter(DBUser.username == user_data.username).first()
+async def create_user(user_data: UserCreate, context: dict = Depends(get_current_context), db: Session = Depends(get_db)):
+    """Crear nuevo usuario con contraseña hasheada"""
+    # Verificar que el username no exista (en la misma compañía si aplica)
+    company_id = context.get("user", {}).get("company_id")
+    existing_user = db.query(DBUser).filter(
+        DBUser.username == user_data.username,
+        DBUser.company_id == company_id
+    ).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="El nombre de usuario ya existe")
     
+    # Hashear contraseña antes de guardar
+    hashed_password = get_password_hash(user_data.password)
+    
     new_user = DBUser(
+        company_id=company_id,
         username=user_data.username,
         name=user_data.name,
         email=user_data.email,
-        password=user_data.password,
+        password=hashed_password,
         role=user_data.role,
         isActive=user_data.isActive,
         createdAt=datetime.now()
@@ -2459,6 +2467,16 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    
+    # Registrar en auditoría
+    log_audit_event(
+        user_id=context.get("user", {}).get("id"),
+        action="USER_CREATED",
+        module="Users",
+        detail=f"Usuario {user_data.username} creado por {context.get('user', {}).get('username')}",
+        company_id=company_id,
+        db=db
+    )
     
     return UserResponse(
         id=new_user.id,

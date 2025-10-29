@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db_session
 from database import Company, User
+from auth import get_password_hash
 
 def create_tables():
     """Crear todas las tablas"""
@@ -22,16 +23,19 @@ def init_sudo_user(db: Session):
         print("Usuario SUDO ya existe, omitiendo...")
         return
     
+    # Hashear contraseña
+    sudo_password = get_password_hash("sudo123")
+    
     sudo_user = User(
         company_id=None,  # SUDO no pertenece a ninguna compañía
         username="sudo",
         name="Super Administrador",
         email="sudo@superpos.com",
-        password="sudo123",  # En producción usar hash
+        password=sudo_password,
         role="sudo",
-            isActive=True,
-            createdAt=datetime.now()
-        )
+        isActive=True,
+        createdAt=datetime.now()
+    )
     
     db.add(sudo_user)
     db.commit()
@@ -169,12 +173,15 @@ def init_cajero_user(db: Session):
         print("No hay compañías disponibles, no se puede crear el cajero")
         return
     
+    # Hashear contraseña
+    cajero_password = get_password_hash("cajero123")
+    
     cajero_user = User(
         company_id=company.id,
         username="cajero1",
         name="Juan Pérez",
         email="juan@superpos.com",
-        password="cajero123",
+        password=cajero_password,
         role="cashier",
         isActive=True,
         createdAt=datetime.now()

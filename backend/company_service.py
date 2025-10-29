@@ -288,12 +288,16 @@ class CompanyService:
                     "user_id": None
                 }
             
+            # Hashear contraseña antes de guardar
+            from auth import get_password_hash
+            hashed_password = get_password_hash(admin_user_data["password"])
+            
             new_admin = DBUser(
                 company_id=company_id,
                 username=admin_user_data["username"],
                 name=admin_user_data["name"],
                 email=admin_user_data["email"],
-                password=admin_user_data["password"],  # En producción usar hash
+                password=hashed_password,
                 role="admin",
                 isActive=True,
                 createdAt=datetime.now()
