@@ -17,16 +17,15 @@
 // Support Chat Modal Styles
 .support-chat-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    bottom: 20px;
+    right: 20px;
+    background: transparent;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end;
+    justify-content: flex-end;
     z-index: 10000;
     animation: fadeIn 0.3s ease;
+    pointer-events: none;
 }
 
 @keyframes fadeIn {
@@ -41,23 +40,26 @@
 .support-chat-modal {
     background: white;
     border-radius: 12px;
-    width: 90%;
-    max-width: 450px;
-    max-height: 90vh;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    max-height: 600px;
+    min-height: 500px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.3s ease;
     overflow: hidden;
+    pointer-events: auto;
+    margin: 0;
 }
 
 @keyframes slideUp {
     from {
-        transform: translateY(50px);
+        transform: translateY(20px) scale(0.95);
         opacity: 0;
     }
     to {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
     }
 }
@@ -253,9 +255,17 @@
 }
 
 @media (max-width: 480px) {
+    .support-chat-overlay {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+
     .support-chat-modal {
-        width: 95%;
-        max-height: 95vh;
+        width: 100%;
+        max-width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+        min-height: auto;
     }
 
     .support-chat-header {
