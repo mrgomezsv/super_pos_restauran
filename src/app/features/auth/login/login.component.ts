@@ -13,6 +13,7 @@ import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { LoginRequest } from '../../../core/models/user.model';
+import { SupportChatComponent } from './support-chat/support-chat.component';
 
 @Component({
   selector: 'app-login',
@@ -25,7 +26,8 @@ import { LoginRequest } from '../../../core/models/user.model';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    SupportChatComponent
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
@@ -36,8 +38,6 @@ export class LoginComponent implements OnInit {
   hidePassword = true;
   mousePosition = { x: 0, y: 0 };
   showSupportChat = false;
-  
-  supportForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -49,12 +49,6 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required]]
-    });
-    
-    this.supportForm = this.fb.group({
-      nombre: ['', [Validators.required]],
-      cargo: ['', [Validators.required]],
-      empresaCliente: ['', [Validators.required]]
     });
   }
 
@@ -132,24 +126,7 @@ export class LoginComponent implements OnInit {
 
   closeSupportChat(): void {
     this.showSupportChat = false;
-    this.supportForm.reset();
     this.playSound('click');
-  }
-
-  onSubmitSupport(): void {
-    if (this.supportForm.valid) {
-      // Aquí puedes enviar el formulario a tu backend o servicio de soporte
-      const supportData = this.supportForm.value;
-      console.log('Support request:', supportData);
-      
-      // Simulación de envío
-      this.notificationService.success('Solicitud enviada. Nos pondremos en contacto pronto.');
-      this.closeSupportChat();
-      this.playSound('success');
-    } else {
-      this.notificationService.error('Por favor, complete todos los campos');
-      this.playSound('error');
-    }
   }
 
   private playSound(type: 'success' | 'error' | 'click'): void {
