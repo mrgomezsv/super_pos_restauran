@@ -35,6 +35,9 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   hidePassword = true;
   mousePosition = { x: 0, y: 0 };
+  showSupportChat = false;
+  
+  supportForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -46,6 +49,12 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required]]
+    });
+    
+    this.supportForm = this.fb.group({
+      nombre: ['', [Validators.required]],
+      cargo: ['', [Validators.required]],
+      empresaCliente: ['', [Validators.required]]
     });
   }
 
@@ -111,6 +120,36 @@ export class LoginComponent implements OnInit {
   togglePasswordVisibility(): void {
     this.hidePassword = !this.hidePassword;
     this.playSound('click');
+  }
+
+  openSupportChat(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    this.showSupportChat = true;
+    this.playSound('click');
+  }
+
+  closeSupportChat(): void {
+    this.showSupportChat = false;
+    this.supportForm.reset();
+    this.playSound('click');
+  }
+
+  onSubmitSupport(): void {
+    if (this.supportForm.valid) {
+      // Aquí puedes enviar el formulario a tu backend o servicio de soporte
+      const supportData = this.supportForm.value;
+      console.log('Support request:', supportData);
+      
+      // Simulación de envío
+      this.notificationService.success('Solicitud enviada. Nos pondremos en contacto pronto.');
+      this.closeSupportChat();
+      this.playSound('success');
+    } else {
+      this.notificationService.error('Por favor, complete todos los campos');
+      this.playSound('error');
+    }
   }
 
   private playSound(type: 'success' | 'error' | 'click'): void {

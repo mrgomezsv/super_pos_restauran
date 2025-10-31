@@ -110,12 +110,115 @@
       <div class="my-form__actions">
         <div class="my-form__row">
           <!-- <span>¿No tienes una cuenta?</span> -->
-          <a href="#" title="Contactar Administrador">
-            Contactar Administrador
+          <a href="#" title="Contactar con Soporte" (click)="openSupportChat($event)">
+            Contactar con Soporte
           </a>
         </div>
       </div>
     </form>
   </main>
+  </div>
+</div>
+
+<!-- Support Chat Modal -->
+<div class="support-chat-overlay" *ngIf="showSupportChat" (click)="closeSupportChat()">
+  <div class="support-chat-modal" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="support-chat-header">
+      <div class="support-chat-header-content">
+        <div class="support-chat-title">
+          <span class="support-hours-title">24 HORAS</span>
+          <span class="support-hours-subtitle">De Lunes a Domingo</span>
+        </div>
+        <button class="support-chat-close" (click)="closeSupportChat()" title="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="support-chat-content">
+      <form [formGroup]="supportForm" (ngSubmit)="onSubmitSupport()">
+        <!-- Nombre -->
+        <div class="support-field">
+          <label for="nombre">Nombre</label>
+          <div class="support-input-wrapper">
+            <input 
+              type="text" 
+              id="nombre" 
+              formControlName="nombre" 
+              placeholder="Ingrese su nombre completo"
+              required
+            >
+            <mat-icon class="support-input-icon">person</mat-icon>
+          </div>
+          <div class="error-message" *ngIf="supportForm.get('nombre')?.hasError('required') && supportForm.get('nombre')?.touched">
+            El nombre es requerido
+          </div>
+        </div>
+
+        <!-- Cargo -->
+        <div class="support-field">
+          <label for="cargo">Cargo</label>
+          <div class="support-input-wrapper">
+            <input 
+              type="text" 
+              id="cargo" 
+              formControlName="cargo" 
+              placeholder="Ingrese su cargo"
+              required
+            >
+            <mat-icon class="support-input-icon">work</mat-icon>
+          </div>
+          <div class="error-message" *ngIf="supportForm.get('cargo')?.hasError('required') && supportForm.get('cargo')?.touched">
+            El cargo es requerido
+          </div>
+        </div>
+
+        <!-- Empresa Cliente -->
+        <div class="support-field">
+          <label for="empresaCliente">Nombre de la Empresa Cliente</label>
+          <div class="support-input-wrapper">
+            <input 
+              type="text" 
+              id="empresaCliente" 
+              formControlName="empresaCliente" 
+              placeholder="Ingrese el nombre de la empresa"
+              required
+            >
+            <mat-icon class="support-input-icon">business</mat-icon>
+          </div>
+          <div class="error-message" *ngIf="supportForm.get('empresaCliente')?.hasError('required') && supportForm.get('empresaCliente')?.touched">
+            El nombre de la empresa es requerido
+          </div>
+        </div>
+
+        <!-- Important Section -->
+        <div class="support-info-section">
+          <div class="support-info-header">
+            <mat-icon class="support-info-icon">lightbulb</mat-icon>
+            <span>Importante</span>
+          </div>
+          <p class="support-info-text">
+            Las transacciones están siempre disponibles. Puede consultar productos, 
+            pagar servicios y realizar transferencias utilizando su PIN de telebanca, 
+            el cual puede ser asignado llamando al 2210-0000 opción 4-2-1.
+          </p>
+          <div class="support-info-footer">
+            <mat-icon class="support-info-lock">lock</mat-icon>
+            <span>Los datos proporcionados serán manejados confidencialmente por Super POS</span>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="support-submit-btn"
+          [disabled]="supportForm.invalid"
+        >
+          ENVIAR
+        </button>
+      </form>
+    </div>
   </div>
 </div>
