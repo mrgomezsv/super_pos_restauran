@@ -126,10 +126,33 @@
     <!-- Sidebar -->
     <aside class="sidebar" #sidenav>
       <nav class="sidebar-nav">
-        <div class="nav-section">
+        <!-- Campo de Búsqueda -->
+        <div class="sidebar-search">
+          <div class="search-input-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input 
+              type="text" 
+              class="search-input"
+              placeholder="Buscar en el menú..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearchChange()"
+              (focus)="onSearchFocus()"
+              (blur)="onSearchBlur()"
+            />
+            <button 
+              *ngIf="searchQuery" 
+              class="search-clear"
+              (click)="clearSearch()"
+              mat-icon-button>
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-section" *ngIf="shouldShowSection('Principal')">
           <h3 class="nav-section-title">Principal</h3>
           <ul class="nav-list">
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Punto de Venta', 'Principal')">
               <a routerLink="/pos" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>point_of_sale</mat-icon>
@@ -139,7 +162,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Productos', 'Principal')">
               <a routerLink="/products" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>inventory_2</mat-icon>
@@ -149,7 +172,7 @@
               </a>
             </li>
             
-            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier'">
+            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Informes', 'Principal')">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>analytics</mat-icon>
@@ -161,11 +184,11 @@
           </ul>
         </div>
         
-        <div class="nav-section" *ngIf="currentUser?.role !== 'cashier'">
+        <div class="nav-section" *ngIf="currentUser?.role !== 'cashier' && shouldShowSection('Administración')">
           <h3 class="nav-section-title">Administración</h3>
           <ul class="nav-list">
             <!-- Gestión de Personal -->
-            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier'">
+            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Usuarios', 'Administración')">
               <a routerLink="/users" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>people</mat-icon>
@@ -176,7 +199,7 @@
             </li>
             
             <!-- Configuración del Sistema -->
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Categorías', 'Administración')">
               <a routerLink="/admin/categories" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>category</mat-icon>
@@ -186,7 +209,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Proveedores', 'Administración')">
               <a routerLink="/admin/suppliers" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>local_shipping</mat-icon>
@@ -196,7 +219,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Órdenes de Compra', 'Administración')">
               <a routerLink="/admin/purchase-orders" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>shopping_cart</mat-icon>
@@ -206,7 +229,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Recepción de Mercancía', 'Administración')">
               <a routerLink="/admin/goods-receipts" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>inventory</mat-icon>
@@ -217,7 +240,7 @@
             </li>
             
             <!-- Gestión Financiera -->
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Caja Registradora', 'Administración')">
               <a routerLink="/admin/cash-register" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>account_balance_wallet</mat-icon>
@@ -227,7 +250,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Promociones', 'Administración')">
               <a routerLink="/admin/discounts" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>local_offer</mat-icon>
@@ -238,7 +261,7 @@
             </li>
             
             <!-- Control y Monitoreo -->
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Alertas Stock', 'Administración')">
               <a routerLink="/admin/inventory-alerts" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>warning</mat-icon>
@@ -248,7 +271,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Bitácora', 'Administración')">
               <a routerLink="/admin/audit-logs" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>history</mat-icon>
@@ -259,7 +282,7 @@
             </li>
             
             <!-- Configuración General -->
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Información del Negocio', 'Administración')">
               <a routerLink="/admin/business-config" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>business</mat-icon>
@@ -269,7 +292,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Documentos Fiscales', 'Administración')">
               <a routerLink="/admin/fiscal-documents" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>description</mat-icon>
@@ -282,10 +305,10 @@
         </div>
 
         <!-- Contabilidad -->
-        <div class="nav-section" *ngIf="currentUser && currentUser.role !== 'cashier'">
+        <div class="nav-section" *ngIf="currentUser && currentUser.role !== 'cashier' && shouldShowSection('Contabilidad')">
           <h3 class="nav-section-title">Contabilidad</h3>
           <ul class="nav-list">
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro Diario', 'Contabilidad')">
               <a routerLink="/accounting/diario" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>menu_book</mat-icon>
@@ -294,7 +317,7 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro Mayor', 'Contabilidad')">
               <a routerLink="/accounting/mayor" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>library_books</mat-icon>
@@ -303,7 +326,7 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Inventarios', 'Contabilidad')">
               <a routerLink="/accounting/inventarios" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>inventory</mat-icon>
@@ -312,7 +335,7 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro de Ventas (IVA)', 'Contabilidad')">
               <a routerLink="/accounting/vat/ventas" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>receipt_long</mat-icon>
@@ -321,7 +344,7 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro de Compras (IVA)', 'Contabilidad')">
               <a routerLink="/accounting/vat/compras" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>shopping_cart</mat-icon>
@@ -330,7 +353,7 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Balance de Comprobación', 'Contabilidad')">
               <a routerLink="/accounting/trial-balance" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>balance</mat-icon>
@@ -343,10 +366,10 @@
         </div>
 
         <!-- SUDO Section -->
-        <div class="nav-section" *ngIf="currentUser?.role === 'sudo'">
+        <div class="nav-section" *ngIf="currentUser?.role === 'sudo' && shouldShowSection('SUDO')">
           <h3 class="nav-section-title">SUDO</h3>
           <ul class="nav-list">
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Empresas Clientes', 'SUDO')">
               <a routerLink="/sudo/empresas-clientes" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>business_center</mat-icon>
@@ -356,7 +379,7 @@
               </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Usuario Sudo', 'SUDO')">
               <a routerLink="/sudo/usuario-sudo" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
                   <mat-icon>admin_panel_settings</mat-icon>
@@ -366,6 +389,13 @@
               </a>
             </li>
           </ul>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <div class="no-results" *ngIf="searchQuery && getFilteredMenuItems().length === 0">
+          <mat-icon>search_off</mat-icon>
+          <p>No se encontraron resultados</p>
+          <span>Intenta con otros términos de búsqueda</span>
         </div>
       </nav>
     </aside>

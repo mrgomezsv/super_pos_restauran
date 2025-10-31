@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
 import { Router, RouterOutlet, RouterModule, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,9 +12,18 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatInputModule } from '@angular/material/input';
 import { AuthService } from './core/services/auth.service';
 import { CompanyContextService, AvailableCompany, CompanyInfo } from './core/services/company-context.service';
 import { User } from './core/models/user.model';
+
+interface MenuItem {
+  text: string;
+  section: string;
+  route: string;
+  icon: string;
+  role?: string; // Restricción de rol (opcional)
+}
 
 @Component({
   selector: 'app-root',
@@ -22,6 +32,7 @@ import { User } from './core/models/user.model';
     CommonModule,
     RouterOutlet,
     RouterModule,
+    FormsModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -31,7 +42,8 @@ import { User } from './core/models/user.model';
     MatSelectModule,
     MatFormFieldModule,
     MatChipsModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatInputModule
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
@@ -47,6 +59,11 @@ export class AppComponent implements OnInit {
   availableCompanies: AvailableCompany[] = [];
   selectedCompany: CompanyInfo | null = null;
   isCompanySelectorOpen = false;
+
+  // Propiedades de búsqueda
+  searchQuery = '';
+  isSearchFocused = false;
+  menuItems: MenuItem[] = [];
 
   constructor(
     private authService: AuthService,
@@ -77,6 +94,8 @@ export class AppComponent implements OnInit {
 
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      // Actualizar items del menú cuando cambia el usuario
+      this.buildMenuItems();
     });
 
     // Suscribirse a los cambios de contexto de compañía
@@ -88,6 +107,99 @@ export class AppComponent implements OnInit {
     this.companyContextService.availableCompanies$.subscribe(companies => {
       this.availableCompanies = companies;
     });
+
+    // Construir items del menú
+    this.buildMenuItems();
+  }
+
+  buildMenuItems(): void {
+    const items: MenuItem[] = [
+      // Principal
+      { text: 'Punto de Venta', section: 'Principal', route: '/pos', icon: 'point_of_sale' },
+      { text: 'Productos', section: 'Principal', route: '/products', icon: 'inventory_2' },
+      { text: 'Informes', section: 'Principal', route: '/reports', icon: 'analytics', role: '!cashier' },
+      
+      // Administración
+      { text: 'Usuarios', section: 'Administración', route: '/users', icon: 'people', role: '!cashier' },
+      { text: 'Categorías', section: 'Administración', route: '/admin/categories', icon: 'category' },
+      { text: 'Proveedores', section: 'Administración', route: '/admin/suppliers', icon: 'local_shipping' },
+      { text: 'Órdenes de Compra', section: 'Administración', route: '/admin/purchase-orders', icon: 'shopping_cart' },
+      { text: 'Recepción de Mercancía', section: 'Administración', route: '/admin/goods-receipts', icon: 'inventory' },
+      { text: 'Caja Registradora', section: 'Administración', route: '/admin/cash-register', icon: 'account_balance_wallet' },
+      { text: 'Promociones', section: 'Administración', route: '/admin/discounts', icon: 'local_offer' },
+      { text: 'Alertas Stock', section: 'Administración', route: '/admin/inventory-alerts', icon: 'warning' },
+      { text: 'Bitácora', section: 'Administración', route: '/admin/audit-logs', icon: 'history' },
+      { text: 'Información del Negocio', section: 'Administración', route: '/admin/business-config', icon: 'business' },
+      { text: 'Documentos Fiscales', section: 'Administración', route: '/admin/fiscal-documents', icon: 'description' },
+      
+      // Contabilidad
+      { text: 'Libro Diario', section: 'Contabilidad', route: '/accounting/diario', icon: 'menu_book', role: '!cashier' },
+      { text: 'Libro Mayor', section: 'Contabilidad', route: '/accounting/mayor', icon: 'library_books', role: '!cashier' },
+      { text: 'Inventarios', section: 'Contabilidad', route: '/accounting/inventarios', icon: 'inventory', role: '!cashier' },
+      { text: 'Libro de Ventas (IVA)', section: 'Contabilidad', route: '/accounting/vat/ventas', icon: 'receipt_long', role: '!cashier' },
+      { text: 'Libro de Compras (IVA)', section: 'Contabilidad', route: '/accounting/vat/compras', icon: 'shopping_cart', role: '!cashier' },
+      { text: 'Balance de Comprobación', section: 'Contabilidad', route: '/accounting/trial-balance', icon: 'balance', role: '!cashier' },
+      
+      // SUDO
+      { text: 'Empresas Clientes', section: 'SUDO', route: '/sudo/empresas-clientes', icon: 'business_center', role: 'sudo' },
+      { text: 'Usuario Sudo', section: 'SUDO', route: '/sudo/usuario-sudo', icon: 'admin_panel_settings', role: 'sudo' }
+    ];
+
+    // Filtrar items según rol del usuario
+    this.menuItems = items.filter(item => {
+      if (!item.role) return true;
+      if (item.role === 'sudo' && this.currentUser?.role === 'sudo') return true;
+      if (item.role === '!cashier' && this.currentUser?.role !== 'cashier') return true;
+      return false;
+    });
+  }
+
+  onSearchChange(): void {
+    // El filtrado se hace automáticamente en los métodos shouldShowMenuItem y shouldShowSection
+  }
+
+  onSearchFocus(): void {
+    this.isSearchFocused = true;
+  }
+
+  onSearchBlur(): void {
+    // Delay para permitir que el click en el botón de limpiar funcione
+    setTimeout(() => {
+      this.isSearchFocused = false;
+    }, 200);
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+  }
+
+  shouldShowMenuItem(text: string, section: string): boolean {
+    if (!this.searchQuery) return true;
+    
+    const query = this.searchQuery.toLowerCase().trim();
+    const itemText = text.toLowerCase();
+    const sectionName = section.toLowerCase();
+    
+    // Buscar en el texto del item o en la sección
+    return itemText.includes(query) || sectionName.includes(query);
+  }
+
+  shouldShowSection(section: string): boolean {
+    if (!this.searchQuery) return true;
+    
+    // Mostrar sección si tiene al menos un item que coincida
+    return this.menuItems.some(item => {
+      if (item.section !== section) return false;
+      return this.shouldShowMenuItem(item.text, item.section);
+    });
+  }
+
+  getFilteredMenuItems(): MenuItem[] {
+    if (!this.searchQuery) return this.menuItems;
+    
+    return this.menuItems.filter(item => 
+      this.shouldShowMenuItem(item.text, item.section)
+    );
   }
 
   goToDashboard() {
