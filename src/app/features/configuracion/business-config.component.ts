@@ -18,9 +18,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
-import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 interface BusinessConfig {
   id: number;
@@ -83,7 +83,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
   saveSuccess = false;
   currentConfig: BusinessConfig | null = null;
   ticketTemplate: any = null; // TODO: Definir tipo específico para ticket template
-  expandedSections: Set<string> = new Set(['company', 'contact', 'fiscal', 'accounting']);
+  expandedSections: Set<string> = new Set(['company', 'contact', 'fiscal']);
   private destroy$ = new Subject<void>();
 
   currencies = [
@@ -382,8 +382,7 @@ export class BusinessConfigComponent implements OnInit, OnDestroy {
     const sectionFields: { [key: string]: string[] } = {
       'company': ['nombre', 'razonSocial', 'nit', 'nrc'],
       'contact': ['direccion', 'telefono', 'email', 'sitioWeb', 'ciudad', 'codigoPostal'],
-      'fiscal': ['regimenFiscal', 'actividadEconomica', 'fechaInicioOperaciones'],
-      'accounting': ['representanteLegal', 'contador', 'auditor']
+      'fiscal': ['regimenFiscal', 'actividadEconomica', 'fechaInicioOperaciones']
     };
 
     const fieldsToClear = sectionFields[sectionId];
