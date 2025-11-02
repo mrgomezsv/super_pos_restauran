@@ -19,12 +19,10 @@ Sistema completo de punto de ventas desarrollado en Angular para supermercados, 
 - Impresión de tickets (funcionalidad preparada)
 - Historial completo de ventas con persistencia real
 
-### 🔒 **Persistencia y Contabilidad**
+### 🔒 **Persistencia y Datos**
 - **SQLite**: Base de datos real con persistencia completa
-- **Pólizas automáticas**: Cada venta genera asientos contables
 - **Movimientos de inventario**: Actualizaciones automáticas de stock
-- **Libro diario**: Registro completo de todas las transacciones
-- **Balance de comprobación**: Informes contables automáticos
+- **Historial de ventas**: Registro completo de todas las transacciones
 - **Datos seguros**: Todo persiste después de reiniciar el servidor
 
 ### 👥 **Gestión de Usuarios**
@@ -71,8 +69,8 @@ Sistema completo de punto de ventas desarrollado en Angular para supermercados, 
 
 ### 1. Clonar el repositorio
 ```bash
-git clone <url-del-repositorio>
-cd super-pos
+git clone https://github.com/mrgomezsv/super_pos_restauran.git
+cd super_pos_restauran
 ```
 
 ### 2. Configurar el Backend (FastAPI + SQLite)
@@ -134,6 +132,7 @@ ng serve
 - ✅ Gestión de usuarios
 - ✅ Configuración de productos
 - ✅ Reportes avanzados
+- ✅ Configuración del negocio y tickets
 - ✅ Punto de venta
 
 ### 👨‍💼 **Gerente**
@@ -170,7 +169,7 @@ ng serve
 ## 🔧 Estructura del Proyecto
 
 ```
-super-pos/
+super_pos_restauran/
 ├── src/                        # 🎨 FRONTEND (Angular)
 │   ├── app/
 │   │   ├── core/                 # Servicios y modelos compartidos
@@ -183,7 +182,8 @@ super-pos/
 │   │   │   ├── products/       # Gestión de productos
 │   │   │   ├── users/          # Gestión de usuarios
 │   │   │   ├── reports/        # Reportes
-│   │   │   ├── accounting/     # Módulos contables
+│   │   │   ├── configuracion/  # Configuración del negocio
+│   │   │   ├── fiscal-documents/# Documentos fiscales
 │   │   │   └── dashboard/      # Dashboard principal
 │   │   ├── app.component.ts    # Componente principal
 │   │   ├── app.routes.ts       # Rutas de la aplicación
@@ -242,13 +242,10 @@ Los impuestos se configuran por producto en la sección de gestión de productos
 - `POST /api/users` - Crear usuario
 - `PUT /api/users/:id` - Actualizar usuario
 
-### Contabilidad (nuevos endpoints)
-- `GET /api/accounting/accounts` - Catálogo de cuentas
-- `GET /api/accounting/journal-entries` - Libro diario
-- `GET /api/accounting/ledger` - Libro mayor
-- `GET /api/accounting/trial-balance` - Balance de comprobación
-- `GET /api/accounting/inventory-movements` - Movimientos de inventario
-- `GET /api/accounting/vat/sales` - Libro de ventas (IVA)
+### Configuración de Negocio
+- `GET /api/business/config` - Obtener configuración del negocio
+- `PUT /api/business/config` - Actualizar configuración del negocio
+- `POST /api/business/config/logo` - Subir logo del negocio
 
 ### Documentos Fiscales
 - `GET /api/fiscal-documents` - Listar documentos fiscales
@@ -312,13 +309,15 @@ cp backend/superpos.db backups/superpos_$(date +%Y%m%d).db
 
 ## 📈 Funcionalidades Completadas y Próximas
 
-### ✅ **Recién Implementado (v2.0 - SQLite)**
+### ✅ **Funcionalidades Implementadas**
 - [x] **Persistencia real con SQLite**
-- [x] **Sistema contable completo**
-- [x] **Pólizas automáticas para cada venta**  
-- [x] **Movimientos de inventario**
-- [x] **Libro diario y mayor**
-- [x] **Balance de comprobación**
+- [x] **Punto de venta completo con carrito dinámico**
+- [x] **Facturación consumidor final y crédito fiscal**
+- [x] **Gestión de productos con control de inventario**
+- [x] **Dashboard con métricas en tiempo real**
+- [x] **Reportes de ventas e inventario**
+- [x] **Configuración de negocio y tickets personalizables**
+- [x] **Sistema multi-rol (Admin, Gerente, Cajero)**
 - [x] **API con documentación automática (Swagger)**
 
 ### 🎯 **Próximas Funcionalidades**
