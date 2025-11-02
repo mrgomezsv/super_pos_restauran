@@ -1,0 +1,159 @@
+.recetas-container {
+  padding: var(--spacing-xl);
+  max-width: 100%;
+  margin: 0;
+  background: var(--background);
+  min-height: 100vh;
+}
+
+.recetas-header {
+  margin-bottom: var(--spacing-2xl);
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+    
+    .header-info {
+      flex: 1;
+      
+      .page-title {
+        font-size: var(--text-3xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--text);
+        margin: 0 0 var(--spacing-sm) 0;
+        line-height: var(--leading-tight);
+        font-family: 'Poppins', sans-serif;
+      }
+      
+      .page-subtitle {
+        font-size: var(--text-base);
+        color: var(--text-gray);
+        margin: 0;
+        line-height: var(--leading-relaxed);
+      }
+    }
+    
+    .add-recipe-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-lg);
+      
+      mat-icon {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+.filters-section {
+  margin-bottom: var(--spacing-2xl);
+  
+  .filters-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+    
+    .filters-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--spacing-lg);
+      align-items: end;
+    }
+    
+    .filter-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      
+      button {
+        flex: 1;
+      }
+    }
+  }
+}
+
+.content-section {
+  .table-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    
+    mat-card-content {
+      padding: 0 !important;
+    }
+  }
+  
+  .recipes-table {
+    width: 100%;
+    background: transparent;
+    
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      font-size: 16px;
+    }
+  }
+  
+  mat-chip.active {
+    background: #10b981;
+    color: white;
+  }
+  
+  mat-chip.inactive {
+    background: #ef4444;
+    color: white;
+  }
+}
+
+.loading-container,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    color: #ccc;
+  }
+  
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 12px 0;
+  }
+  
+  p {
+    font-size: 16px;
+    color: var(--text-gray);
+    margin: 0 0 24px 0;
+  }
+  
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filters-section {
+    .filters-card {
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+

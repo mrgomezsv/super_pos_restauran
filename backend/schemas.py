@@ -783,3 +783,114 @@ class CompanyContext(BaseModel):
     user_role: str
     is_sudo: bool = False
     permissions: List[str] = []
+
+# Esquemas de Recetas
+class RecipeIngredientCreate(BaseModel):
+    ingredient_product_id: int = Field(..., description="ID del producto ingrediente")
+    quantity: float = Field(..., gt=0, description="Cantidad necesaria")
+    unit_of_measure: str = Field(..., max_length=20, description="Unidad de medida")
+    notes: Optional[str] = None
+
+class RecipeIngredientResponse(BaseModel):
+    id: int
+    recipe_id: int
+    ingredient_product_id: int
+    ingredient_product_name: Optional[str] = None
+    quantity: float
+    unit_of_measure: str
+    unit_cost: float
+    total_cost: float
+    notes: Optional[str] = None
+
+class RecipeCreate(BaseModel):
+    product_id: int = Field(..., description="ID del producto final que se produce")
+    code: str = Field(..., max_length=50, description="Código único de la receta")
+    name: str = Field(..., max_length=200, description="Nombre de la receta")
+    description: Optional[str] = None
+    batch_size: float = Field(1.0, gt=0, description="Cantidad de unidades que produce")
+    unit_of_measure: str = Field("unidades", max_length=20)
+    preparation_time: int = Field(0, ge=0, description="Tiempo de preparación en minutos")
+    ingredients: List[RecipeIngredientCreate] = Field(..., min_items=1)
+
+class RecipeUpdate(BaseModel):
+    code: Optional[str] = Field(None, max_length=50)
+    name: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = None
+    batch_size: Optional[float] = Field(None, gt=0)
+    unit_of_measure: Optional[str] = Field(None, max_length=20)
+    preparation_time: Optional[int] = Field(None, ge=0)
+    isActive: Optional[bool] = None
+
+class RecipeResponse(BaseModel):
+    id: int
+    company_id: int
+    product_id: int
+    product_name: Optional[str] = None
+    code: str
+    name: str
+    description: Optional[str] = None
+    batch_size: float
+    unit_of_measure: str
+    preparation_time: int
+    cost_per_batch: float
+    isActive: bool
+    createdAt: datetime
+    updatedAt: datetime
+    ingredients: List[RecipeIngredientResponse] = []
+
+# Esquemas de Producción
+class ProductionConsumptionCreate(BaseModel):
+    ingredient_product_id: int
+    quantity_required: float = Field(..., gt=0)
+    quantity_consumed: float = Field(..., gt=0)
+    unit_of_measure: str = Field(..., max_length=20)
+    unit_cost: float = Field(..., ge=0)
+
+class ProductionConsumptionResponse(BaseModel):
+    id: int
+    production_order_id: int
+    ingredient_product_id: int
+    ingredient_product_name: Optional[str] = None
+    quantity_required: float
+    quantity_consumed: float
+    unit_of_measure: str
+    unit_cost: float
+    total_cost: float
+
+class ProductionOrderCreate(BaseModel):
+    recipe_id: int = Field(..., description="ID de la receta a producir")
+    quantity_to_produce: float = Field(..., gt=0, description="Cantidad a producir")
+    unit_of_measure: str = Field(..., max_length=20)
+    planned_start_date: Optional[datetime] = None
+    planned_end_date: Optional[datetime] = None
+    notes: Optional[str] = None
+    consumption_items: List[ProductionConsumptionCreate] = []
+
+class ProductionOrderStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(planned|in_progress|completed|cancelled)$")
+
+class ProductionOrderResponse(BaseModel):
+    id: int
+    company_id: int
+    recipe_id: int
+    recipe_name: Optional[str] = None
+    production_number: str
+    production_date: datetime
+    quantity_to_produce: float
+    quantity_produced: float
+    unit_of_measure: str
+    status: str
+    planned_start_date: Optional[datetime] = None
+    planned_end_date: Optional[datetime] = None
+    actual_start_date: Optional[datetime] = None
+    actual_end_date: Optional[datetime] = None
+    cost_per_unit: float
+    total_cost: float
+    notes: Optional[str] = None
+    created_by: int
+    creator_name: Optional[str] = None
+    completed_by: Optional[int] = None
+    completed_by_name: Optional[str] = None
+    createdAt: datetime
+    updatedAt: datetime
+    consumption_items: List[ProductionConsumptionResponse] = []

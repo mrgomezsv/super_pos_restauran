@@ -184,6 +184,32 @@
           </ul>
         </div>
         
+        <!-- Producción -->
+        <div class="nav-section" *ngIf="currentUser?.role !== 'cashier' && shouldShowSection('Producción')">
+          <h3 class="nav-section-title">Producción</h3>
+          <ul class="nav-list">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Recetas', 'Producción')">
+              <a routerLink="/recetas" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>menu_book</mat-icon>
+                </div>
+                <span class="nav-text">Recetas</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Ordenes de Producción', 'Producción')">
+              <a routerLink="/produccion" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>precision_manufacturing</mat-icon>
+                </div>
+                <span class="nav-text">Ordenes de Producción</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
         <!-- Administración -->
         <div class="nav-section" *ngIf="currentUser?.role !== 'cashier' && shouldShowSection('Administración')">
           <h3 class="nav-section-title">Administración</h3>

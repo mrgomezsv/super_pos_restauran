@@ -156,6 +156,7 @@ class Product(Base):
     
     # Relaciones
     company = relationship("Company", back_populates="products")
+    recipes = relationship("Recipe", back_populates="product", foreign_keys="[Recipe.product_id]")
     
     # Restricciones
     __table_args__ = (
@@ -536,6 +537,114 @@ class AuditLog(Base):
 
     company = relationship("Company", backref="audit_logs")
     user = relationship("User", backref="audit_logs")
+
+# Recetas y Producción
+class Recipe(Base):
+    __tablename__ = "recipes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)  # Producto final que se produce
+    code = Column(String(50), nullable=False, index=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    batch_size = Column(Float, nullable=False, default=1.0)  # Cantidad de unidades que produce la receta
+    unit_of_measure = Column(String(20), default="unidades")  # unidad, kg, litro, etc.
+    preparation_time = Column(Integer, default=0)  # Tiempo en minutos
+    cost_per_batch = Column(Float, default=0.0)  # Costo calculado por lote
+    isActive = Column(Boolean, default=True)
+    createdAt = Column(DateTime, default=func.now())
+    updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    company = relationship("Company", backref="recipes")
+    product = relationship("Product", back_populates="recipes", foreign_keys=[product_id])
+    ingredients = relationship("RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan")
+    production_orders = relationship("ProductionOrder", back_populates="recipe")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('code', 'company_id', name='unique_recipe_code_per_company'),
+        UniqueConstraint('product_id', 'company_id', name='unique_recipe_product_per_company'),  # Un producto solo puede tener una receta
+    )
+
+class RecipeIngredient(Base):
+    __tablename__ = "recipe_ingredients"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False, index=True)
+    ingredient_product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    quantity = Column(Float, nullable=False)  # Cantidad necesaria por lote
+    unit_of_measure = Column(String(20), nullable=False)  # unidad, kg, litro, gramos, ml, etc.
+    unit_cost = Column(Float, default=0.0)  # Costo unitario del ingrediente (referencia)
+    total_cost = Column(Float, default=0.0)  # Costo total = quantity * unit_cost
+    notes = Column(Text, nullable=True)
+    
+    # Relaciones
+    recipe = relationship("Recipe", back_populates="ingredients")
+    ingredient_product = relationship("Product", foreign_keys=[ingredient_product_id], backref="ingredients_in")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('recipe_id', 'ingredient_product_id', name='unique_ingredient_per_recipe'),  # Un ingrediente solo una vez por receta
+    )
+
+class ProductionOrder(Base):
+    __tablename__ = "production_orders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False, index=True)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False, index=True)
+    production_number = Column(String(50), nullable=False, index=True)  # PROD-001
+    production_date = Column(DateTime, nullable=False, default=func.now())
+    quantity_to_produce = Column(Float, nullable=False)  # Cantidad a producir
+    quantity_produced = Column(Float, default=0.0)  # Cantidad real producida
+    unit_of_measure = Column(String(20), nullable=False)
+    status = Column(String(20), default="planned", index=True)  # planned, in_progress, completed, cancelled
+    planned_start_date = Column(DateTime, nullable=True)
+    planned_end_date = Column(DateTime, nullable=True)
+    actual_start_date = Column(DateTime, nullable=True)
+    actual_end_date = Column(DateTime, nullable=True)
+    cost_per_unit = Column(Float, default=0.0)  # Costo por unidad producida
+    total_cost = Column(Float, default=0.0)  # Costo total de la producción
+    notes = Column(Text, nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"))
+    completed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    createdAt = Column(DateTime, default=func.now())
+    updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    company = relationship("Company", backref="production_orders")
+    recipe = relationship("Recipe", back_populates="production_orders")
+    creator = relationship("User", foreign_keys=[created_by], backref="created_production_orders")
+    completer = relationship("User", foreign_keys=[completed_by], backref="completed_production_orders")
+    consumption_items = relationship("ProductionConsumption", back_populates="production_order", cascade="all, delete-orphan")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('production_number', 'company_id', name='unique_production_number_per_company'),
+    )
+
+class ProductionConsumption(Base):
+    __tablename__ = "production_consumptions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    production_order_id = Column(Integer, ForeignKey("production_orders.id"), nullable=False, index=True)
+    ingredient_product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    quantity_required = Column(Float, nullable=False)  # Cantidad requerida según la receta
+    quantity_consumed = Column(Float, nullable=False)  # Cantidad real consumida
+    unit_of_measure = Column(String(20), nullable=False)
+    unit_cost = Column(Float, nullable=False)  # Costo unitario al momento del consumo
+    total_cost = Column(Float, nullable=False)  # Costo total del ingrediente consumido
+    
+    # Relaciones
+    production_order = relationship("ProductionOrder", back_populates="consumption_items")
+    ingredient_product = relationship("Product", backref="production_consumptions")
+    
+    # Restricciones
+    __table_args__ = (
+        UniqueConstraint('production_order_id', 'ingredient_product_id', name='unique_consumption_item_per_order'),
+    )
 
 # Función para crear todas las tablas
 def create_tables():

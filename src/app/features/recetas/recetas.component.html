@@ -1,0 +1,128 @@
+<div class="recetas-container">
+  <div class="recetas-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">Gestión de Recetas</h1>
+        <p class="page-subtitle">
+          Administra las recetas de producción y sus ingredientes
+        </p>
+      </div>
+      <button class="add-recipe-btn" mat-raised-button color="primary" (click)="openRecipeDialog()">
+        <mat-icon>add</mat-icon>
+        <span>Agregar Receta</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-card">
+      <form [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+        <div class="filters-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Buscar receta</mat-label>
+            <input matInput formControlName="search" placeholder="Nombre, código...">
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <div class="filter-actions">
+            <button mat-stroked-button type="submit" [disabled]="isLoading">
+              <mat-icon>search</mat-icon>
+              Buscar
+            </button>
+            <button mat-stroked-button type="button" (click)="clearFilters()" [disabled]="isLoading">
+              <mat-icon>clear</mat-icon>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando recetas...</p>
+  </div>
+
+  <!-- Recipes Table -->
+  <div *ngIf="!isLoading" class="content-section">
+    <mat-card class="table-card">
+      <mat-card-content>
+        <div *ngIf="recipes.length === 0" class="empty-state">
+          <mat-icon>receipt_long</mat-icon>
+          <h3>No hay recetas registradas</h3>
+          <p>Comienza creando tu primera receta de producción</p>
+          <button mat-raised-button color="primary" (click)="openRecipeDialog()">
+            <mat-icon>add</mat-icon>
+            Crear Receta
+          </button>
+        </div>
+
+        <table mat-table [dataSource]="recipes" *ngIf="recipes.length > 0" class="recipes-table">
+          <!-- Código -->
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let recipe">{{ recipe.code }}</td>
+          </ng-container>
+
+          <!-- Nombre -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let recipe">{{ recipe.name }}</td>
+          </ng-container>
+
+          <!-- Producto Final -->
+          <ng-container matColumnDef="product_name">
+            <th mat-header-cell *matHeaderCellDef>Producto</th>
+            <td mat-cell *matCellDef="let recipe">{{ recipe.product_name || 'N/A' }}</td>
+          </ng-container>
+
+          <!-- Cantidad por Lote -->
+          <ng-container matColumnDef="batch_size">
+            <th mat-header-cell *matHeaderCellDef>Tamaño de Lote</th>
+            <td mat-cell *matCellDef="let recipe">
+              {{ recipe.batch_size }} {{ recipe.unit_of_measure }}
+            </td>
+          </ng-container>
+
+          <!-- Costo por Lote -->
+          <ng-container matColumnDef="cost_per_batch">
+            <th mat-header-cell *matHeaderCellDef>Costo/Lote</th>
+            <td mat-cell *matCellDef="let recipe">{{ formatCurrency(recipe.cost_per_batch) }}</td>
+          </ng-container>
+
+          <!-- Estado -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let recipe">
+              <mat-chip [class.active]="recipe.isActive" [class.inactive]="!recipe.isActive">
+                {{ recipe.isActive ? 'Activa' : 'Inactiva' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Acciones -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let recipe">
+              <button mat-icon-button [matTooltip]="'Ver detalles'" (click)="viewRecipeDetails(recipe)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button [matTooltip]="'Editar receta'" (click)="openRecipeDialog(recipe)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button [matTooltip]="'Eliminar receta'" (click)="deleteRecipe(recipe)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+

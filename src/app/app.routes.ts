@@ -43,6 +43,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/configuracion/business-config.component').then(m => m.BusinessConfigComponent),
     canActivate: [companyGuard, noCashierGuard]
   },
+  {
+    path: 'recetas',
+    loadComponent: () => import('./features/recetas/recetas.component').then(m => m.RecetasComponent),
+    canActivate: [companyGuard]
+  },
+  {
+    path: 'produccion',
+    loadComponent: () => import('./features/produccion/produccion.component').then(m => m.ProduccionComponent),
+    canActivate: [companyGuard]
+  },
   // SUDO routes (solo para usuarios SUDO)
   {
     path: 'sudo/empresas-clientes',

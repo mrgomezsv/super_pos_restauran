@@ -1,0 +1,89 @@
+<div class="tutorial-container" [@flashAnimation]>
+  <mat-card class="tutorial-card">
+    <mat-card-header class="tutorial-header">
+      <div class="tutorial-title">
+        <mat-icon>school</mat-icon>
+        <h2>Tutorial de Producción</h2>
+      </div>
+      <button mat-icon-button (click)="completeTutorial()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loading State -->
+      <div *ngIf="steps.length === 0" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando tutorial...</p>
+      </div>
+
+      <!-- Tutorial Content -->
+      <div *ngIf="steps.length > 0">
+        <!-- Progress Bar -->
+        <div class="progress-section">
+          <mat-progress-bar mode="determinate" [value]="progress"></mat-progress-bar>
+          <span class="progress-text">{{ currentStep + 1 }} / {{ steps.length }}</span>
+        </div>
+
+        <!-- Current Step -->
+        <div class="current-step">
+          <div class="step-number">{{ currentStep + 1 }}</div>
+          <div class="step-content">
+            <h3>{{ currentStepData.title }}</h3>
+            <p>{{ currentStepData.description }}</p>
+            <div class="step-action" *ngIf="currentStepData.action">
+              <mat-icon>arrow_forward</mat-icon>
+              <span>{{ currentStepData.action }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Steps List -->
+        <div class="steps-list">
+          <div 
+            *ngFor="let step of steps; let i = index" 
+            class="step-item"
+            [class.active]="i === currentStep"
+            [class.completed]="i < currentStep"
+            (click)="jumpToStep(i)">
+            <div class="step-indicator">
+              <mat-icon *ngIf="i < currentStep">check_circle</mat-icon>
+              <div *ngIf="i === currentStep" class="pulse-dot"></div>
+              <div *ngIf="i > currentStep" class="empty-dot"></div>
+            </div>
+            <div class="step-title">{{ step.title }}</div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="tutorial-navigation">
+          <button 
+            mat-stroked-button 
+            [disabled]="currentStep === 0"
+            (click)="previousStep()">
+            <mat-icon>arrow_back</mat-icon>
+            <span>Anterior</span>
+          </button>
+
+          <button 
+            *ngIf="currentStep < steps.length - 1"
+            mat-raised-button 
+            color="primary"
+            (click)="nextStep()">
+            <span>Siguiente</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+
+          <button 
+            *ngIf="currentStep === steps.length - 1"
+            mat-raised-button 
+            color="accent"
+            (click)="completeTutorial()">
+            <span>Completar</span>
+            <mat-icon>check_circle</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

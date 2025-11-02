@@ -20,7 +20,9 @@ from database import (
     InventoryMovement as DBInventoryMovement, ArInvoice as DBArInvoice, ApInvoice as DBApInvoice,
     Supplier as DBSupplier, Discount as DBDiscount, CashSession as DBCashSession, AuditLog as DBAuditLog,
     Company as DBCompany, PurchaseOrder as DBPurchaseOrder, PurchaseOrderItem as DBPurchaseOrderItem,
-    GoodsReceipt as DBGoodsReceipt, GoodsReceiptItem as DBGoodsReceiptItem
+    GoodsReceipt as DBGoodsReceipt, GoodsReceiptItem as DBGoodsReceiptItem,
+    Recipe as DBRecipe, RecipeIngredient as DBRecipeIngredient,
+    ProductionOrder as DBProductionOrder, ProductionConsumption as DBProductionConsumption
 )
 
 # Importar modelos Pydantic para requests/responses
@@ -51,7 +53,10 @@ from schemas import (
     AccountResponse, AccountCreate, AccountUpdate,
     DashboardMetricsResponse, SalesDashboardMetrics, InventoryDashboardMetrics, AccountingDashboardMetrics,
     DailySalesResponse, TopProductResponse, DashboardAlertResponse,
-    BusinessConfigResponse, BusinessConfigUpdate
+    BusinessConfigResponse, BusinessConfigUpdate,
+    RecipeResponse, RecipeCreate, RecipeUpdate, RecipeIngredientResponse,
+    ProductionOrderResponse, ProductionOrderCreate, ProductionOrderStatusUpdate,
+    ProductionConsumptionResponse, ProductionConsumptionCreate
 )
 
 # Importar servicio de compañías
@@ -4067,6 +4072,837 @@ async def delete_product_category(category_id: int, context: dict = Depends(get_
     )
     
     return {"message": "Categoría eliminada exitosamente"}
+
+# -----------------------------
+# ENDPOINTS DE RECETAS Y PRODUCCIÓN
+# -----------------------------
+
+@app.get("/api/recipes", response_model=List[RecipeResponse])
+async def get_recipes(
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener todas las recetas de la compañía"""
+    company_id = context.get("company", {}).get("id")
+    recipes = db.query(DBRecipe).filter(
+        DBRecipe.company_id == company_id,
+        DBRecipe.isActive == True
+    ).options(
+        joinedload(DBRecipe.product),
+        joinedload(DBRecipe.ingredients).joinedload(DBRecipeIngredient.ingredient_product)
+    ).all()
+    
+    return [
+        RecipeResponse(
+            id=r.id,
+            company_id=r.company_id,
+            product_id=r.product_id,
+            product_name=r.product.name if r.product else None,
+            code=r.code,
+            name=r.name,
+            description=r.description,
+            batch_size=r.batch_size,
+            unit_of_measure=r.unit_of_measure,
+            preparation_time=r.preparation_time,
+            cost_per_batch=r.cost_per_batch,
+            isActive=r.isActive,
+            createdAt=r.createdAt,
+            updatedAt=r.updatedAt,
+            ingredients=[
+                RecipeIngredientResponse(
+                    id=ing.id,
+                    recipe_id=ing.recipe_id,
+                    ingredient_product_id=ing.ingredient_product_id,
+                    ingredient_product_name=ing.ingredient_product.name if ing.ingredient_product else None,
+                    quantity=ing.quantity,
+                    unit_of_measure=ing.unit_of_measure,
+                    unit_cost=ing.unit_cost,
+                    total_cost=ing.total_cost,
+                    notes=ing.notes
+                )
+                for ing in r.ingredients
+            ]
+        )
+        for r in recipes
+    ]
+
+@app.get("/api/recipes/{recipe_id}", response_model=RecipeResponse)
+async def get_recipe(
+    recipe_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener receta por ID"""
+    company_id = context.get("company", {}).get("id")
+    recipe = db.query(DBRecipe).filter(
+        DBRecipe.id == recipe_id,
+        DBRecipe.company_id == company_id
+    ).options(
+        joinedload(DBRecipe.product),
+        joinedload(DBRecipe.ingredients).joinedload(DBRecipeIngredient.ingredient_product)
+    ).first()
+    
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    
+    return RecipeResponse(
+        id=recipe.id,
+        company_id=recipe.company_id,
+        product_id=recipe.product_id,
+        product_name=recipe.product.name if recipe.product else None,
+        code=recipe.code,
+        name=recipe.name,
+        description=recipe.description,
+        batch_size=recipe.batch_size,
+        unit_of_measure=recipe.unit_of_measure,
+        preparation_time=recipe.preparation_time,
+        cost_per_batch=recipe.cost_per_batch,
+        isActive=recipe.isActive,
+        createdAt=recipe.createdAt,
+        updatedAt=recipe.updatedAt,
+        ingredients=[
+            RecipeIngredientResponse(
+                id=ing.id,
+                recipe_id=ing.recipe_id,
+                ingredient_product_id=ing.ingredient_product_id,
+                ingredient_product_name=ing.ingredient_product.name if ing.ingredient_product else None,
+                quantity=ing.quantity,
+                unit_of_measure=ing.unit_of_measure,
+                unit_cost=ing.unit_cost,
+                total_cost=ing.total_cost,
+                notes=ing.notes
+            )
+            for ing in recipe.ingredients
+        ]
+    )
+
+@app.post("/api/recipes", response_model=RecipeResponse)
+async def create_recipe(
+    recipe_data: RecipeCreate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Crear nueva receta"""
+    company_id = context.get("company", {}).get("id")
+    user_id = context.get("user", {}).get("id")
+    
+    # Verificar que el producto existe y pertenece a la compañía
+    product = db.query(DBProduct).filter(
+        DBProduct.id == recipe_data.product_id,
+        DBProduct.company_id == company_id
+    ).first()
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    
+    # Verificar código único
+    existing = db.query(DBRecipe).filter(
+        DBRecipe.code == recipe_data.code,
+        DBRecipe.company_id == company_id
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Ya existe una receta con este código")
+    
+    # Verificar que el producto no tenga ya una receta
+    existing_recipe = db.query(DBRecipe).filter(
+        DBRecipe.product_id == recipe_data.product_id,
+        DBRecipe.company_id == company_id
+    ).first()
+    
+    if existing_recipe:
+        raise HTTPException(status_code=400, detail="Este producto ya tiene una receta asociada")
+    
+    # Calcular costo total de la receta
+    total_cost = 0.0
+    for ing in recipe_data.ingredients:
+        ingredient_product = db.query(DBProduct).filter(
+            DBProduct.id == ing.ingredient_product_id,
+            DBProduct.company_id == company_id
+        ).first()
+        if not ingredient_product:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Ingrediente con ID {ing.ingredient_product_id} no encontrado"
+            )
+        ing_cost = ing.quantity * ingredient_product.cost
+        total_cost += ing_cost
+    
+    # Crear receta
+    new_recipe = DBRecipe(
+        company_id=company_id,
+        product_id=recipe_data.product_id,
+        code=recipe_data.code,
+        name=recipe_data.name,
+        description=recipe_data.description,
+        batch_size=recipe_data.batch_size,
+        unit_of_measure=recipe_data.unit_of_measure,
+        preparation_time=recipe_data.preparation_time,
+        cost_per_batch=total_cost,
+        isActive=True
+    )
+    
+    db.add(new_recipe)
+    db.flush()
+    
+    # Crear ingredientes
+    for ing_data in recipe_data.ingredients:
+        ingredient_product = db.query(DBProduct).filter(
+            DBProduct.id == ing_data.ingredient_product_id,
+            DBProduct.company_id == company_id
+        ).first()
+        
+        new_ingredient = DBRecipeIngredient(
+            recipe_id=new_recipe.id,
+            ingredient_product_id=ing_data.ingredient_product_id,
+            quantity=ing_data.quantity,
+            unit_of_measure=ing_data.unit_of_measure,
+            unit_cost=ingredient_product.cost,
+            total_cost=ing_data.quantity * ingredient_product.cost,
+            notes=ing_data.notes
+        )
+        db.add(new_ingredient)
+    
+    db.commit()
+    db.refresh(new_recipe)
+    
+    # Cargar relaciones
+    db.refresh(new_recipe)
+    recipe = db.query(DBRecipe).filter(DBRecipe.id == new_recipe.id).options(
+        joinedload(DBRecipe.product),
+        joinedload(DBRecipe.ingredients).joinedload(DBRecipeIngredient.ingredient_product)
+    ).first()
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="RECIPE_CREATE",
+        module="Recipes",
+        detail=f"Receta creada: {recipe.name}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return RecipeResponse(
+        id=recipe.id,
+        company_id=recipe.company_id,
+        product_id=recipe.product_id,
+        product_name=recipe.product.name if recipe.product else None,
+        code=recipe.code,
+        name=recipe.name,
+        description=recipe.description,
+        batch_size=recipe.batch_size,
+        unit_of_measure=recipe.unit_of_measure,
+        preparation_time=recipe.preparation_time,
+        cost_per_batch=recipe.cost_per_batch,
+        isActive=recipe.isActive,
+        createdAt=recipe.createdAt,
+        updatedAt=recipe.updatedAt,
+        ingredients=[
+            RecipeIngredientResponse(
+                id=ing.id,
+                recipe_id=ing.recipe_id,
+                ingredient_product_id=ing.ingredient_product_id,
+                ingredient_product_name=ing.ingredient_product.name if ing.ingredient_product else None,
+                quantity=ing.quantity,
+                unit_of_measure=ing.unit_of_measure,
+                unit_cost=ing.unit_cost,
+                total_cost=ing.total_cost,
+                notes=ing.notes
+            )
+            for ing in recipe.ingredients
+        ]
+    )
+
+@app.put("/api/recipes/{recipe_id}", response_model=RecipeResponse)
+async def update_recipe(
+    recipe_id: int,
+    recipe_data: RecipeUpdate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Actualizar receta existente"""
+    company_id = context.get("company", {}).get("id")
+    user_id = context.get("user", {}).get("id")
+    
+    recipe = db.query(DBRecipe).filter(
+        DBRecipe.id == recipe_id,
+        DBRecipe.company_id == company_id
+    ).first()
+    
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    
+    # Verificar código único si se actualiza
+    if recipe_data.code and recipe_data.code != recipe.code:
+        existing = db.query(DBRecipe).filter(
+            DBRecipe.code == recipe_data.code,
+            DBRecipe.company_id == company_id,
+            DBRecipe.id != recipe_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Ya existe una receta con este código")
+    
+    # Actualizar campos
+    for field, value in recipe_data.model_dump(exclude_unset=True).items():
+        setattr(recipe, field, value)
+    
+    recipe.updatedAt = datetime.now()
+    db.commit()
+    db.refresh(recipe)
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="RECIPE_UPDATE",
+        module="Recipes",
+        detail=f"Receta actualizada: {recipe.name}",
+        company_id=company_id,
+        db=db
+    )
+    
+    # Cargar relaciones
+    recipe = db.query(DBRecipe).filter(DBRecipe.id == recipe.id).options(
+        joinedload(DBRecipe.product),
+        joinedload(DBRecipe.ingredients).joinedload(DBRecipeIngredient.ingredient_product)
+    ).first()
+    
+    return RecipeResponse(
+        id=recipe.id,
+        company_id=recipe.company_id,
+        product_id=recipe.product_id,
+        product_name=recipe.product.name if recipe.product else None,
+        code=recipe.code,
+        name=recipe.name,
+        description=recipe.description,
+        batch_size=recipe.batch_size,
+        unit_of_measure=recipe.unit_of_measure,
+        preparation_time=recipe.preparation_time,
+        cost_per_batch=recipe.cost_per_batch,
+        isActive=recipe.isActive,
+        createdAt=recipe.createdAt,
+        updatedAt=recipe.updatedAt,
+        ingredients=[
+            RecipeIngredientResponse(
+                id=ing.id,
+                recipe_id=ing.recipe_id,
+                ingredient_product_id=ing.ingredient_product_id,
+                ingredient_product_name=ing.ingredient_product.name if ing.ingredient_product else None,
+                quantity=ing.quantity,
+                unit_of_measure=ing.unit_of_measure,
+                unit_cost=ing.unit_cost,
+                total_cost=ing.total_cost,
+                notes=ing.notes
+            )
+            for ing in recipe.ingredients
+        ]
+    )
+
+@app.delete("/api/recipes/{recipe_id}")
+async def delete_recipe(
+    recipe_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Eliminar receta (soft delete)"""
+    company_id = context.get("company", {}).get("id")
+    user_id = context.get("user", {}).get("id")
+    
+    recipe = db.query(DBRecipe).filter(
+        DBRecipe.id == recipe_id,
+        DBRecipe.company_id == company_id
+    ).first()
+    
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    
+    # Soft delete
+    recipe.isActive = False
+    recipe.updatedAt = datetime.now()
+    db.commit()
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="RECIPE_DELETE",
+        module="Recipes",
+        detail=f"Receta eliminada: {recipe.name}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return {"message": "Receta eliminada exitosamente"}
+
+def generate_production_number(db: Session, company_id: int) -> str:
+    """Generar número de orden de producción único"""
+    last_order = db.query(DBProductionOrder).filter(
+        DBProductionOrder.company_id == company_id
+    ).order_by(DBProductionOrder.id.desc()).first()
+    
+    if not last_order or not last_order.production_number:
+        return "PROD-001"
+    
+    # Extraer número del último PROD
+    try:
+        last_number = int(last_order.production_number.split("-")[1])
+        next_number = last_number + 1
+        return f"PROD-{next_number:03d}"
+    except:
+        return "PROD-001"
+
+@app.get("/api/production-orders", response_model=List[ProductionOrderResponse])
+async def get_production_orders(
+    status: Optional[str] = None,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener todas las órdenes de producción"""
+    company_id = context.get("company", {}).get("id")
+    query = db.query(DBProductionOrder).filter(
+        DBProductionOrder.company_id == company_id
+    )
+    
+    if status:
+        query = query.filter(DBProductionOrder.status == status)
+    
+    orders = query.options(
+        joinedload(DBProductionOrder.recipe),
+        joinedload(DBProductionOrder.creator),
+        joinedload(DBProductionOrder.completer),
+        joinedload(DBProductionOrder.consumption_items).joinedload(DBProductionConsumption.ingredient_product)
+    ).order_by(DBProductionOrder.createdAt.desc()).all()
+    
+    return [
+        ProductionOrderResponse(
+            id=o.id,
+            company_id=o.company_id,
+            recipe_id=o.recipe_id,
+            recipe_name=o.recipe.name if o.recipe else None,
+            production_number=o.production_number,
+            production_date=o.production_date,
+            quantity_to_produce=o.quantity_to_produce,
+            quantity_produced=o.quantity_produced,
+            unit_of_measure=o.unit_of_measure,
+            status=o.status,
+            planned_start_date=o.planned_start_date,
+            planned_end_date=o.planned_end_date,
+            actual_start_date=o.actual_start_date,
+            actual_end_date=o.actual_end_date,
+            cost_per_unit=o.cost_per_unit,
+            total_cost=o.total_cost,
+            notes=o.notes,
+            created_by=o.created_by,
+            creator_name=o.creator.name if o.creator else None,
+            completed_by=o.completed_by,
+            completed_by_name=o.completer.name if o.completer else None,
+            createdAt=o.createdAt,
+            updatedAt=o.updatedAt,
+            consumption_items=[
+                ProductionConsumptionResponse(
+                    id=ci.id,
+                    production_order_id=ci.production_order_id,
+                    ingredient_product_id=ci.ingredient_product_id,
+                    ingredient_product_name=ci.ingredient_product.name if ci.ingredient_product else None,
+                    quantity_required=ci.quantity_required,
+                    quantity_consumed=ci.quantity_consumed,
+                    unit_of_measure=ci.unit_of_measure,
+                    unit_cost=ci.unit_cost,
+                    total_cost=ci.total_cost
+                )
+                for ci in o.consumption_items
+            ]
+        )
+        for o in orders
+    ]
+
+@app.get("/api/production-orders/{order_id}", response_model=ProductionOrderResponse)
+async def get_production_order(
+    order_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Obtener orden de producción por ID"""
+    company_id = context.get("company", {}).get("id")
+    order = db.query(DBProductionOrder).filter(
+        DBProductionOrder.id == order_id,
+        DBProductionOrder.company_id == company_id
+    ).options(
+        joinedload(DBProductionOrder.recipe),
+        joinedload(DBProductionOrder.creator),
+        joinedload(DBProductionOrder.completer),
+        joinedload(DBProductionOrder.consumption_items).joinedload(DBProductionConsumption.ingredient_product)
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de producción no encontrada")
+    
+    return ProductionOrderResponse(
+        id=order.id,
+        company_id=order.company_id,
+        recipe_id=order.recipe_id,
+        recipe_name=order.recipe.name if order.recipe else None,
+        production_number=order.production_number,
+        production_date=order.production_date,
+        quantity_to_produce=order.quantity_to_produce,
+        quantity_produced=order.quantity_produced,
+        unit_of_measure=order.unit_of_measure,
+        status=order.status,
+        planned_start_date=order.planned_start_date,
+        planned_end_date=order.planned_end_date,
+        actual_start_date=order.actual_start_date,
+        actual_end_date=order.actual_end_date,
+        cost_per_unit=order.cost_per_unit,
+        total_cost=order.total_cost,
+        notes=order.notes,
+        created_by=order.created_by,
+        creator_name=order.creator.name if order.creator else None,
+        completed_by=order.completed_by,
+        completed_by_name=order.completer.name if order.completer else None,
+        createdAt=order.createdAt,
+        updatedAt=order.updatedAt,
+        consumption_items=[
+            ProductionConsumptionResponse(
+                id=ci.id,
+                production_order_id=ci.production_order_id,
+                ingredient_product_id=ci.ingredient_product_id,
+                ingredient_product_name=ci.ingredient_product.name if ci.ingredient_product else None,
+                quantity_required=ci.quantity_required,
+                quantity_consumed=ci.quantity_consumed,
+                unit_of_measure=ci.unit_of_measure,
+                unit_cost=ci.unit_cost,
+                total_cost=ci.total_cost
+            )
+            for ci in order.consumption_items
+        ]
+    )
+
+@app.post("/api/production-orders", response_model=ProductionOrderResponse)
+async def create_production_order(
+    order_data: ProductionOrderCreate,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Crear nueva orden de producción"""
+    company_id = context.get("company", {}).get("id")
+    user_id = context.get("user", {}).get("id")
+    
+    # Verificar que la receta existe
+    recipe = db.query(DBRecipe).filter(
+        DBRecipe.id == order_data.recipe_id,
+        DBRecipe.company_id == company_id,
+        DBRecipe.isActive == True
+    ).options(
+        joinedload(DBRecipe.ingredients).joinedload(DBRecipeIngredient.ingredient_product)
+    ).first()
+    
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    
+    # Generar número de producción
+    production_number = generate_production_number(db, company_id)
+    
+    # Calcular cantidades necesarias basadas en la receta
+    # Si no se proporcionan consumption_items, calcularlos automáticamente
+    if not order_data.consumption_items or len(order_data.consumption_items) == 0:
+        consumption_items_data = []
+        for ing in recipe.ingredients:
+            # Calcular cantidad necesaria escalando por la cantidad a producir
+            required_qty = (ing.quantity / recipe.batch_size) * order_data.quantity_to_produce
+            
+            consumption_items_data.append(
+                ProductionConsumptionCreate(
+                    ingredient_product_id=ing.ingredient_product_id,
+                    quantity_required=required_qty,
+                    quantity_consumed=required_qty,  # Inicialmente igual a requerido
+                    unit_of_measure=ing.unit_of_measure,
+                    unit_cost=ing.ingredient_product.cost if ing.ingredient_product else 0.0
+                )
+            )
+    else:
+        consumption_items_data = order_data.consumption_items
+    
+    # Validar stock disponible para todos los ingredientes
+    for cons_item in consumption_items_data:
+        ingredient_product = db.query(DBProduct).filter(
+            DBProduct.id == cons_item.ingredient_product_id,
+            DBProduct.company_id == company_id
+        ).first()
+        
+        if not ingredient_product:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Ingrediente con ID {cons_item.ingredient_product_id} no encontrado"
+            )
+        
+        # Verificar stock disponible
+        if ingredient_product.stock < cons_item.quantity_consumed:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Stock insuficiente para {ingredient_product.name}. "
+                       f"Stock disponible: {ingredient_product.stock}, "
+                       f"Cantidad requerida: {cons_item.quantity_consumed}"
+            )
+    
+    # Calcular costo total
+    total_cost = 0.0
+    for cons_item in consumption_items_data:
+        ingredient_product = db.query(DBProduct).filter(
+            DBProduct.id == cons_item.ingredient_product_id
+        ).first()
+        item_cost = cons_item.quantity_consumed * cons_item.unit_cost
+        total_cost += item_cost
+    
+    cost_per_unit = total_cost / order_data.quantity_to_produce if order_data.quantity_to_produce > 0 else 0
+    
+    # Crear orden de producción
+    new_order = DBProductionOrder(
+        company_id=company_id,
+        recipe_id=order_data.recipe_id,
+        production_number=production_number,
+        production_date=datetime.now(),
+        quantity_to_produce=order_data.quantity_to_produce,
+        unit_of_measure=order_data.unit_of_measure,
+        status="planned",
+        planned_start_date=order_data.planned_start_date,
+        planned_end_date=order_data.planned_end_date,
+        notes=order_data.notes,
+        cost_per_unit=cost_per_unit,
+        total_cost=total_cost,
+        created_by=user_id
+    )
+    
+    db.add(new_order)
+    db.flush()
+    
+    # Crear items de consumo
+    for cons_item_data in consumption_items_data:
+        new_consumption = DBProductionConsumption(
+            production_order_id=new_order.id,
+            ingredient_product_id=cons_item_data.ingredient_product_id,
+            quantity_required=cons_item_data.quantity_required,
+            quantity_consumed=cons_item_data.quantity_consumed,
+            unit_of_measure=cons_item_data.unit_of_measure,
+            unit_cost=cons_item_data.unit_cost,
+            total_cost=cons_item_data.quantity_consumed * cons_item_data.unit_cost
+        )
+        db.add(new_consumption)
+    
+    db.commit()
+    db.refresh(new_order)
+    
+    # Cargar relaciones
+    order = db.query(DBProductionOrder).filter(DBProductionOrder.id == new_order.id).options(
+        joinedload(DBProductionOrder.recipe),
+        joinedload(DBProductionOrder.creator),
+        joinedload(DBProductionOrder.consumption_items).joinedload(DBProductionConsumption.ingredient_product)
+    ).first()
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="PRODUCTION_ORDER_CREATE",
+        module="Production",
+        detail=f"Orden de producción creada: {order.production_number}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return ProductionOrderResponse(
+        id=order.id,
+        company_id=order.company_id,
+        recipe_id=order.recipe_id,
+        recipe_name=order.recipe.name if order.recipe else None,
+        production_number=order.production_number,
+        production_date=order.production_date,
+        quantity_to_produce=order.quantity_to_produce,
+        quantity_produced=order.quantity_produced,
+        unit_of_measure=order.unit_of_measure,
+        status=order.status,
+        planned_start_date=order.planned_start_date,
+        planned_end_date=order.planned_end_date,
+        actual_start_date=order.actual_start_date,
+        actual_end_date=order.actual_end_date,
+        cost_per_unit=order.cost_per_unit,
+        total_cost=order.total_cost,
+        notes=order.notes,
+        created_by=order.created_by,
+        creator_name=order.creator.name if order.creator else None,
+        completed_by=order.completed_by,
+        completed_by_name=order.completer.name if order.completer else None,
+        createdAt=order.createdAt,
+        updatedAt=order.updatedAt,
+        consumption_items=[
+            ProductionConsumptionResponse(
+                id=ci.id,
+                production_order_id=ci.production_order_id,
+                ingredient_product_id=ci.ingredient_product_id,
+                ingredient_product_name=ci.ingredient_product.name if ci.ingredient_product else None,
+                quantity_required=ci.quantity_required,
+                quantity_consumed=ci.quantity_consumed,
+                unit_of_measure=ci.unit_of_measure,
+                unit_cost=ci.unit_cost,
+                total_cost=ci.total_cost
+            )
+            for ci in order.consumption_items
+        ]
+    )
+
+@app.post("/api/production-orders/{order_id}/start")
+async def start_production_order(
+    order_id: int,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Iniciar orden de producción - Descuenta inventario"""
+    company_id = context.get("company", {}).get("id")
+    user_id = context.get("user", {}).get("id")
+    
+    order = db.query(DBProductionOrder).filter(
+        DBProductionOrder.id == order_id,
+        DBProductionOrder.company_id == company_id
+    ).options(
+        joinedload(DBProductionOrder.consumption_items).joinedload(DBProductionConsumption.ingredient_product),
+        joinedload(DBProductionOrder.recipe).joinedload(DBRecipe.product)
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de producción no encontrada")
+    
+    if order.status != "planned":
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se puede iniciar una orden con estado: {order.status}"
+        )
+    
+    # Descontar inventario de todos los ingredientes
+    for consumption in order.consumption_items:
+        ingredient_product = consumption.ingredient_product
+        
+        # Verificar stock disponible nuevamente
+        if ingredient_product.stock < consumption.quantity_consumed:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Stock insuficiente para {ingredient_product.name}. "
+                       f"Stock disponible: {ingredient_product.stock}, "
+                       f"Cantidad requerida: {consumption.quantity_consumed}"
+            )
+        
+        # Descontar del inventario
+        ingredient_product.stock -= consumption.quantity_consumed
+        ingredient_product.updatedAt = datetime.now()
+        
+        # Crear movimiento de inventario (salida)
+        inventory_movement = DBInventoryMovement(
+            company_id=company_id,
+            productId=ingredient_product.id,
+            movementType="salida",
+            quantity=consumption.quantity_consumed,
+            unitCost=consumption.unit_cost,
+            totalCost=consumption.total_cost,
+            reference=f"PROD-{order.production_number}",
+            referenceId=order.id
+        )
+        db.add(inventory_movement)
+    
+    # Actualizar estado de la orden
+    order.status = "in_progress"
+    order.actual_start_date = datetime.now()
+    order.updatedAt = datetime.now()
+    
+    db.commit()
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="PRODUCTION_ORDER_START",
+        module="Production",
+        detail=f"Orden de producción iniciada: {order.production_number}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return {"message": f"Orden de producción {order.production_number} iniciada, inventario descontado exitosamente"}
+
+@app.post("/api/production-orders/{order_id}/complete")
+async def complete_production_order(
+    order_id: int,
+    quantity_produced: float,
+    context: dict = Depends(get_current_context),
+    db: Session = Depends(get_db)
+):
+    """Completar orden de producción - Agrega producto final al inventario"""
+    company_id = context.get("company", {}).get("id")
+    user_id = context.get("user", {}).get("id")
+    
+    order = db.query(DBProductionOrder).filter(
+        DBProductionOrder.id == order_id,
+        DBProductionOrder.company_id == company_id
+    ).options(
+        joinedload(DBProductionOrder.recipe).joinedload(DBRecipe.product)
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Orden de producción no encontrada")
+    
+    if order.status != "in_progress":
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se puede completar una orden con estado: {order.status}"
+        )
+    
+    if quantity_produced <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="La cantidad producida debe ser mayor a cero"
+        )
+    
+    # Agregar producto final al inventario
+    final_product = order.recipe.product
+    
+    # Calcular costo unitario del producto final
+    total_cost = order.total_cost
+    cost_per_unit = total_cost / order.quantity_to_produce if order.quantity_to_produce > 0 else total_cost
+    
+    # Actualizar inventario del producto final
+    final_product.stock += quantity_produced
+    final_product.cost = cost_per_unit  # Actualizar costo al costo de producción
+    final_product.updatedAt = datetime.now()
+    
+    # Crear movimiento de inventario (entrada)
+    inventory_movement = DBInventoryMovement(
+        company_id=company_id,
+        productId=final_product.id,
+        movementType="entrada",
+        quantity=quantity_produced,
+        unitCost=cost_per_unit,
+        totalCost=cost_per_unit * quantity_produced,
+        reference=f"PROD-{order.production_number}",
+        referenceId=order.id
+    )
+    db.add(inventory_movement)
+    
+    # Actualizar orden
+    order.quantity_produced = quantity_produced
+    order.status = "completed"
+    order.actual_end_date = datetime.now()
+    order.cost_per_unit = cost_per_unit
+    order.total_cost = cost_per_unit * quantity_produced
+    order.completed_by = user_id
+    order.updatedAt = datetime.now()
+    
+    db.commit()
+    
+    # Registrar evento de auditoría
+    log_audit_event(
+        user_id=user_id,
+        action="PRODUCTION_ORDER_COMPLETE",
+        module="Production",
+        detail=f"Orden de producción completada: {order.production_number}, Cantidad: {quantity_produced}",
+        company_id=company_id,
+        db=db
+    )
+    
+    return {"message": f"Orden de producción {order.production_number} completada, {quantity_produced} unidades agregadas al inventario"}
 
 if __name__ == "__main__":
     import uvicorn
