@@ -184,10 +184,10 @@
           </ul>
         </div>
         
+        <!-- Administración -->
         <div class="nav-section" *ngIf="currentUser?.role !== 'cashier' && shouldShowSection('Administración')">
           <h3 class="nav-section-title">Administración</h3>
           <ul class="nav-list">
-            <!-- Gestión de Personal -->
             <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Usuarios', 'Administración')">
               <a routerLink="/users" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
@@ -198,167 +198,12 @@
               </a>
             </li>
             
-            <!-- Configuración del Sistema -->
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Categorías', 'Administración')">
-              <a routerLink="/admin/categories" routerLinkActive="active" class="nav-link">
+            <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Configuración', 'Administración')">
+              <a routerLink="/configuracion" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
-                  <mat-icon>category</mat-icon>
+                  <mat-icon>settings</mat-icon>
                 </div>
-                <span class="nav-text">Categorías</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Proveedores', 'Administración')">
-              <a routerLink="/admin/suppliers" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>local_shipping</mat-icon>
-                </div>
-                <span class="nav-text">Proveedores</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Órdenes de Compra', 'Administración')">
-              <a routerLink="/admin/purchase-orders" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>shopping_cart</mat-icon>
-                </div>
-                <span class="nav-text">Órdenes de Compra</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Recepción de Mercancía', 'Administración')">
-              <a routerLink="/admin/goods-receipts" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>inventory</mat-icon>
-                </div>
-                <span class="nav-text">Recepción de Mercancía</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <!-- Gestión Financiera -->
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Caja Registradora', 'Administración')">
-              <a routerLink="/admin/cash-register" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>account_balance_wallet</mat-icon>
-                </div>
-                <span class="nav-text">Caja Registradora</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Promociones', 'Administración')">
-              <a routerLink="/admin/discounts" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>local_offer</mat-icon>
-                </div>
-                <span class="nav-text">Promociones</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <!-- Control y Monitoreo -->
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Alertas Stock', 'Administración')">
-              <a routerLink="/admin/inventory-alerts" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>warning</mat-icon>
-                </div>
-                <span class="nav-text">Alertas Stock</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Bitácora', 'Administración')">
-              <a routerLink="/admin/audit-logs" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>history</mat-icon>
-                </div>
-                <span class="nav-text">Bitácora</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <!-- Configuración General -->
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Información del Negocio', 'Administración')">
-              <a routerLink="/admin/business-config" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>business</mat-icon>
-                </div>
-                <span class="nav-text">Información del Negocio</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Documentos Fiscales', 'Administración')">
-              <a routerLink="/admin/fiscal-documents" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>description</mat-icon>
-                </div>
-                <span class="nav-text">Documentos Fiscales</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Contabilidad -->
-        <div class="nav-section" *ngIf="currentUser && currentUser.role !== 'cashier' && shouldShowSection('Contabilidad')">
-          <h3 class="nav-section-title">Contabilidad</h3>
-          <ul class="nav-list">
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro Diario', 'Contabilidad')">
-              <a routerLink="/accounting/diario" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>menu_book</mat-icon>
-                </div>
-                <span class="nav-text">Libro Diario</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro Mayor', 'Contabilidad')">
-              <a routerLink="/accounting/mayor" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>library_books</mat-icon>
-                </div>
-                <span class="nav-text">Libro Mayor</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Inventarios', 'Contabilidad')">
-              <a routerLink="/accounting/inventarios" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>inventory</mat-icon>
-                </div>
-                <span class="nav-text">Inventarios</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro de Ventas (IVA)', 'Contabilidad')">
-              <a routerLink="/accounting/vat/ventas" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>receipt_long</mat-icon>
-                </div>
-                <span class="nav-text">Libro de Ventas (IVA)</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Libro de Compras (IVA)', 'Contabilidad')">
-              <a routerLink="/accounting/vat/compras" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>shopping_cart</mat-icon>
-                </div>
-                <span class="nav-text">Libro de Compras (IVA)</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Balance de Comprobación', 'Contabilidad')">
-              <a routerLink="/accounting/trial-balance" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>balance</mat-icon>
-                </div>
-                <span class="nav-text">Balance de Comprobación</span>
+                <span class="nav-text">Configuración</span>
                 <div class="nav-indicator"></div>
               </a>
             </li>

@@ -97,7 +97,6 @@ export class CompanyContextInterceptor implements HttpInterceptor {
       '/api/products',
       '/api/sales',
       '/api/users',
-      '/api/accounting',
       '/api/fiscal-documents',
       '/api/categories',
       '/api/inventory',
@@ -116,7 +115,6 @@ export class CompanyContextInterceptor implements HttpInterceptor {
       '/api/products',
       '/api/sales',
       '/api/users',
-      '/api/accounting',
       '/api/fiscal-documents'
     ];
 

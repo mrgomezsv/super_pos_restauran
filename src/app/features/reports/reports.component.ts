@@ -155,12 +155,12 @@ export class ReportsComponent implements OnInit {
 
     Promise.all([
       this.http.get<SalesSummaryReport>(`${this.api}/sales-summary`, { params }).toPromise(),
-      this.http.get<InventoryStatusReport>(`${this.api}/inventory-status`, { params }).toPromise(),
-      this.http.get<FinancialSummaryReport>(`${this.api}/financial-summary`, { params }).toPromise()
-    ]).then(([sales, inventory, financial]) => {
+      this.http.get<InventoryStatusReport>(`${this.api}/inventory-status`, { params }).toPromise()
+      // this.http.get<FinancialSummaryReport>(`${this.api}/financial-summary`, { params }).toPromise()
+    ]).then(([sales, inventory]) => {
       this.salesReport = sales || null;
       this.inventoryReport = inventory || null;
-      this.financialReport = financial || null;
+      this.financialReport = null;
       this.isLoading = false;
     }).catch((err) => {
       console.error('Error cargando reportes:', err);
@@ -178,8 +178,8 @@ export class ReportsComponent implements OnInit {
   }
 
   exportReport(): void {
-    // Exportar todos los reportes si existen
-    if (this.salesReport && this.inventoryReport && this.financialReport) {
+    // Exportar todos los reportes si existen (sin financiero)
+    if (this.salesReport && this.inventoryReport) {
       try {
         const wb = XLSX.utils.book_new();
         
@@ -201,17 +201,6 @@ export class ReportsComponent implements OnInit {
         }));
         const ws2 = XLSX.utils.json_to_sheet(inventoryData);
         XLSX.utils.book_append_sheet(wb, ws2, 'Inventario');
-        
-        // Financiero
-        const accountsData = this.financialReport.accountTotals.map(a => ({
-          'Código': a.accountCode,
-          'Nombre': a.accountName,
-          'Débito': a.totalDebit,
-          'Crédito': a.totalCredit,
-          'Saldo': a.balance
-        }));
-        const ws3 = XLSX.utils.json_to_sheet(accountsData);
-        XLSX.utils.book_append_sheet(wb, ws3, 'Financiero');
         
         // Exportar
         const fileName = `reporte_completo_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -320,45 +309,8 @@ export class ReportsComponent implements OnInit {
   }
 
   exportFinancialReport(): void {
-    if (!this.financialReport) {
-      this.toastr.warning('No hay datos financieros para exportar');
-      return;
-    }
-
-    try {
-      const accountData = this.financialReport.accountTotals.map(account => ({
-        'Código Cuenta': account.accountCode,
-        'Nombre Cuenta': account.accountName,
-        'Débito': account.totalDebit,
-        'Crédito': account.totalCredit,
-        'Saldo': account.balance
-      }));
-
-      // Crear workbook
-      const ws = XLSX.utils.json_to_sheet(accountData);
-      const wb = XLSX.utils.book_new();
-      
-      XLSX.utils.book_append_sheet(wb, ws, 'Cuentas');
-      
-      // Agregar resumen
-      const summary = [
-        { 'Métrica': 'Total Débitos', 'Valor': this.financialReport.accountingMetrics.totalDebits },
-        { 'Métrica': 'Total Créditos', 'Valor': this.financialReport.accountingMetrics.totalCredits },
-        { 'Métrica': 'Asientos Contables', 'Valor': this.financialReport.accountingMetrics.journalEntriesCount },
-        { 'Métrica': 'Cuentas Activas', 'Valor': this.financialReport.accountingMetrics.accountsWithActivity }
-      ];
-      const ws2 = XLSX.utils.json_to_sheet(summary);
-      XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
-
-      // Exportar
-      const fileName = `reporte_financiero_${new Date().toISOString().split('T')[0]}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-      
-      this.toastr.success('Reporte exportado exitosamente');
-    } catch (error) {
-      console.error('Error exportando reporte:', error);
-      this.toastr.error('Error al exportar el reporte');
-    }
+    // Función deshabilitada - sección de contabilidad eliminada
+    this.toastr.warning('La exportación de reportes financieros no está disponible');
   }
 
   getTotalSales(): number {
@@ -422,6 +374,6 @@ export class ReportsComponent implements OnInit {
   }
 
   hasData(): boolean {
-    return !!(this.salesReport || this.inventoryReport || this.financialReport);
+    return !!(this.salesReport || this.inventoryReport);
   }
 }

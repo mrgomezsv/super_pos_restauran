@@ -126,31 +126,6 @@
           </button>
         </mat-card-actions>
       </mat-card>
-
-      <!-- Contabilidad -->
-      <mat-card class="metric-card accounting">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>account_balance</mat-icon>
-            Contabilidad
-          </mat-card-title>
-          <mat-card-subtitle>{{ getPeriodLabel(metrics.period) }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="metric-value">{{ metrics.accountingMetrics.journalEntriesCount }}</div>
-          <div class="metric-details">
-            <div class="metric-item">
-              <span class="label">Asientos Contables</span>
-            </div>
-          </div>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-button color="primary" (click)="goToAccounting()">
-            <mat-icon>book</mat-icon>
-            Ver Diario
-          </button>
-        </mat-card-actions>
-      </mat-card>
     </div>
 
     <!-- Gráfico de Ventas Diarias -->

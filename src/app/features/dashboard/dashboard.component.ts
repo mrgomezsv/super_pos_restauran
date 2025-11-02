@@ -36,9 +36,6 @@ interface DashboardMetrics {
     outOfStockProducts: number;
     inventoryValue: number;
   };
-  accountingMetrics: {
-    journalEntriesCount: number;
-  };
   dailySales: Array<{
     date: string;
     amount: number;
@@ -170,14 +167,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   goToUsers(): void {
     this.router.navigate(['/users']);
-  }
-
-  goToAccounting(): void {
-    this.router.navigate(['/accounting/diario']);
-  }
-
-  goToInventory(): void {
-    this.router.navigate(['/admin/inventory-alerts']);
   }
 
   getCurrentDate(): string {

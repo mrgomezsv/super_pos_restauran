@@ -121,24 +121,7 @@ export class AppComponent implements OnInit {
       
       // Administración
       { text: 'Usuarios', section: 'Administración', route: '/users', icon: 'people', role: '!cashier' },
-      { text: 'Categorías', section: 'Administración', route: '/admin/categories', icon: 'category' },
-      { text: 'Proveedores', section: 'Administración', route: '/admin/suppliers', icon: 'local_shipping' },
-      { text: 'Órdenes de Compra', section: 'Administración', route: '/admin/purchase-orders', icon: 'shopping_cart' },
-      { text: 'Recepción de Mercancía', section: 'Administración', route: '/admin/goods-receipts', icon: 'inventory' },
-      { text: 'Caja Registradora', section: 'Administración', route: '/admin/cash-register', icon: 'account_balance_wallet' },
-      { text: 'Promociones', section: 'Administración', route: '/admin/discounts', icon: 'local_offer' },
-      { text: 'Alertas Stock', section: 'Administración', route: '/admin/inventory-alerts', icon: 'warning' },
-      { text: 'Bitácora', section: 'Administración', route: '/admin/audit-logs', icon: 'history' },
-      { text: 'Información del Negocio', section: 'Administración', route: '/admin/business-config', icon: 'business' },
-      { text: 'Documentos Fiscales', section: 'Administración', route: '/admin/fiscal-documents', icon: 'description' },
-      
-      // Contabilidad
-      { text: 'Libro Diario', section: 'Contabilidad', route: '/accounting/diario', icon: 'menu_book', role: '!cashier' },
-      { text: 'Libro Mayor', section: 'Contabilidad', route: '/accounting/mayor', icon: 'library_books', role: '!cashier' },
-      { text: 'Inventarios', section: 'Contabilidad', route: '/accounting/inventarios', icon: 'inventory', role: '!cashier' },
-      { text: 'Libro de Ventas (IVA)', section: 'Contabilidad', route: '/accounting/vat/ventas', icon: 'receipt_long', role: '!cashier' },
-      { text: 'Libro de Compras (IVA)', section: 'Contabilidad', route: '/accounting/vat/compras', icon: 'shopping_cart', role: '!cashier' },
-      { text: 'Balance de Comprobación', section: 'Contabilidad', route: '/accounting/trial-balance', icon: 'balance', role: '!cashier' },
+      { text: 'Configuración', section: 'Administración', route: '/configuracion', icon: 'settings', role: '!cashier' },
       
       // SUDO
       { text: 'Empresas Clientes', section: 'SUDO', route: '/sudo/empresas-clientes', icon: 'business_center', role: 'sudo' },
