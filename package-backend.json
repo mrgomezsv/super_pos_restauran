@@ -2,10 +2,10 @@
   "name": "super-pos-backend",
   "version": "1.0.0",
   "description": "Backend simulado para el sistema Super POS",
-  "main": "mock-backend.js",
+  "main": "front/mock-backend.js",
   "scripts": {
-    "start": "node mock-backend.js",
-    "dev": "nodemon mock-backend.js"
+    "start": "node front/mock-backend.js",
+    "dev": "nodemon front/mock-backend.js"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -12,7 +12,7 @@ echo "Esperando 3 segundos para que el backend inicie..."
 sleep 3
 
 echo "Iniciando frontend Angular..."
-gnome-terminal --title="Frontend" -- bash -c "npm start; exec bash" &
+gnome-terminal --title="Frontend" -- bash -c "cd front && npm start; exec bash" &
 
 echo
 echo "========================================"

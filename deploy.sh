@@ -117,7 +117,8 @@ install_backend_dependencies() {
 install_frontend_dependencies() {
     log_info "Instalando dependencias del frontend..."
     
-    if [ -f "package.json" ]; then
+    if [ -f "front/package.json" ]; then
+        pushd front > /dev/null
         npm install
         if [ $? -eq 0 ]; then
             log_success "Dependencias del frontend instaladas correctamente"
@@ -125,8 +126,9 @@ install_frontend_dependencies() {
             log_error "Error instalando dependencias del frontend"
             exit 1
         fi
+        popd > /dev/null
     else
-        log_error "No se encontró package.json"
+        log_error "No se encontró package.json del frontend (front/package.json)"
         exit 1
     fi
 }
@@ -135,6 +137,7 @@ install_frontend_dependencies() {
 build_frontend() {
     log_info "Construyendo el frontend para producción..."
     
+    pushd front > /dev/null
     npm run build
     if [ $? -eq 0 ]; then
         log_success "Frontend construido correctamente"
@@ -142,6 +145,7 @@ build_frontend() {
         log_error "Error construyendo el frontend"
         exit 1
     fi
+    popd > /dev/null
 }
 
 # Función para inicializar la base de datos
@@ -178,7 +182,7 @@ health_check() {
     fi
     
     # Verificar que el frontend esté construido
-    if [ -d "dist/super-pos" ]; then
+    if [ -d "front/dist/super-pos" ]; then
         log_success "Frontend está construido correctamente"
     else
         log_warning "Frontend no está construido"
@@ -220,7 +224,7 @@ deploy() {
     echo
     echo "Para iniciar el sistema:"
     echo "  Backend:  cd backend && python3 start.py"
-    echo "  Frontend: npm start"
+    echo "  Frontend: cd front && npm start"
     echo
     echo "URLs del sistema:"
     echo "  Frontend: http://localhost:4200"

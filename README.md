@@ -97,8 +97,8 @@ python main.py
 ### 4. Configurar el Frontend
 
 ```bash
-# En otra terminal, volver al directorio raíz
-cd ..
+# En otra terminal, ir al directorio del frontend
+cd front
 
 # Instalar dependencias de Node.js
 npm install
@@ -106,6 +106,7 @@ npm install
 
 ### 5. Iniciar el frontend
 ```bash
+cd front
 npm start
 # o
 ng serve
@@ -170,25 +171,6 @@ ng serve
 
 ```
 super_pos_restauran/
-├── src/                        # 🎨 FRONTEND (Angular)
-│   ├── app/
-│   │   ├── core/                 # Servicios y modelos compartidos
-│   │   │   ├── guards/          # Guards de autenticación
-│   │   │   ├── models/          # Interfaces TypeScript
-│   │   │   └── services/        # Servicios de API
-│   │   ├── features/            # Módulos de funcionalidades
-│   │   │   ├── auth/           # Autenticación
-│   │   │   ├── pos/            # Punto de venta
-│   │   │   ├── products/       # Gestión de productos
-│   │   │   ├── users/          # Gestión de usuarios
-│   │   │   ├── reports/        # Reportes
-│   │   │   ├── configuracion/  # Configuración del negocio
-│   │   │   ├── fiscal-documents/# Documentos fiscales
-│   │   │   └── dashboard/      # Dashboard principal
-│   │   ├── app.component.ts    # Componente principal
-│   │   ├── app.routes.ts       # Rutas de la aplicación
-│   │   └── app.config.ts       # Configuración global
-│   └── styles.scss             # Estilos globales
 ├── backend/                    # 🔧 BACKEND (FastAPI + SQLite)
 │   ├── main.py                 # Servidor principal FastAPI
 │   ├── database.py             # Configuración SQLAlchemy + modelos
@@ -197,9 +179,21 @@ super_pos_restauran/
 │   ├── schemas.py              # Esquemas de validación
 │   ├── requirements.txt        # Dependencias Python
 │   ├── superpos.db            # 📊 Base de datos SQLite (auto-generada)
-│   └── test_*.py              # Scripts de pruebas
-├── package.json               # Dependencias Node.js
-└── README.md                  # Este archivo
+│   └── test_*.py              # Scripts de pruebas y utilidades
+├── front/                      # 🎨 FRONTEND (Angular)
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/           # Servicios y modelos compartidos
+│   │   │   ├── features/       # Módulos de funcionalidades
+│   │   │   ├── shared/         # Componentes reutilizables
+│   │   │   └── app.config.ts   # Configuración global
+│   │   └── styles.scss         # Estilos globales
+│   ├── angular.json            # Configuración Angular CLI
+│   ├── package.json            # Dependencias Node.js
+│   └── tsconfig*.json          # Configuraciones TypeScript
+├── start.sh                    # Script Linux/macOS para iniciar backend + frontend
+├── start.bat                   # Script Windows para iniciar backend + frontend
+└── README.md                   # Este archivo
 ```
 
 ## 🎨 Personalización
@@ -261,6 +255,7 @@ Los impuestos se configuran por producto en la sección de gestión de productos
 ### 1. Build del frontend
 ```bash
 # Construir para producción
+cd front
 ng build --configuration production
 ```
 

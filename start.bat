@@ -11,7 +11,7 @@ echo Esperando 3 segundos para que el backend inicie...
 timeout /t 3 /nobreak > nul
 
 echo Iniciando frontend Angular...
-start "Frontend" cmd /k "npm start"
+start "Frontend" cmd /k "cd front && npm start"
 
 echo.
 echo ========================================
