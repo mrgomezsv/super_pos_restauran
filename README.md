@@ -31,7 +31,7 @@ Sistema completo de punto de ventas desarrollado en Angular para supermercados, 
 - Control de acceso por permisos
 - Gestión de sesiones activas
 
-### 📦 **Gestión de Productos**
+### 📦 **Gestión de Ingredientes**
 - CRUD completo de productos
 - Categorización y marcas
 - Control de stock con alertas

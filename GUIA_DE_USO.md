@@ -5,7 +5,7 @@
 1. [Flujo Completo del Sistema](#flujo-completo-del-sistema)
 2. [Etapa 1: Inicialización del Sistema](#etapa-1-inicialización-del-sistema)
 3. [Etapa 2: Configuración Inicial del Administrador](#etapa-2-configuración-inicial-del-administrador)
-4. [Etapa 3: Gestión de Productos](#etapa-3-gestión-de-productos)
+4. [Etapa 3: Gestión de Ingredientes](#etapa-3-gestión-de-ingredientes)
 5. [Etapa 4: Proceso de Venta (POS)](#etapa-4-proceso-de-venta-pos)
 6. [Etapa 5: Procesamiento Contable Automático](#etapa-5-procesamiento-contable-automático)
 7. [Aspectos Contables Clave](#aspectos-contables-clave)
@@ -139,7 +139,7 @@ El administrador debe configurar:
 
 ---
 
-## 📦 Etapa 3: Gestión de Productos
+## 📦 Etapa 3: Gestión de Ingredientes
 
 ### Crear un Producto
 

@@ -3,7 +3,7 @@ Configuración de base de datos para Super POS
 Soporta SQLite (desarrollo) y PostgreSQL (producción)
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, UniqueConstraint, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.sql import func
@@ -141,7 +141,7 @@ class Product(Base):
     code = Column(String(20), index=True, nullable=False)  # Removido unique para permitir mismo código en diferentes compañías
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    price = Column(Float, nullable=False)
+    price = Column(Float, nullable=False, default=0.0)
     cost = Column(Float, nullable=False)
     category = Column(String(100), nullable=True)
     brand = Column(String(100), nullable=True)
@@ -151,6 +151,8 @@ class Product(Base):
     barcode = Column(String(50), nullable=True, index=True)
     taxRate = Column(Float, default=15.0)  # Porcentaje de impuesto
     isActive = Column(Boolean, default=True)
+    productType = Column(String(20), nullable=False, default="final")  # ingredient, preparation, final
+    unitOfMeasure = Column(String(20), nullable=False, default="unidad")
     createdAt = Column(DateTime, default=func.now())
     updatedAt = Column(DateTime, default=func.now(), onupdate=func.now())
     
@@ -163,6 +165,43 @@ class Product(Base):
         UniqueConstraint('code', 'company_id', name='unique_product_code_per_company'),
         UniqueConstraint('barcode', 'company_id', name='unique_barcode_per_company'),
     )
+
+
+def ensure_database_schema() -> None:
+    """
+    Garantiza que la estructura de la base de datos esté actualizada con los
+    campos más recientes sin requerir migraciones manuales.
+    """
+    if is_postgresql:
+        # En PostgreSQL se asume que existe un sistema de migraciones externo,
+        # por lo que no se realizan alteraciones automáticas.
+        return
+
+    with engine.begin() as connection:
+        product_columns = {
+            row._mapping["name"] for row in connection.execute(text("PRAGMA table_info(products)"))
+        }
+
+        if "productType" not in product_columns:
+            connection.execute(
+                text("ALTER TABLE products ADD COLUMN productType VARCHAR(20) NOT NULL DEFAULT 'final'")
+            )
+
+        if "unitOfMeasure" not in product_columns:
+            connection.execute(
+                text("ALTER TABLE products ADD COLUMN unitOfMeasure VARCHAR(20) NOT NULL DEFAULT 'unidad'")
+            )
+
+        # Normalizar datos existentes para cumplir con el nuevo modelo de ingredientes
+        connection.execute(
+            text("UPDATE products SET productType = 'ingredient' WHERE productType IS NULL OR productType = ''")
+        )
+        connection.execute(
+            text("UPDATE products SET unitOfMeasure = 'unidad' WHERE unitOfMeasure IS NULL OR unitOfMeasure = ''")
+        )
+        connection.execute(
+            text("UPDATE products SET category = 'Ingredientes' WHERE category IS NULL OR category = ''")
+        )
 
 class FiscalDocument(Base):
     __tablename__ = "fiscal_documents"

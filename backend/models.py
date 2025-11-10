@@ -63,6 +63,8 @@ class Product(BaseModel):
     barcode: Optional[str] = None
     taxRate: float  # Porcentaje de impuesto
     isActive: bool
+    productType: str
+    unitOfMeasure: str
     createdAt: datetime
     updatedAt: datetime
 

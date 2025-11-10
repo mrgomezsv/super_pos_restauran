@@ -442,73 +442,14 @@ class CompanyService:
             }
     
     def _create_sample_products(self, company_id: int, db: Session) -> Dict:
-        """Crear productos de ejemplo"""
-        try:
-            sample_products = [
-                {
-                    "code": "SKU00001",
-                    "name": "Producto de Ejemplo 1",
-                    "description": "Primer producto de ejemplo para la compañía",
-                    "price": 10.00,
-                    "cost": 7.50,
-                    "category": "Otros",
-                    "brand": "Ejemplo",
-                    "stock": 100,
-                    "minStock": 10,
-                    "maxStock": 500,
-                    "taxRate": 13.0
-                },
-                {
-                    "code": "SKU00002", 
-                    "name": "Producto de Ejemplo 2",
-                    "description": "Segundo producto de ejemplo",
-                    "price": 25.00,
-                    "cost": 18.75,
-                    "category": "Otros",
-                    "brand": "Ejemplo",
-                    "stock": 50,
-                    "minStock": 5,
-                    "maxStock": 200,
-                    "taxRate": 13.0
-                }
-            ]
-            
-            created_count = 0
-            
-            for product_data in sample_products:
-                new_product = DBProduct(
-                    company_id=company_id,
-                    code=product_data["code"],
-                    name=product_data["name"],
-                    description=product_data["description"],
-                    price=product_data["price"],
-                    cost=product_data["cost"],
-                    category=product_data["category"],
-                    brand=product_data["brand"],
-                    stock=product_data["stock"],
-                    minStock=product_data["minStock"],
-                    maxStock=product_data["maxStock"],
-                    taxRate=product_data["taxRate"],
-                    isActive=True,
-                    createdAt=datetime.now(),
-                    updatedAt=datetime.now()
-                )
-                
-                db.add(new_product)
-                created_count += 1
-            
-            return {
-                "success": True,
-                "count": created_count,
-                "message": f"Productos de ejemplo creados: {created_count}"
-            }
-            
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Error creando productos de ejemplo: {str(e)}",
-                "count": 0
-            }
+        """
+        Gestión de ingredientes: no se crean productos de ejemplo para dejar el inventario limpio.
+        """
+        return {
+            "success": True,
+            "count": 0,
+            "message": "Productos de ejemplo omitidos (inventario inicial vacío)"
+        }
     
     def get_company_by_id(self, company_id: int, db: Optional[Session] = None) -> Optional[DBCompany]:
         """Obtener compañía por ID"""

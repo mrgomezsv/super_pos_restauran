@@ -4,12 +4,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.1) !important; // Fondo muy sutil
+  background-color: rgba(15, 23, 42, 0.75) !important; // Fondo oscuro translúcido
   backdrop-filter: blur(3px); // Desenfoque leve
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 20000;
   padding: var(--spacing-lg);
   box-sizing: border-box;
   animation: fadeIn 0.3s ease;
@@ -35,7 +35,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(3px);
     z-index: -1;
     pointer-events: all;
@@ -55,7 +55,7 @@
   flex-direction: column;
   animation: modalSlideIn 0.3s ease-out;
   position: relative;
-  z-index: 10001;
+  z-index: 20001;
   
   // Borde sutil para definir mejor el modal
   &::before {
@@ -158,7 +158,7 @@
     gap: var(--spacing-2xl);
   }
 
-  .form-section {
+    .form-section {
     background: #f8f9fa;
     border: 1px solid #e2e8f0;
     border-radius: var(--border-radius-lg);
@@ -207,7 +207,7 @@
       }
     }
 
-    .form-field {
+      .form-field {
       width: 100%;
 
       &.full-width {
@@ -255,6 +255,31 @@
             z-index: 1 !important;
           }
         }
+      }
+
+      .unit-select {
+        position: relative;
+      }
+
+      .unit-select ::ng-deep .mat-mdc-select-trigger {
+        min-height: 56px !important;
+        display: flex;
+        align-items: center;
+      }
+
+      .unit-select ::ng-deep .mat-mdc-select-value {
+        display: flex;
+        align-items: center;
+      }
+
+      ::ng-deep .cdk-overlay-container,
+      ::ng-deep .cdk-overlay-pane,
+      ::ng-deep .cdk-global-overlay-wrapper {
+        z-index: 30000 !important;
+      }
+
+      ::ng-deep .unit-select-panel.mat-mdc-select-panel {
+        max-height: 260px !important;
       }
 
       ::ng-deep {
@@ -394,6 +419,25 @@
         }
       }
     }
+  }
+}
+
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  background: rgba(1, 126, 132, 0.08);
+  border: 1px solid rgba(1, 126, 132, 0.2);
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.6;
+
+  mat-icon {
+    color: #017E84;
+    font-size: 20px;
+    margin-top: 2px;
   }
 }
 

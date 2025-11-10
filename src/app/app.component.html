@@ -162,16 +162,6 @@
               </a>
             </li>
             
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Productos', 'Principal')">
-              <a routerLink="/products" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>inventory_2</mat-icon>
-                </div>
-                <span class="nav-text">Productos</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            
             <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Informes', 'Principal')">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">
@@ -188,6 +178,15 @@
         <div class="nav-section" *ngIf="currentUser?.role !== 'cashier' && shouldShowSection('Producción')">
           <h3 class="nav-section-title">Producción</h3>
           <ul class="nav-list">
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Ingredientes', 'Producción')">
+              <a routerLink="/products" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>inventory_2</mat-icon>
+                </div>
+                <span class="nav-text">Ingredientes</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
             <li class="nav-item" *ngIf="shouldShowMenuItem('Recetas', 'Producción')">
               <a routerLink="/recetas" routerLinkActive="active" class="nav-link">
                 <div class="nav-icon">

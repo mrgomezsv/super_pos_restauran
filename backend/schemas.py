@@ -3,7 +3,7 @@ Esquemas de validación para el sistema Super POS
 """
 
 from datetime import datetime, date
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field, EmailStr
 
 # Esquemas de usuario
@@ -59,7 +59,7 @@ class ProductResponse(BaseModel):
     description: Optional[str] = None
     price: float
     cost: float
-    category: str
+    category: Optional[str] = None
     brand: Optional[str] = None
     stock: int
     minStock: int
@@ -67,6 +67,8 @@ class ProductResponse(BaseModel):
     barcode: Optional[str] = None
     taxRate: float
     isActive: bool
+    productType: Literal["ingredient", "preparation", "final"]
+    unitOfMeasure: str
     createdAt: datetime
     updatedAt: datetime
 
@@ -74,23 +76,25 @@ class ProductCreate(BaseModel):
     code: Optional[str] = Field(None, max_length=50)  # Opcional, se genera automáticamente
     name: str = Field(..., min_length=2, max_length=200)
     description: Optional[str] = Field(None, max_length=500)
-    price: float = Field(..., gt=0)
+    price: Optional[float] = Field(0, ge=0)
     cost: float = Field(0, ge=0)
-    category: str = Field(..., min_length=2, max_length=100)
+    category: Optional[str] = Field(None, max_length=100)
     brand: Optional[str] = Field(None, max_length=100)
     stock: int = Field(..., ge=0)
     minStock: int = Field(..., ge=0)
     maxStock: Optional[int] = Field(None, ge=0)
     barcode: Optional[str] = Field(None, max_length=50)
-    taxRate: float = Field(15.0, ge=0, le=100)
+    taxRate: float = Field(0, ge=0, le=100)
     isActive: bool = True
+    productType: Optional[Literal["ingredient", "preparation", "final"]] = None
+    unitOfMeasure: str = Field("unidad", min_length=1, max_length=20)
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=200)
     description: Optional[str] = Field(None, max_length=500)
-    price: Optional[float] = Field(None, gt=0)
+    price: Optional[float] = Field(None, ge=0)
     cost: Optional[float] = Field(None, ge=0)
-    category: Optional[str] = Field(None, min_length=2, max_length=100)
+    category: Optional[str] = Field(None, max_length=100)
     brand: Optional[str] = Field(None, max_length=100)
     stock: Optional[int] = Field(None, ge=0)
     minStock: Optional[int] = Field(None, ge=0)
@@ -98,6 +102,8 @@ class ProductUpdate(BaseModel):
     barcode: Optional[str] = Field(None, max_length=50)
     taxRate: Optional[float] = Field(None, ge=0, le=100)
     isActive: Optional[bool] = None
+    productType: Optional[Literal["ingredient", "preparation", "final"]] = None
+    unitOfMeasure: Optional[str] = Field(None, min_length=1, max_length=20)
 
 # Esquemas de categoría
 class ProductCategory(BaseModel):

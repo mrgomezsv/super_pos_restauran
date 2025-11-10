@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func
 
 # Importar configuración de base de datos
-from database import get_db, create_tables
+from database import get_db, create_tables, ensure_database_schema
 from database import (
     User as DBUser, Product as DBProduct, Sale as DBSale, SaleItem as DBSaleItem,
     ProductCategory as DBProductCategory, FiscalDocument as DBFiscalDocument,
@@ -100,6 +100,7 @@ async def startup_event():
     
     # Crear tablas si no existen
     create_tables()
+    ensure_database_schema()
     
     # Inicializar datos si la BD está vacía
     db = next(get_db())
@@ -685,6 +686,8 @@ async def get_products(
         barcode=p.barcode,
         taxRate=p.taxRate,
         isActive=p.isActive,
+        productType=p.productType,
+        unitOfMeasure=p.unitOfMeasure,
         createdAt=p.createdAt,
         updatedAt=p.updatedAt
     ) for p in products]
@@ -717,6 +720,8 @@ async def get_product(product_id: int, db: Session = Depends(get_db)):
         barcode=product.barcode,
         taxRate=product.taxRate,
         isActive=product.isActive,
+        productType=product.productType,
+        unitOfMeasure=product.unitOfMeasure,
         createdAt=product.createdAt,
         updatedAt=product.updatedAt
     )
@@ -743,6 +748,8 @@ async def get_product_by_code(code: str, db: Session = Depends(get_db)):
         barcode=product.barcode,
         taxRate=product.taxRate,
         isActive=product.isActive,
+        productType=product.productType,
+        unitOfMeasure=product.unitOfMeasure,
         createdAt=product.createdAt,
         updatedAt=product.updatedAt
     )
@@ -769,6 +776,8 @@ async def get_product_by_barcode(barcode: str, db: Session = Depends(get_db)):
         barcode=product.barcode,
         taxRate=product.taxRate,
         isActive=product.isActive,
+        productType=product.productType,
+        unitOfMeasure=product.unitOfMeasure,
         createdAt=product.createdAt,
         updatedAt=product.updatedAt
     )
@@ -781,25 +790,35 @@ async def create_product(
 ):
     """Crear nuevo producto con SKU automático secuencial"""
     try:
+        company_id = context.get("company", {}).get("id")
+        if not company_id and not context.get("user", {}).get("is_sudo"):
+            raise HTTPException(status_code=400, detail="Compañía requerida para crear productos")
+
+        # En la gestión de ingredientes, los precios de venta son opcionales.
+        sale_price = product_data.price if product_data.price is not None else 0.0
+        product_type = product_data.productType or "ingredient"
+
         # Generar SKU automáticamente
-        product_code = generate_next_sku(db, context.get("company_id"))
+        product_code = generate_next_sku(db, company_id)
     
         # Crear el producto
         new_product = DBProduct(
             code=product_code,
             name=product_data.name,
             description=product_data.description,
-            price=product_data.price,
+            price=sale_price,
             cost=product_data.cost,
-            category=product_data.category,
+            category=product_data.category or "Ingredientes",
             brand=product_data.brand,
             stock=product_data.stock,
             minStock=product_data.minStock,
             maxStock=product_data.maxStock,
             barcode=product_data.barcode,
-            taxRate=product_data.taxRate,
+            taxRate=product_data.taxRate if product_data.taxRate is not None else 0,
             isActive=product_data.isActive,
-            company_id=context.get("company_id"),
+            productType=product_type,
+            unitOfMeasure=product_data.unitOfMeasure,
+            company_id=company_id,
             createdAt=datetime.now(),
             updatedAt=datetime.now()
         )
@@ -823,6 +842,8 @@ async def create_product(
             barcode=new_product.barcode,
             taxRate=new_product.taxRate,
             isActive=new_product.isActive,
+            productType=new_product.productType,
+            unitOfMeasure=new_product.unitOfMeasure,
             createdAt=new_product.createdAt,
             updatedAt=new_product.updatedAt
         )
@@ -840,6 +861,18 @@ async def update_product(product_id: int, product_data: ProductUpdate, db: Sessi
     # Actualizar campos
     for field, value in product_data.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
+
+    if product.productType == "final":
+        if product.price is None or product.price <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Los productos de venta deben tener un precio mayor a 0"
+            )
+    else:
+        # En ingredientes y preparaciones el precio puede ser cero.
+        product.price = product.price or 0.0
+        if not product.unitOfMeasure:
+            product.unitOfMeasure = "unidad"
     
     product.updatedAt = datetime.now()
     db.commit()
@@ -860,6 +893,8 @@ async def update_product(product_id: int, product_data: ProductUpdate, db: Sessi
         barcode=product.barcode,
         taxRate=product.taxRate,
         isActive=product.isActive,
+        productType=product.productType,
+        unitOfMeasure=product.unitOfMeasure,
         createdAt=product.createdAt,
         updatedAt=product.updatedAt
     )

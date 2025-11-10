@@ -77,7 +77,7 @@ export class TutorialGuideComponent implements OnInit, OnDestroy {
           title: '📦 Ingredientes Creados',
           description: 'Ya tienes 5 materias primas en inventario: Harina (100kg), Pollo Entero (50 unid), Aceite (30L), Sal (200kg), Cebolla (100kg)',
           route: '/products',
-          action: 'Revisar inventario en Gestión de Productos'
+          action: 'Revisar inventario en Gestión de Ingredientes'
         },
         {
           id: 'step-2',

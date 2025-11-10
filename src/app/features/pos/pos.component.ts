@@ -110,7 +110,6 @@ export class PosComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.loadProducts();
-    this.loadCategories();
     this.loadBusinessConfig();
     this.updateCurrentTime();
     
@@ -184,6 +183,7 @@ export class PosComponent implements OnInit, OnDestroy {
       next: (products) => {
         this.products = products;
         this.filteredProducts = products;
+        this.loadCategories();
         this.isLoadingProducts = false;
       },
       error: (error) => {
@@ -197,9 +197,10 @@ export class PosComponent implements OnInit, OnDestroy {
   private loadCategories(): void {
     const categories = new Set<string>();
     this.products.forEach(product => {
-      if (product.category) {
-        categories.add(product.category);
-      }
+      const category = product.category && product.category.trim()
+        ? product.category
+        : 'Ingredientes';
+      categories.add(category);
     });
     this.categories = Array.from(categories).sort();
   }
@@ -370,7 +371,7 @@ export class PosComponent implements OnInit, OnDestroy {
     }
   }
 
-  getProductIcon(category: string): string {
+  getProductIcon(category?: string): string {
     const iconMap: { [key: string]: string } = {
       'Bebidas': 'local_drink',
       'Panadería': 'bakery_dining',
@@ -380,14 +381,17 @@ export class PosComponent implements OnInit, OnDestroy {
       'Verduras': 'eco',
       'Limpieza': 'cleaning_services',
       'Higiene': 'soap',
+      'Ingredientes': 'egg_alt',
       'Default': 'inventory_2'
     };
-    return iconMap[category] || iconMap['Default'];
+    const key = category && category.trim() ? category : 'Ingredientes';
+    return iconMap[key] || iconMap['Default'];
   }
 
   getProductCategory(productId: number): string {
     const product = this.products.find(p => p.id === productId);
-    return product?.category || 'Default';
+    const category = product?.category;
+    return category && category.trim() ? category : 'Ingredientes';
   }
 
   getStockClass(stock: number, minStock: number): string {

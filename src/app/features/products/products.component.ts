@@ -9,14 +9,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
 
 import { ProductService } from '../../core/services/product.service';
-import { Product, ProductCategory } from '../../core/models/product.model';
+import { Product } from '../../core/models/product.model';
 import { ProductDialogComponent } from './product-dialog/product-dialog.component';
 
 @Component({
@@ -32,7 +31,6 @@ import { ProductDialogComponent } from './product-dialog/product-dialog.componen
     MatInputModule,
     MatFormFieldModule,
     MatDialogModule,
-    MatSelectModule,
     MatChipsModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
@@ -43,14 +41,12 @@ import { ProductDialogComponent } from './product-dialog/product-dialog.componen
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products: Product[] = [];
-  categories: ProductCategory[] = [];
-  displayedColumns: string[] = ['code', 'name', 'category', 'price', 'stock', 'status', 'actions'];
+  displayedColumns: string[] = ['code', 'name', 'unitOfMeasure', 'cost', 'stock', 'status', 'actions'];
   isLoading = true;
   filtersForm: FormGroup;
   private destroy$ = new Subject<void>();
   
   // Dropdown states
-  isCategoryDropdownOpen = false;
   isStatusDropdownOpen = false;
 
   constructor(
@@ -61,14 +57,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
   ) {
     this.filtersForm = this.fb.group({
       search: [''],
-      category: [''],
       isActive: ['']
     });
   }
 
   ngOnInit(): void {
     this.loadProducts();
-    this.loadCategories();
   }
 
   ngOnDestroy(): void {
@@ -87,22 +81,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error loading products:', error);
-          this.toastr.error('Error al cargar los productos');
+          console.error('Error loading ingredients:', error);
+          this.toastr.error('Error al cargar los ingredientes');
           this.isLoading = false;
-        }
-      });
-  }
-
-  private loadCategories(): void {
-    this.productService.getCategories()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (categories) => {
-          this.categories = categories;
-        },
-        error: (error) => {
-          console.error('Error loading categories:', error);
         }
       });
   }
@@ -119,8 +100,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error filtering products:', error);
-          this.toastr.error('Error al filtrar los productos');
+          console.error('Error filtering ingredients:', error);
+          this.toastr.error('Error al filtrar los ingredientes');
           this.isLoading = false;
         }
       });
@@ -136,12 +117,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private scrollYPosition = 0;
 
   openProductDialog(product?: Product): void {
-    // Si es nuevo producto (no edición), validar límite
+    // Si es un ingrediente nuevo (no edición), validar límite
     if (!product) {
       const limits = this.productService.getProductLimits();
       if (limits.hasLimits && this.products.length >= limits.maxProducts) {
         this.toastr.warning(
-          `Has alcanzado el límite de ${limits.maxProducts} productos de tu plan`,
+          `Has alcanzado el límite de ${limits.maxProducts} ingredientes de tu plan`,
           'Límite Alcanzado'
         );
         return;
@@ -183,17 +164,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
   }
 
   deleteProduct(product: Product): void {
-    if (confirm(`¿Está seguro de eliminar el producto "${product.name}"?`)) {
+    if (confirm(`¿Está seguro de eliminar el ingrediente "${product.name}"?`)) {
       this.productService.deleteProduct(product.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.toastr.success('Producto eliminado exitosamente');
+            this.toastr.success('Ingrediente eliminado exitosamente');
             this.loadProducts();
           },
           error: (error) => {
             console.error('Error deleting product:', error);
-            this.toastr.error('Error al eliminar el producto');
+            this.toastr.error('Error al eliminar el ingrediente');
           }
         });
     }
@@ -209,33 +190,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Dropdown methods for Category
-  toggleCategoryDropdown(): void {
-    this.isCategoryDropdownOpen = !this.isCategoryDropdownOpen;
-    this.isStatusDropdownOpen = false; // Close other dropdown
-  }
-
-  selectCategory(value: string): void {
-    this.filtersForm.get('category')?.setValue(value);
-    this.isCategoryDropdownOpen = false;
-  }
-
-  getCategoryDisplayValue(): string {
-    const category = this.filtersForm.get('category')?.value;
-    if (!category) {
-      return 'Todas las categorías';
-    }
-    return category;
-  }
-
   // Dropdown methods for Status
   toggleStatusDropdown(): void {
     this.isStatusDropdownOpen = !this.isStatusDropdownOpen;
-    this.isCategoryDropdownOpen = false; // Close other dropdown
   }
 
   selectStatus(value: string | boolean): void {
     this.filtersForm.get('isActive')?.setValue(value);
+    this.applyFilters();
     this.isStatusDropdownOpen = false;
   }
 
@@ -244,9 +206,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
     if (status === '') {
       return 'Todos los estados';
     } else if (status === true) {
-      return 'Productos Activos';
+      return 'Ingredientes Activos';
     } else if (status === false) {
-      return 'Productos Inactivos';
+      return 'Ingredientes Inactivos';
     }
     return 'Todos los estados';
   }
@@ -256,12 +218,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
   onDocumentClick(event: Event) {
     const target = event.target as HTMLElement;
     if (!target.closest('.custom-select-field')) {
-      this.isCategoryDropdownOpen = false;
       this.isStatusDropdownOpen = false;
     }
   }
 
-  // Método para obtener límites de productos según suscripción
+  // Método para obtener límites de ingredientes según suscripción
   getProductLimits() {
     return this.productService.getProductLimits();
   }

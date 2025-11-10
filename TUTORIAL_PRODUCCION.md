@@ -19,7 +19,7 @@ El sistema de producción permite transformar materias primas en productos final
 
 ### **PASO 1: 📦 Ver Materias Primas Creadas**
 
-**Ubicación:** Gestión de Productos → Categoría "Materia Prima"
+**Ubicación:** Gestión de Ingredientes → Insumos
 
 Ya tienes creados estos productos con inventario inicial:
 
@@ -37,7 +37,7 @@ Ya tienes creados estos productos con inventario inicial:
 
 ### **PASO 2: 🍽️ Ver Producto Final Creado**
 
-**Ubicación:** Gestión de Productos → Categoría "Platillos"
+**Ubicación:** Gestión de Ingredientes → Preparaciones / Platillos
 
 | Producto | Stock Inicial | Precio de Venta |
 |----------|--------------|-----------------|

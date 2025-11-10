@@ -99,7 +99,7 @@ def create_demo_recipes():
                 code=sku,
                 name=ing["name"],
                 description=f"Materia prima - {ing['unit']}",
-                price=ing["price"],
+                price=0.0,
                 cost=ing["cost"],
                 category=ing["category"],
                 brand="Demo",
@@ -108,6 +108,8 @@ def create_demo_recipes():
                 maxStock=500,
                 taxRate=13.0,
                 isActive=True,
+                productType="ingredient",
+                unitOfMeasure=ing["unit"],
                 createdAt=datetime.now(),
                 updatedAt=datetime.now()
             )
@@ -147,6 +149,8 @@ def create_demo_recipes():
                 maxStock=50,
                 taxRate=13.0,
                 isActive=True,
+                productType="final",
+                unitOfMeasure="unidad",
                 createdAt=datetime.now(),
                 updatedAt=datetime.now()
             )

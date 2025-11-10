@@ -5,7 +5,7 @@ export interface Product {
   description?: string;
   price: number;
   cost: number;
-  category: string;
+  category?: string;
   brand?: string;
   stock: number;
   minStock: number;
@@ -13,6 +13,8 @@ export interface Product {
   isActive: boolean;
   barcode?: string;
   taxRate: number; // Porcentaje de impuesto (ej: 15 para 15%)
+  productType: 'ingredient' | 'preparation' | 'final';
+  unitOfMeasure: string;
   createdAt: Date;
   updatedAt: Date;
 }

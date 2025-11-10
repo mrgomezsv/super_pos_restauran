@@ -30,6 +30,12 @@
   height: 100vh !important;
 }
 
+/* Asegurar que los paneles de selección se vean sobre los modales personalizados */
+.cdk-overlay-container {
+  position: fixed;
+  z-index: 40000 !important;
+}
+
 /* Asegurar que el overlay de Angular Material funcione correctamente */
 ::ng-deep .cdk-overlay-backdrop.receipt-modal-backdrop {
   background-color: rgba(255, 255, 255, 0.1) !important;

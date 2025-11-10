@@ -2,17 +2,17 @@
   <div class="products-header">
     <div class="header-content">
       <div class="header-info">
-        <h1 class="page-title">Gestión de Productos</h1>
+        <h1 class="page-title">Gestión de Ingredientes</h1>
         <p class="page-subtitle">
-          Administra el inventario de productos y sus categorías
+          Administra el inventario de ingredientes para producción y recetas
           <span *ngIf="getProductLimits().hasLimits" style="margin-left:12px; padding:4px 12px; background:#e3f2fd; border-radius:12px; font-size:12px; color:#1976d2;">
-            {{products.length}} / {{getProductLimits().maxProducts}} productos
+            {{products.length}} / {{getProductLimits().maxProducts}} ingredientes
           </span>
         </p>
       </div>
       <button class="add-product-btn" mat-raised-button color="primary" (click)="openProductDialog()">
         <mat-icon>add</mat-icon>
-        <span>Agregar Producto</span>
+        <span>Agregar Ingrediente</span>
       </button>
     </div>
   </div>
@@ -23,7 +23,7 @@
         <mat-icon>tune</mat-icon>
         Filtros de Búsqueda
       </h3>
-      <p class="filters-subtitle">Encuentra productos específicos usando los filtros</p>
+      <p class="filters-subtitle">Encuentra ingredientes específicos usando los filtros</p>
     </div>
     
     <div class="filters-card">
@@ -32,13 +32,13 @@
           <div class="form-group">
             <label class="form-label">
               <mat-icon>search</mat-icon>
-              Buscar Productos
+              Buscar Ingredientes
             </label>
             <div class="input-container">
               <input 
                 matInput 
                 formControlName="search" 
-                placeholder="Ingresa SKU, nombre o descripción del producto"
+                placeholder="Ingresa SKU, nombre o descripción del ingrediente"
                 class="search-input">
               <mat-icon class="input-icon">search</mat-icon>
             </div>
@@ -46,42 +46,8 @@
 
           <div class="form-group">
             <label class="form-label">
-              <mat-icon>category</mat-icon>
-              Categoría
-            </label>
-            <div class="custom-select-field">
-              <div class="select-wrapper">
-                <div 
-                  class="custom-select-display"
-                  (click)="toggleCategoryDropdown()">
-                  <span class="select-value">{{ getCategoryDisplayValue() }}</span>
-                  <span class="select-arrow" [class.open]="isCategoryDropdownOpen">▼</span>
-                </div>
-                <div class="custom-dropdown" [class.open]="isCategoryDropdownOpen">
-                  <div 
-                    class="dropdown-option" 
-                    [class.selected]="filtersForm.get('category')?.value === ''"
-                    (click)="selectCategory('')">
-                    <mat-icon>apps</mat-icon>
-                    <span>Todas las categorías</span>
-                  </div>
-                  <div 
-                    class="dropdown-option" 
-                    *ngFor="let category of categories"
-                    [class.selected]="filtersForm.get('category')?.value === category.name"
-                    (click)="selectCategory(category.name)">
-                    <mat-icon>inventory_2</mat-icon>
-                    <span>{{ category.name }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">
               <mat-icon>toggle_on</mat-icon>
-              Estado del Producto
+              Estado del Ingrediente
             </label>
             <div class="custom-select-field">
               <div class="select-wrapper">
@@ -104,14 +70,14 @@
                     [class.selected]="filtersForm.get('isActive')?.value === true"
                     (click)="selectStatus(true)">
                     <mat-icon class="status-active">check_circle</mat-icon>
-                    <span>Productos Activos</span>
+                    <span>Ingredientes Activos</span>
                   </div>
                   <div 
                     class="dropdown-option" 
                     [class.selected]="filtersForm.get('isActive')?.value === false"
                     (click)="selectStatus(false)">
                     <mat-icon class="status-inactive">cancel</mat-icon>
-                    <span>Productos Inactivos</span>
+                    <span>Ingredientes Inactivos</span>
                   </div>
                 </div>
               </div>
@@ -144,21 +110,21 @@
           </ng-container>
 
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <th mat-header-cell *matHeaderCellDef>Ingrediente</th>
             <td mat-cell *matCellDef="let product">{{ product.name }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef>Categoría</th>
+          <ng-container matColumnDef="unitOfMeasure">
+            <th mat-header-cell *matHeaderCellDef>Unidad</th>
             <td mat-cell *matCellDef="let product">
-              <mat-chip>{{ product.category }}</mat-chip>
+              <mat-chip>{{ product.unitOfMeasure }}</mat-chip>
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="price">
-            <th mat-header-cell *matHeaderCellDef>Precio</th>
+          <ng-container matColumnDef="cost">
+            <th mat-header-cell *matHeaderCellDef>Costo</th>
             <td mat-cell *matCellDef="let product">
-              <span class="price">${{ product.price | number:'1.2-2' }}</span>
+              <span class="price">${{ product.cost | number:'1.2-2' }}</span>
             </td>
           </ng-container>
 
@@ -197,21 +163,21 @@
         </table>
 
         <div class="no-data" *ngIf="products.length === 0">
-          <mat-icon>inventory_2</mat-icon>
-          <p>No se encontraron productos</p>
+          <mat-icon>egg_alt</mat-icon>
+          <p>No se encontraron ingredientes</p>
         </div>
       </div>
 
       <ng-template #loadingTemplate>
         <div class="loading-container">
           <mat-spinner diameter="50"></mat-spinner>
-          <p>Cargando productos...</p>
+          <p>Cargando ingredientes...</p>
         </div>
       </ng-template>
     </mat-card-content>
   </mat-card>
 
-  <!-- Modal de Producto -->
+  <!-- Modal de Ingrediente -->
   <app-product-dialog 
     *ngIf="showProductDialog"
     [product]="selectedProduct"
