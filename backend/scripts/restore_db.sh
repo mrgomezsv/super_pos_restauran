@@ -6,6 +6,11 @@
 
 set -e  # Salir si hay algún error
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+BACKEND_DIR="${ROOT_DIR}/backend"
+BACKUP_ROOT="${BACKEND_DIR}/backups"
+
 echo "========================================"
 echo "   SUPER POS - Restauración de BD"
 echo "========================================"
@@ -37,7 +42,7 @@ log_error() {
 
 # Función para listar backups disponibles
 list_backups() {
-    BACKUP_DIR="backups"
+    BACKUP_DIR="$BACKUP_ROOT"
     
     if [ ! -d "$BACKUP_DIR" ]; then
         log_error "No existe el directorio de backups"
@@ -81,21 +86,22 @@ restore_backup() {
     log_info "Restaurando backup: $backup_file"
     
     # Hacer backup de la BD actual si existe
-    if [ -f "backend/superpos.db" ]; then
-        CURRENT_BACKUP="backend/superpos_current_$(date +%Y%m%d_%H%M%S).db"
-        cp "backend/superpos.db" "$CURRENT_BACKUP"
+    if [ -f "$BACKEND_DIR/superpos.db" ]; then
+        CURRENT_BACKUP="${BACKUP_ROOT}/superpos_current_$(date +%Y%m%d_%H%M%S).db"
+        mkdir -p "$BACKUP_ROOT"
+        cp "$BACKEND_DIR/superpos.db" "$CURRENT_BACKUP"
         log_info "Backup de BD actual creado: $CURRENT_BACKUP"
     fi
     
     # Restaurar el backup
-    cp "$backup_file" "backend/superpos.db"
+    cp "$backup_file" "$BACKEND_DIR/superpos.db"
     
     if [ $? -eq 0 ]; then
         log_success "Backup restaurado exitosamente"
         
         # Verificar que la BD restaurada sea válida
-        if [ -f "backend/superpos.db" ]; then
-            DB_SIZE=$(stat -f "%z" "backend/superpos.db" 2>/dev/null || stat -c "%s" "backend/superpos.db" 2>/dev/null)
+        if [ -f "$BACKEND_DIR/superpos.db" ]; then
+            DB_SIZE=$(stat -f "%z" "$BACKEND_DIR/superpos.db" 2>/dev/null || stat -c "%s" "$BACKEND_DIR/superpos.db" 2>/dev/null)
             if [ "$DB_SIZE" -gt 0 ]; then
                 log_success "Base de datos restaurada y validada correctamente"
             else
@@ -159,15 +165,15 @@ restore_by_filename() {
     # Buscar el archivo en el directorio de backups
     BACKUP_FILE=""
     
-    if [ -f "backups/$filename" ]; then
-        BACKUP_FILE="backups/$filename"
+    if [ -f "${BACKUP_ROOT}/$filename" ]; then
+        BACKUP_FILE="${BACKUP_ROOT}/$filename"
     elif [ -f "$filename" ]; then
         BACKUP_FILE="$filename"
     else
         log_error "No se encontró el archivo de backup: $filename"
         echo
-        echo "Archivos disponibles en el directorio backups:"
-        ls -la backups/ 2>/dev/null || echo "No hay directorio de backups"
+        echo "Archivos disponibles en el directorio ${BACKUP_ROOT}:"
+        ls -la "${BACKUP_ROOT}/" 2>/dev/null || echo "No hay directorio de backups"
         exit 1
     fi
     
@@ -191,7 +197,7 @@ show_help() {
     echo
     echo "Notas:"
     echo "  - Se creará automáticamente un backup de la BD actual antes de restaurar"
-    echo "  - Los backups se almacenan en el directorio 'backups/'"
+    echo "  - Los backups se almacenan en el directorio 'backend/backups/'"
     echo "  - La BD actual se respalda con el prefijo 'superpos_current_'"
 }
 

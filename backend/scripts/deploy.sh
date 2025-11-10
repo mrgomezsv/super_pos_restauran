@@ -6,6 +6,11 @@
 
 set -e  # Salir si hay algún error
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+BACKEND_DIR="${ROOT_DIR}/backend"
+FRONT_DIR="${ROOT_DIR}/front"
+
 echo "========================================"
 echo "   SUPER POS - Script de Despliegue"
 echo "========================================"
@@ -39,8 +44,8 @@ log_error() {
 backup_database() {
     log_info "Realizando backup de la base de datos..."
     
-    if [ -f "backend/superpos.db" ]; then
-        BACKUP_DIR="backups"
+    if [ -f "$BACKEND_DIR/superpos.db" ]; then
+        BACKUP_DIR="${BACKEND_DIR}/backups"
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
         BACKUP_FILE="${BACKUP_DIR}/superpos_backup_${TIMESTAMP}.db"
         
@@ -48,15 +53,15 @@ backup_database() {
         mkdir -p "$BACKUP_DIR"
         
         # Copiar la base de datos
-        cp "backend/superpos.db" "$BACKUP_FILE"
+        cp "$BACKEND_DIR/superpos.db" "$BACKUP_FILE"
         
         if [ $? -eq 0 ]; then
             log_success "Backup creado exitosamente: $BACKUP_FILE"
             
             # Mantener solo los últimos 10 backups
-            cd "$BACKUP_DIR"
+            pushd "$BACKUP_DIR" > /dev/null
             ls -t superpos_backup_*.db | tail -n +11 | xargs -r rm -f
-            cd ..
+            popd > /dev/null
         else
             log_error "Error al crear backup de la base de datos"
             exit 1
@@ -95,7 +100,7 @@ check_dependencies() {
 install_backend_dependencies() {
     log_info "Instalando dependencias del backend..."
     
-    cd backend
+    pushd "$BACKEND_DIR" > /dev/null
     
     if [ -f "requirements.txt" ]; then
         pip3 install -r requirements.txt
@@ -110,15 +115,15 @@ install_backend_dependencies() {
         exit 1
     fi
     
-    cd ..
+    popd > /dev/null
 }
 
 # Función para instalar dependencias del frontend
 install_frontend_dependencies() {
     log_info "Instalando dependencias del frontend..."
     
-    if [ -f "front/package.json" ]; then
-        pushd front > /dev/null
+    if [ -f "$FRONT_DIR/package.json" ]; then
+        pushd "$FRONT_DIR" > /dev/null
         npm install
         if [ $? -eq 0 ]; then
             log_success "Dependencias del frontend instaladas correctamente"
@@ -128,7 +133,7 @@ install_frontend_dependencies() {
         fi
         popd > /dev/null
     else
-        log_error "No se encontró package.json del frontend (front/package.json)"
+        log_error "No se encontró package.json del frontend ($FRONT_DIR/package.json)"
         exit 1
     fi
 }
@@ -137,7 +142,7 @@ install_frontend_dependencies() {
 build_frontend() {
     log_info "Construyendo el frontend para producción..."
     
-    pushd front > /dev/null
+    pushd "$FRONT_DIR" > /dev/null
     npm run build
     if [ $? -eq 0 ]; then
         log_success "Frontend construido correctamente"
@@ -152,7 +157,7 @@ build_frontend() {
 init_database() {
     log_info "Inicializando base de datos..."
     
-    cd backend
+    pushd "$BACKEND_DIR" > /dev/null
     
     if [ -f "init_db.py" ]; then
         python3 init_db.py
@@ -167,7 +172,7 @@ init_database() {
         exit 1
     fi
     
-    cd ..
+    popd > /dev/null
 }
 
 # Función para verificar que el sistema esté funcionando
@@ -182,7 +187,7 @@ health_check() {
     fi
     
     # Verificar que el frontend esté construido
-    if [ -d "front/dist/super-pos" ]; then
+    if [ -d "$FRONT_DIR/dist/super-pos" ]; then
         log_success "Frontend está construido correctamente"
     else
         log_warning "Frontend no está construido"
@@ -209,7 +214,7 @@ deploy() {
     build_frontend
     
     # 6. Inicializar la base de datos (si es necesario)
-    if [ ! -f "backend/superpos.db" ]; then
+    if [ ! -f "$BACKEND_DIR/superpos.db" ]; then
         init_database
     fi
     
@@ -237,7 +242,7 @@ deploy() {
 restore_db() {
     log_info "Función de restauración de base de datos..."
     
-    BACKUP_DIR="backups"
+    BACKUP_DIR="${BACKEND_DIR}/backups"
     
     if [ ! -d "$BACKUP_DIR" ]; then
         log_error "No existe el directorio de backups"
@@ -253,7 +258,7 @@ restore_db() {
     
     echo
     echo "Para restaurar un backup específico, ejecute:"
-    echo "  cp backups/superpos_backup_YYYYMMDD_HHMMSS.db backend/superpos.db"
+    echo "  cp backend/backups/superpos_backup_YYYYMMDD_HHMMSS.db backend/superpos.db"
 }
 
 # Función para mostrar ayuda

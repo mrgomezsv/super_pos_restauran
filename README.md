@@ -112,6 +112,8 @@ npm start
 ng serve
 ```
 
+> 💡 Alternativamente, puedes ejecutar `./backend/scripts/start.sh` (Linux/macOS) o `backend\scripts\start.bat` (Windows) desde la raíz para iniciar backend y frontend de una sola vez.
+
 ### 6. Acceder a la aplicación
 - **Frontend**: http://localhost:4200
 - **Backend API**: http://localhost:3000/api
@@ -172,14 +174,21 @@ ng serve
 ```
 super_pos_restauran/
 ├── backend/                    # 🔧 BACKEND (FastAPI + SQLite)
+│   ├── env.example             # Variables de entorno de referencia
 │   ├── main.py                 # Servidor principal FastAPI
 │   ├── database.py             # Configuración SQLAlchemy + modelos
 │   ├── init_db.py              # Inicialización de BD con datos semilla
 │   ├── models.py               # Modelos Pydantic (requests/responses)
 │   ├── schemas.py              # Esquemas de validación
 │   ├── requirements.txt        # Dependencias Python
-│   ├── superpos.db            # 📊 Base de datos SQLite (auto-generada)
-│   └── test_*.py              # Scripts de pruebas y utilidades
+│   ├── scripts/                # Herramientas de despliegue y utilidades
+│   │   ├── deploy.sh
+│   │   ├── restore_db.sh
+│   │   ├── start.bat
+│   │   └── start.sh
+│   ├── package-backend.json    # Mock backend opcional basado en Node
+│   ├── superpos.db             # 📊 Base de datos SQLite (auto-generada)
+│   └── test_*.py               # Scripts de pruebas y utilidades
 ├── front/                      # 🎨 FRONTEND (Angular)
 │   ├── src/
 │   │   ├── app/
@@ -188,11 +197,10 @@ super_pos_restauran/
 │   │   │   ├── shared/         # Componentes reutilizables
 │   │   │   └── app.config.ts   # Configuración global
 │   │   └── styles.scss         # Estilos globales
+│   ├── docs/                   # Documentación funcional y guías
 │   ├── angular.json            # Configuración Angular CLI
 │   ├── package.json            # Dependencias Node.js
 │   └── tsconfig*.json          # Configuraciones TypeScript
-├── start.sh                    # Script Linux/macOS para iniciar backend + frontend
-├── start.bat                   # Script Windows para iniciar backend + frontend
 └── README.md                   # Este archivo
 ```
 

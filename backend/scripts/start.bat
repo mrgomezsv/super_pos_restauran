@@ -4,14 +4,19 @@ echo    SUPER POS - Sistema de Punto de Ventas
 echo ========================================
 echo.
 
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%..") do set "BACKEND_DIR=%%~fI"
+for %%I in ("%BACKEND_DIR%\..") do set "ROOT_DIR=%%~fI"
+set "FRONT_DIR=%ROOT_DIR%\front"
+
 echo Iniciando backend FastAPI...
-start "Backend" cmd /k "cd backend && python start.py"
+start "Backend" cmd /k "cd /d ""%BACKEND_DIR%"" && python start.py"
 
 echo Esperando 3 segundos para que el backend inicie...
 timeout /t 3 /nobreak > nul
 
 echo Iniciando frontend Angular...
-start "Frontend" cmd /k "cd front && npm start"
+start "Frontend" cmd /k "cd /d ""%FRONT_DIR%"" && npm start"
 
 echo.
 echo ========================================
