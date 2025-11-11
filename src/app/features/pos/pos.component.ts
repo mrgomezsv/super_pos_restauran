@@ -45,8 +45,7 @@ interface PaymentMethod {
         MatIconModule,
         MatDialogModule,
         MatProgressSpinnerModule,
-        MatTooltipModule,
-        PaymentDialogComponent
+        MatTooltipModule
     ],
     templateUrl: './pos.component.html',
     styleUrls: ['./pos.component.scss']

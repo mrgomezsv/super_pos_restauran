@@ -1,4 +1,4 @@
-@import '../../../features/products/product-dialog/product-dialog.component.scss';
+@use '../../../features/products/product-dialog/product-dialog.component' as *;
 
 // Estilos mejorados para el modal de documentos fiscales
 .document-modal {
