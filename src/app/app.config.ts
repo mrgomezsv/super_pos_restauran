@@ -10,11 +10,17 @@ import { routes } from './app.routes';
 import { CompanyContextInterceptor } from './core/interceptors/company-context.interceptor';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { AppRouteReuseStrategy } from './core/route-reuse.strategy';
+import { provideFirebaseApp } from '@angular/fire/app';
+import { initializeApp } from 'firebase/app';
+import { provideAuth, getAuth } from '@angular/fire/auth';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideAnimations(),
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
     provideHttpClient(withInterceptorsFromDi()),
     provideNativeDateAdapter(),
     AppRouteReuseStrategy,
