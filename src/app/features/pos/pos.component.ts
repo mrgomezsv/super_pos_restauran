@@ -36,21 +36,20 @@ interface PaymentMethod {
 }
 
 @Component({
-  selector: 'app-pos',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    PaymentDialogComponent
-  ],
-  templateUrl: './pos.component.html',
-  styleUrls: ['./pos.component.scss']
+    selector: 'app-pos',
+    imports: [
+        CommonModule,
+        FormsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatIconModule,
+        MatDialogModule,
+        MatProgressSpinnerModule,
+        MatTooltipModule,
+        PaymentDialogComponent
+    ],
+    templateUrl: './pos.component.html',
+    styleUrls: ['./pos.component.scss']
 })
 export class PosComponent implements OnInit, OnDestroy {
   products: Product[] = [];

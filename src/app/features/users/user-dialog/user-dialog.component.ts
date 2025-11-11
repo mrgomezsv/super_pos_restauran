@@ -14,20 +14,19 @@ import { User } from '../../../core/models/user.model';
 import { Overlay } from '@angular/cdk/overlay';
 
 @Component({
-  selector: 'app-user-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatCheckboxModule
-  ],
-  template: `
+    selector: 'app-user-dialog',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatSelectModule,
+        MatCheckboxModule
+    ],
+    template: `
     <div class="modal-overlay">
       <div class="modal-container user-modal">
         <!-- Header del Modal -->
@@ -209,7 +208,7 @@ import { Overlay } from '@angular/cdk/overlay';
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .modal-overlay {
       position: fixed;
       top: 0;

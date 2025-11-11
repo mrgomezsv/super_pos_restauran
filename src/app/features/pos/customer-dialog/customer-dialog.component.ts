@@ -8,18 +8,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-customer-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ],
-  template: `
+    selector: 'app-customer-dialog',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule
+    ],
+    template: `
     <h2 mat-dialog-title class="customer-modal">
       <mat-icon>person</mat-icon>
       Información del Cliente
@@ -57,7 +56,7 @@ import { MatIconModule } from '@angular/material/icon';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`
+    styles: [`
     .customer-form {
       display: flex;
       flex-direction: column;

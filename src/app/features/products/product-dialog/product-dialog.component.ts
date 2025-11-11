@@ -15,21 +15,20 @@ import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../core/models/product.model';
 
 @Component({
-  selector: 'app-product-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatTooltipModule
-  ],
-  templateUrl: './product-dialog.component.html',
-  styleUrls: ['./product-dialog.component.scss']
+    selector: 'app-product-dialog',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCheckboxModule,
+        MatTooltipModule
+    ],
+    templateUrl: './product-dialog.component.html',
+    styleUrls: ['./product-dialog.component.scss']
 })
 export class ProductDialogComponent implements OnInit, OnDestroy {
   @Input() product: Product | null = null;

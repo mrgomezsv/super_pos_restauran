@@ -4,11 +4,10 @@ import { BusinessConfiguration, TicketTemplate } from '../../../core/models/busi
 import { Sale } from '../../../core/models/sale.model';
 
 @Component({
-  selector: 'app-ticket-preview',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './ticket-preview.component.html',
-  styleUrls: ['./ticket-preview.component.scss']
+    selector: 'app-ticket-preview',
+    imports: [CommonModule],
+    templateUrl: './ticket-preview.component.html',
+    styleUrls: ['./ticket-preview.component.scss']
 })
 export class TicketPreviewComponent implements OnInit {
   @Input() businessConfig: BusinessConfiguration | null = null;

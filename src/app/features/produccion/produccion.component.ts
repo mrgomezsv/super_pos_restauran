@@ -20,26 +20,25 @@ import { ProductionOrder } from '../../core/models/recipe.model';
 import { TutorialGuideComponent } from '../../shared/components/tutorial-guide/tutorial-guide.component';
 
 @Component({
-  selector: 'app-produccion',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    TutorialGuideComponent
-  ],
-  templateUrl: './produccion.component.html',
-  styleUrls: ['./produccion.component.scss']
+    selector: 'app-produccion',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatCardModule,
+        MatTableModule,
+        MatButtonModule,
+        MatIconModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatDialogModule,
+        MatSelectModule,
+        MatChipsModule,
+        MatProgressSpinnerModule,
+        MatTooltipModule,
+        TutorialGuideComponent
+    ],
+    templateUrl: './produccion.component.html',
+    styleUrls: ['./produccion.component.scss']
 })
 export class ProduccionComponent implements OnInit, OnDestroy {
   showTutorial = false;

@@ -58,30 +58,29 @@ interface ActividadSudo {
 }
 
 @Component({
-  selector: 'app-usuario-sudo',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatChipsModule,
-    MatBadgeModule,
-    MatSlideToggleModule,
-    MatTabsModule,
-    MatExpansionModule,
-    MatTooltipModule
-  ],
-  templateUrl: './usuario-sudo.component.html',
-  styleUrls: ['./usuario-sudo.component.scss']
+    selector: 'app-usuario-sudo',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTableModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatDialogModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
+        MatChipsModule,
+        MatBadgeModule,
+        MatSlideToggleModule,
+        MatTabsModule,
+        MatExpansionModule,
+        MatTooltipModule
+    ],
+    templateUrl: './usuario-sudo.component.html',
+    styleUrls: ['./usuario-sudo.component.scss']
 })
 export class UsuarioSudoComponent implements OnInit, OnDestroy {
   usuariosSudo: UsuarioSudo[] = [];

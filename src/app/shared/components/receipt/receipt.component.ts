@@ -6,11 +6,10 @@ import { BusinessConfiguration, TicketTemplate } from '../../../core/models/busi
 import { Sale } from '../../../core/models/sale.model';
 
 @Component({
-  selector: 'app-receipt',
-  standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule],
-  templateUrl: './receipt.component.html',
-  styleUrls: ['./receipt.component.scss']
+    selector: 'app-receipt',
+    imports: [CommonModule, MatButtonModule, MatIconModule],
+    templateUrl: './receipt.component.html',
+    styleUrls: ['./receipt.component.scss']
 })
 export class ReceiptComponent implements OnInit {
   @Input() sale: Sale | null = null;

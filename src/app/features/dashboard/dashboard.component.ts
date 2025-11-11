@@ -53,23 +53,22 @@ interface DashboardMetrics {
 }
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatGridListModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatChipsModule,
-    MatTableModule,
-    MatTooltipModule
-  ],
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+    selector: 'app-dashboard',
+    imports: [
+        CommonModule,
+        MatCardModule,
+        MatGridListModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
+        MatButtonModule,
+        MatSelectModule,
+        MatFormFieldModule,
+        MatChipsModule,
+        MatTableModule,
+        MatTooltipModule
+    ],
+    templateUrl: './dashboard.component.html',
+    styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly api = `${environment.apiUrl}/dashboard/metrics`;

@@ -21,25 +21,24 @@ import { Recipe, RecipeCreate } from '../../core/models/recipe.model';
 import { Product } from '../../core/models/product.model';
 
 @Component({
-  selector: 'app-recetas',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule
-  ],
-  templateUrl: './recetas.component.html',
-  styleUrls: ['./recetas.component.scss']
+    selector: 'app-recetas',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatCardModule,
+        MatTableModule,
+        MatButtonModule,
+        MatIconModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatDialogModule,
+        MatSelectModule,
+        MatChipsModule,
+        MatProgressSpinnerModule,
+        MatTooltipModule
+    ],
+    templateUrl: './recetas.component.html',
+    styleUrls: ['./recetas.component.scss']
 })
 export class RecetasComponent implements OnInit, OnDestroy {
   recipes: Recipe[] = [];

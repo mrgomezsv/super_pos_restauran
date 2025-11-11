@@ -14,21 +14,20 @@ import { FiscalDocument } from '../../../core/models/fiscal-document.model';
 import { FiscalDocumentService } from '../../../core/services/fiscal-document.service';
 
 @Component({
-  selector: 'app-payment-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCardModule
-  ],
-  templateUrl: './payment-dialog.component.html',
-  styleUrls: ['./payment-dialog.component.scss']
+    selector: 'app-payment-dialog',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        FormsModule,
+        MatButtonModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCardModule
+    ],
+    templateUrl: './payment-dialog.component.html',
+    styleUrls: ['./payment-dialog.component.scss']
 })
 export class PaymentDialogComponent implements OnInit, OnDestroy {
   paymentForm!: FormGroup;

@@ -5,15 +5,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
-  selector: 'app-support-chat',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatIconModule
-  ],
-  templateUrl: './support-chat.component.html',
-  styleUrl: './support-chat.component.scss'
+    selector: 'app-support-chat',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatIconModule
+    ],
+    templateUrl: './support-chat.component.html',
+    styleUrl: './support-chat.component.scss'
 })
 export class SupportChatComponent implements OnInit {
   @Input() isOpen: boolean = false;

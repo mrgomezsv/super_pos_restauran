@@ -51,27 +51,26 @@ interface BusinessConfig {
 }
 
 @Component({
-  selector: 'app-business-config',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatTabsModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    MatProgressBarModule,
-    MatTooltipModule,
-    MatSnackBarModule
-  ],
-  templateUrl: './business-config.component.html',
-  styleUrls: ['./business-config.component.scss']
+    selector: 'app-business-config',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatSelectModule,
+        MatCheckboxModule,
+        MatTabsModule,
+        MatDividerModule,
+        MatProgressSpinnerModule,
+        MatProgressBarModule,
+        MatTooltipModule,
+        MatSnackBarModule
+    ],
+    templateUrl: './business-config.component.html',
+    styleUrls: ['./business-config.component.scss']
 })
 export class BusinessConfigComponent implements OnInit, OnDestroy {
   private readonly api = `${environment.apiUrl}/business/config`;

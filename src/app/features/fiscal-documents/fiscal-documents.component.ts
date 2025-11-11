@@ -28,20 +28,19 @@ interface FiscalDocument {
 }
 
 @Component({
-  selector: 'app-fiscal-documents',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    MatDialogModule
-  ],
-  templateUrl: './fiscal-documents.component.html',
-  styleUrls: ['./fiscal-documents.component.scss']
+    selector: 'app-fiscal-documents',
+    imports: [
+        CommonModule,
+        MatCardModule,
+        MatTableModule,
+        MatButtonModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
+        MatTooltipModule,
+        MatDialogModule
+    ],
+    templateUrl: './fiscal-documents.component.html',
+    styleUrls: ['./fiscal-documents.component.scss']
 })
 export class FiscalDocumentsComponent implements OnInit, OnDestroy {
   documents: FiscalDocument[] = [];

@@ -19,27 +19,26 @@ export interface TutorialStep {
 }
 
 @Component({
-  selector: 'app-tutorial-guide',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule
-  ],
-  templateUrl: './tutorial-guide.component.html',
-  styleUrls: ['./tutorial-guide.component.scss'],
-  animations: [
-    trigger('flashAnimation', [
-      transition('* => *', [
-        style({ transform: 'scale(1)', opacity: 1 }),
-        animate('300ms ease-out')
-      ])
-    ])
-  ]
+    selector: 'app-tutorial-guide',
+    imports: [
+        CommonModule,
+        MatCardModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule,
+        MatProgressBarModule,
+        MatProgressSpinnerModule
+    ],
+    templateUrl: './tutorial-guide.component.html',
+    styleUrls: ['./tutorial-guide.component.scss'],
+    animations: [
+        trigger('flashAnimation', [
+            transition('* => *', [
+                style({ transform: 'scale(1)', opacity: 1 }),
+                animate('300ms ease-out')
+            ])
+        ])
+    ]
 })
 export class TutorialGuideComponent implements OnInit, OnDestroy {
   @Input() tutorialId: string = 'default';

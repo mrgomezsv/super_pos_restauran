@@ -38,26 +38,25 @@ interface EmpresaCliente {
 }
 
 @Component({
-  selector: 'app-empresas-clientes',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatChipsModule,
-    MatBadgeModule
-  ],
-  templateUrl: './empresas-clientes.component.html',
-  styleUrls: ['./empresas-clientes.component.scss']
+    selector: 'app-empresas-clientes',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTableModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatDialogModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
+        MatChipsModule,
+        MatBadgeModule
+    ],
+    templateUrl: './empresas-clientes.component.html',
+    styleUrls: ['./empresas-clientes.component.scss']
 })
 export class EmpresasClientesComponent implements OnInit, OnDestroy {
   empresas: EmpresaCliente[] = [];

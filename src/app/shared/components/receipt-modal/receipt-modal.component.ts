@@ -10,17 +10,16 @@ import { Sale } from '../../../core/models/sale.model';
 import { BusinessConfiguration, TicketTemplate } from '../../../core/models/business.model';
 
 @Component({
-  selector: 'app-receipt-modal',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    ReceiptComponent
-  ],
-  templateUrl: './receipt-modal.component.html',
-  styleUrls: ['./receipt-modal.component.scss']
+    selector: 'app-receipt-modal',
+    imports: [
+        CommonModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatIconModule,
+        ReceiptComponent
+    ],
+    templateUrl: './receipt-modal.component.html',
+    styleUrls: ['./receipt-modal.component.scss']
 })
 export class ReceiptModalComponent implements OnInit {
   @ViewChild(ReceiptComponent) receiptComponent!: ReceiptComponent;

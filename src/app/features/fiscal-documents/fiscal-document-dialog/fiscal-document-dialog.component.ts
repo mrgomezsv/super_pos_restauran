@@ -15,21 +15,20 @@ import { FiscalDocumentService } from '../../../core/services/fiscal-document.se
 import { FiscalDocument } from '../../../core/models/fiscal-document.model';
 
 @Component({
-  selector: 'app-fiscal-document-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatTooltipModule,
-    MatDialogModule
-  ],
-  templateUrl: './fiscal-document-dialog.component.html',
-  styleUrls: ['./fiscal-document-dialog.component.scss']
+    selector: 'app-fiscal-document-dialog',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatCheckboxModule,
+        MatTooltipModule,
+        MatDialogModule
+    ],
+    templateUrl: './fiscal-document-dialog.component.html',
+    styleUrls: ['./fiscal-document-dialog.component.scss']
 })
 export class FiscalDocumentDialogComponent implements OnInit, OnDestroy {
   documentForm!: FormGroup;
