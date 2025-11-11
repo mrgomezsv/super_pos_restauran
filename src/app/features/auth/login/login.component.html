@@ -38,13 +38,13 @@
         </a>
       </div>
       <div class="socials-row">
-        <a href="#" title="Cuenta Administrador" (click)="fillDemoAccount('admin', 'admin123'); $event.preventDefault()">
+        <a href="#" title="Cuenta Administrador" (click)="fillDemoAccount('admin@example.com', 'admin123'); $event.preventDefault()">
           <!-- <mat-icon>admin_panel_settings</mat-icon> -->
           Continuar como Administrador
         </a>
       </div>
       <div class="socials-row">
-        <a href="#" title="Cuenta Administrador SUDO" (click)="fillDemoAccount('sudo', 'sudo123'); $event.preventDefault()">
+        <a href="#" title="Cuenta Administrador SUDO" (click)="fillDemoAccount('mrgomez.dev@gmail.com', 'Karin2100'); $event.preventDefault()">
           <!-- <mat-icon>admin_panel_settings</mat-icon> -->
           Continuar como Administrador SUDO
         </a>
@@ -58,16 +58,19 @@
       </div>
 
       <div class="text-field">
-        <label for="username">Nombre de Usuario</label>
+        <label for="email">Correo Electrónico</label>
         <input 
-          type="text" 
-          id="username" 
-          formControlName="username" 
+          type="email" 
+          id="email" 
+          formControlName="email" 
           autocomplete="off" 
-          placeholder="Usuario"
+          placeholder="correo@empresa.com"
           required>
-        <div class="error-message" *ngIf="loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched">
-          El nombre de usuario es requerido
+        <div class="error-message" *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched">
+          El correo es requerido
+        </div>
+        <div class="error-message" *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
+          Ingresa un correo electrónico válido
         </div>
       </div>
 

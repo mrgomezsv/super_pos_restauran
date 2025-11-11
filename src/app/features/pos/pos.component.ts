@@ -1002,7 +1002,7 @@ export class PosComponent implements OnInit, OnDestroy {
       paymentMethod: this.selectedPaymentMethod as 'cash' | 'card' | 'transfer',
       paymentAmount: amount,
       change: change,
-      cashierId: this.currentUser?.id || 0,
+      cashierId: Number(this.currentUser?.id) || 0,
       cashierName: this.currentUser?.name || '',
       createdAt: new Date(),
       status: 'completed'
@@ -1096,7 +1096,7 @@ export class PosComponent implements OnInit, OnDestroy {
       paymentMethod: paymentData.method as 'cash' | 'card' | 'transfer' | 'bitcoin',
       paymentAmount: paymentData.amount,
       change: paymentData.change,
-      cashierId: this.currentUser?.id || 0,
+      cashierId: Number(this.currentUser?.id) || 0,
       cashierName: this.currentUser?.name || '',
       createdAt: new Date(),
       status: 'completed'

@@ -46,7 +46,7 @@ export class LoginComponent implements OnInit {
     private notificationService: NotificationService
   ) {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]]
     });
   }
@@ -59,31 +59,25 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    console.log('Form submitted:', this.loginForm.value);
-    console.log('Form valid:', this.loginForm.valid);
-    
     if (this.loginForm.valid) {
       this.isLoading = true;
       const credentials: LoginRequest = this.loginForm.value;
-      console.log('Sending credentials:', credentials);
 
       this.authService.login(credentials).subscribe({
-        next: (response) => {
-          console.log('Login successful:', response);
+        next: (user) => {
           this.isLoading = false;
           this.playSound('success');
-          this.notificationService.success(`Bienvenido, ${response.user.name}`);
+          const displayName = user.fullName || user.name || user.email;
+          this.notificationService.success(`Bienvenido, ${displayName}`);
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          console.error('Login error:', error);
           this.isLoading = false;
           this.playSound('error');
-          this.notificationService.error('Credenciales inválidas');
+          this.notificationService.error(error?.message || 'No se pudo iniciar sesión');
         }
       });
     } else {
-      console.log('Form is invalid');
       this.notificationService.error('Por favor, completa todos los campos');
     }
   }
@@ -101,12 +95,12 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  fillDemoAccount(username: string, password: string): void {
+  fillDemoAccount(email: string, password: string): void {
     this.loginForm.patchValue({
-      username,
+      email,
       password
     });
-    this.notificationService.info(`Cuenta ${username} cargada`, 'Demo');
+    this.notificationService.info(`Cuenta ${email} cargada`, 'Demo');
     this.playSound('click');
   }
 

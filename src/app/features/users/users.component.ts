@@ -108,10 +108,14 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   toggleUserStatus(user: User): void {
-    const action = user.isActive ? 'desactivar' : 'activar';
+    const isActive = user.status !== 'inactive';
+    const action = isActive ? 'desactivar' : 'activar';
     if (confirm(`¿Está seguro de ${action} al usuario "${user.name}"?`)) {
-      const updatedUser = { ...user, isActive: !user.isActive };
-      
+      const updatedUser: Partial<User> = {
+        status: isActive ? 'inactive' : 'active',
+        isActive: !isActive
+      };
+
       this.userService.updateUser(user.id, updatedUser)
         .pipe(takeUntil(this.destroy$))
         .subscribe({

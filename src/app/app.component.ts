@@ -242,7 +242,7 @@ export class AppComponent implements OnInit {
     return company.nombre;
   }
 
-  getCompanyStatusColor(estado: string): string {
+  getCompanyStatusColor(estado?: string): string {
     switch (estado) {
       case 'activa': return '#4caf50';
       case 'inactiva': return '#f44336';

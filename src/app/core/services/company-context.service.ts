@@ -1,277 +1,165 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
-import { environment } from '../../../environments/environment';
-import { catchError, map, tap } from 'rxjs/operators';
+import { User, UserCompany } from '../models/user.model';
 
-export interface CompanyInfo {
-  id: number;
-  nombre: string;
-  razonSocial: string;
-  nit: string;
-  estado: string;
-  subscriptionPlan: string;
-  maxUsers: number;
-  maxProducts: number;
-  maxSalesPerMonth: number;
-}
-
-export interface UserContext {
-  id: number;
-  username: string;
-  name: string;
-  email: string;
-  role: string;
-  company_id?: number;
-  is_sudo: boolean;
-}
+export interface CompanyInfo extends UserCompany {}
 
 export interface CompanyContext {
-  user: UserContext;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    is_sudo: boolean;
+  };
   company?: CompanyInfo;
   permissions: string[];
 }
 
-export interface AvailableCompany {
-  id: number;
-  nombre: string;
-  razonSocial: string;
-  nit: string;
-  estado: string;
-}
+export type AvailableCompany = CompanyInfo;
 
 @Injectable({
   providedIn: 'root'
 })
 export class CompanyContextService {
-  private readonly apiUrl = environment.apiUrl || 'http://localhost:3000/api';
-  
   private currentContextSubject = new BehaviorSubject<CompanyContext | null>(null);
   private availableCompaniesSubject = new BehaviorSubject<AvailableCompany[]>([]);
-  private selectedCompanyIdSubject = new BehaviorSubject<number | null>(null);
+  private selectedCompanyIdSubject = new BehaviorSubject<string | null>(null);
 
   public currentContext$ = this.currentContextSubject.asObservable();
   public availableCompanies$ = this.availableCompaniesSubject.asObservable();
   public selectedCompanyId$ = this.selectedCompanyIdSubject.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService
-  ) {
-    // Inicializar contexto cuando el usuario se loguea
+  constructor(private authService: AuthService) {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.initializeContext();
+        this.initializeContext(user);
       } else {
         this.clearContext();
       }
     });
   }
 
-  /**
-   * Inicializar contexto del usuario
-   */
-  private initializeContext(): void {
-    const currentUser = this.authService.getCurrentUser();
-    if (!currentUser) return;
+  private initializeContext(user: User): void {
+    const companies = user.companies || [];
+    this.availableCompaniesSubject.next(companies);
 
-    // Para usuarios normales, usar su compañía por defecto
-    if (currentUser.role !== 'sudo' && currentUser.company_id) {
-      this.switchToCompany(currentUser.company_id);
-    } else if (currentUser.role === 'sudo') {
-      // Para SUDO, cargar lista de compañías disponibles
-      this.loadAvailableCompanies();
+    const defaultCompanyId = user.primaryCompanyId || companies[0]?.id || null;
+
+    if (defaultCompanyId) {
+      this.switchToCompany(defaultCompanyId).subscribe();
+    } else {
+      const context: CompanyContext = {
+        user: this.mapUserToContext(user),
+        permissions: user.permissions ?? []
+      };
+      this.currentContextSubject.next(context);
+      this.selectedCompanyIdSubject.next(null);
+      localStorage.removeItem('selectedCompanyId');
+      localStorage.setItem('companyContext', JSON.stringify(context));
     }
   }
 
-  /**
-   * Cambiar a una compañía específica
-   */
-  switchToCompany(companyId: number): Observable<CompanyContext> {
+  switchToCompany(companyId: string): Observable<CompanyContext> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
-      throw new Error('Usuario no autenticado');
+      return throwError(() => new Error('Usuario no autenticado'));
     }
 
-    return this.http.get<CompanyContext>(`${this.apiUrl}/companies/${companyId}/context`, {
-      params: { user_id: currentUser.id.toString() }
-    }).pipe(
-      tap(context => {
-        this.currentContextSubject.next(context);
-        this.selectedCompanyIdSubject.next(companyId);
-        
-        // Guardar en localStorage para persistencia
-        localStorage.setItem('selectedCompanyId', companyId.toString());
-        localStorage.setItem('companyContext', JSON.stringify(context));
-      }),
-      catchError(error => {
-        console.error('Error al cambiar contexto de compañía:', error);
-        throw error;
-      })
-    );
+    const company = currentUser.companies.find(c => c.id === companyId) || null;
+
+    const context: CompanyContext = {
+      user: this.mapUserToContext(currentUser),
+      company: company || undefined,
+      permissions: currentUser.permissions ?? []
+    };
+
+    this.currentContextSubject.next(context);
+    this.selectedCompanyIdSubject.next(company?.id || null);
+
+    localStorage.setItem('companyContext', JSON.stringify(context));
+    if (company?.id) {
+      localStorage.setItem('selectedCompanyId', company.id);
+    } else {
+      localStorage.removeItem('selectedCompanyId');
+    }
+
+    return of(context);
   }
 
-  /**
-   * Cargar compañías disponibles para el usuario
-   */
   loadAvailableCompanies(): Observable<AvailableCompany[]> {
-    const currentUser = this.authService.getCurrentUser();
-    if (!currentUser) {
-      return of([]);
-    }
-
-    // Para SUDO, cargar todas las compañías sin filtro de contexto
-    // Para otros usuarios, usar su compañía asignada
-    if (currentUser.role === 'sudo') {
-      return this.http.get<any[]>(`${this.apiUrl}/companies`, {
-        params: { 
-          active_only: 'false'  // Cargar todas para SUDO
-        }
-      }).pipe(
-        map(companies => companies.map(c => ({
-          id: c.id,
-          nombre: c.nombre,
-          razonSocial: c.razonSocial,
-          nit: c.nit,
-          estado: c.estado
-        }))),
-        tap(companies => {
-          this.availableCompaniesSubject.next(companies);
-        }),
-        catchError(error => {
-          console.error('Error al cargar compañías disponibles:', error);
-          return of([]);
-        })
-      );
-    }
-
-    // Para usuarios normales, retornar su compañía asignada
-    if (currentUser.company_id) {
-      return this.http.get<any>(`${this.apiUrl}/companies/${currentUser.company_id}`).pipe(
-        map(company => [{
-          id: company.id,
-          nombre: company.nombre,
-          razonSocial: company.razonSocial,
-          nit: company.nit,
-          estado: company.estado
-        }]),
-        tap(companies => {
-          this.availableCompaniesSubject.next(companies);
-        }),
-        catchError(error => {
-          console.error('Error al cargar compañía del usuario:', error);
-          return of([]);
-        })
-      );
-    }
-
-    return of([]);
+    const user = this.authService.getCurrentUser();
+    const companies = user?.companies ?? [];
+    this.availableCompaniesSubject.next(companies);
+    return of(companies);
   }
 
-  /**
-   * Obtener contexto actual
-   */
   getCurrentContext(): CompanyContext | null {
     return this.currentContextSubject.value;
   }
 
-  /**
-   * Obtener compañía seleccionada actual
-   */
   getCurrentCompany(): CompanyInfo | null {
-    const context = this.getCurrentContext();
-    return context?.company || null;
+    return this.getCurrentContext()?.company ?? null;
   }
 
-  /**
-   * Obtener ID de compañía actual para filtros
-   */
-  getCurrentCompanyId(): number | null {
-    const company = this.getCurrentCompany();
-    return company?.id || null;
+  getCurrentCompanyId(): string | null {
+    return this.selectedCompanyIdSubject.value;
   }
 
-  /**
-   * Verificar si el usuario es SUDO
-   */
   isSudo(): boolean {
-    const context = this.getCurrentContext();
-    return context?.user?.is_sudo || false;
+    return this.getCurrentContext()?.user?.is_sudo ?? false;
   }
 
-  /**
-   * Verificar si el usuario tiene un permiso específico
-   */
   hasPermission(permission: string): boolean {
     const context = this.getCurrentContext();
     if (!context) return false;
-
-    // SUDO tiene todos los permisos
     if (context.user.is_sudo) return true;
-
-    // Verificar permiso específico
     return context.permissions.includes(permission);
   }
 
-  /**
-   * Verificar si el usuario puede acceder a una funcionalidad
-   */
   canAccess(requiredPermissions: string[]): boolean {
     return requiredPermissions.some(permission => this.hasPermission(permission));
   }
 
-  /**
-   * Obtener información del usuario actual
-   */
-  getCurrentUser(): UserContext | null {
-    const context = this.getCurrentContext();
-    return context?.user || null;
+  getCurrentUser(): CompanyContext['user'] | null {
+    return this.getCurrentContext()?.user ?? null;
   }
 
-  /**
-   * Verificar si hay una compañía seleccionada
-   */
   hasCompanySelected(): boolean {
-    return this.getCurrentCompanyId() !== null;
+    return !!this.getCurrentCompanyId();
   }
 
-  /**
-   * Obtener parámetros de filtro de compañía para requests HTTP
-   */
   getCompanyFilterParams(): { [key: string]: string } {
     const companyId = this.getCurrentCompanyId();
     if (companyId && !this.isSudo()) {
-      return { company_id: companyId.toString() };
+      return { company_id: companyId };
     }
     return {};
   }
 
-  /**
-   * Limpiar contexto (logout)
-   */
   clearContext(): void {
     this.currentContextSubject.next(null);
     this.availableCompaniesSubject.next([]);
     this.selectedCompanyIdSubject.next(null);
-    
-    // Limpiar localStorage
     localStorage.removeItem('selectedCompanyId');
     localStorage.removeItem('companyContext');
   }
 
-  /**
-   * Restaurar contexto desde localStorage (al recargar página)
-   */
   restoreContextFromStorage(): void {
     const savedCompanyId = localStorage.getItem('selectedCompanyId');
     const savedContext = localStorage.getItem('companyContext');
-    
-    if (savedCompanyId && savedContext) {
+
+    if (savedContext) {
       try {
-        const context = JSON.parse(savedContext);
+        const context: CompanyContext = JSON.parse(savedContext);
         this.currentContextSubject.next(context);
-        this.selectedCompanyIdSubject.next(parseInt(savedCompanyId));
+        this.selectedCompanyIdSubject.next(savedCompanyId || null);
+        if (context.company) {
+          this.availableCompaniesSubject.next(
+            this.mergeCompanyInList(context.company)
+          );
+        }
       } catch (error) {
         console.error('Error al restaurar contexto:', error);
         this.clearContext();
@@ -279,79 +167,62 @@ export class CompanyContextService {
     }
   }
 
-  /**
-   * Crear nueva compañía (solo para SUDO)
-   */
-  createCompany(companyData: any): Observable<any> {
-    if (!this.isSudo()) {
-      throw new Error('Solo usuarios SUDO pueden crear compañías');
-    }
-
-    return this.http.post(`${this.apiUrl}/companies`, companyData).pipe(
-      tap(() => {
-        // Recargar lista de compañías después de crear una nueva
-        this.loadAvailableCompanies().subscribe();
-      })
-    );
+  createCompany(): Observable<never> {
+    return throwError(() => new Error('La creación de compañías aún no está implementada con Firebase'));
   }
 
-  /**
-   * Actualizar estado de compañía (solo para SUDO)
-   */
-  updateCompanyStatus(companyId: number, newStatus: string): Observable<any> {
-    if (!this.isSudo()) {
-      throw new Error('Solo usuarios SUDO pueden actualizar estados de compañías');
-    }
-
-    return this.http.put(`${this.apiUrl}/companies/${companyId}/status`, {
-      estado: newStatus
-    }).pipe(
-      tap(() => {
-        // Recargar lista de compañías después de actualizar
-        this.loadAvailableCompanies().subscribe();
-      })
-    );
+  updateCompanyStatus(): Observable<never> {
+    return throwError(() => new Error('La actualización de compañías aún no está implementada con Firebase'));
   }
 
-  /**
-   * Obtener límites de la suscripción actual
-   */
   getSubscriptionLimits(): {
     maxUsers: number;
     maxProducts: number;
     maxSalesPerMonth: number;
   } | null {
     const company = this.getCurrentCompany();
-    if (!company) return null;
+    if (!company) {
+      return null;
+    }
 
     return {
-      maxUsers: company.maxUsers,
-      maxProducts: company.maxProducts,
-      maxSalesPerMonth: company.maxSalesPerMonth
+      maxUsers: company.maxUsers ?? Number.POSITIVE_INFINITY,
+      maxProducts: company.maxProducts ?? Number.POSITIVE_INFINITY,
+      maxSalesPerMonth: company.maxSalesPerMonth ?? Number.POSITIVE_INFINITY
     };
   }
 
-  /**
-   * Verificar si se puede agregar más usuarios
-   */
   canAddMoreUsers(currentUserCount: number): boolean {
     const limits = this.getSubscriptionLimits();
     return !limits || currentUserCount < limits.maxUsers;
   }
 
-  /**
-   * Verificar si se pueden agregar más productos
-   */
   canAddMoreProducts(currentProductCount: number): boolean {
     const limits = this.getSubscriptionLimits();
     return !limits || currentProductCount < limits.maxProducts;
   }
 
-  /**
-   * Verificar si se pueden hacer más ventas este mes
-   */
   canAddMoreSales(currentMonthlySales: number): boolean {
     const limits = this.getSubscriptionLimits();
     return !limits || currentMonthlySales < limits.maxSalesPerMonth;
+  }
+
+  private mapUserToContext(user: User): CompanyContext['user'] {
+    return {
+      id: user.id,
+      name: user.fullName || user.name || user.email,
+      email: user.email,
+      role: user.role,
+      is_sudo: user.role === 'sudo'
+    };
+  }
+
+  private mergeCompanyInList(company: CompanyInfo): CompanyInfo[] {
+    const list = this.availableCompaniesSubject.value;
+    const exists = list.find(c => c.id === company.id);
+    if (exists) {
+      return list.map(c => (c.id === company.id ? company : c));
+    }
+    return [...list, company];
   }
 }

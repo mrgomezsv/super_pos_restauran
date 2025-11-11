@@ -1,22 +1,38 @@
+export type UserRole = 'sudo' | 'admin' | 'cashier' | 'manager';
+
+export interface UserCompany {
+  id: string;
+  nombre: string;
+  razonSocial?: string;
+  nit?: string;
+  estado?: string;
+  subscriptionPlan?: string;
+  maxUsers?: number;
+  maxProducts?: number;
+  maxSalesPerMonth?: number;
+}
+
 export interface User {
-  id: number;
-  username: string;
-  name: string;
+  id: string;
   email: string;
-  role: 'sudo' | 'admin' | 'cashier' | 'manager';
-  company_id?: number;
-  isActive: boolean;
-  createdAt: Date;
-  lastLogin?: Date;
+  name: string;
+  lastName?: string;
+  fullName?: string;
+  username?: string;
+  role: UserRole;
+  status: 'active' | 'inactive' | 'suspended';
+  isActive?: boolean;
+  phone?: string;
+  photoUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+  primaryCompanyId?: string;
+  companies: UserCompany[];
+  permissions: string[];
 }
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  user: User;
-  expiresIn: number;
 }
