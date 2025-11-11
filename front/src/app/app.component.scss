@@ -748,14 +748,6 @@
   }
 }
 
-.sidebar {
-  animation: slideInLeft 0.3s ease-out;
-}
-
-.main-content {
-  animation: slideInRight 0.3s ease-out;
-}
-
 // Scrollbar styling
 .sidebar-nav::-webkit-scrollbar {
   width: 6px;

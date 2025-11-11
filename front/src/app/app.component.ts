@@ -16,6 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { AuthService } from './core/services/auth.service';
 import { CompanyContextService, AvailableCompany, CompanyInfo } from './core/services/company-context.service';
 import { User } from './core/models/user.model';
+import { AppRouteReuseStrategy } from './core/route-reuse.strategy';
 
 interface MenuItem {
   text: string;
@@ -68,7 +69,8 @@ export class AppComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private companyContextService: CompanyContextService,
-    private router: Router
+    private router: Router,
+    private routeReuseStrategy: AppRouteReuseStrategy
   ) {}
 
   ngOnInit() {
@@ -194,6 +196,7 @@ export class AppComponent implements OnInit {
   }
 
   logout() {
+    this.routeReuseStrategy.clearStoredRoutes();
     this.authService.logout();
     this.router.navigate(['/login']);
   }
@@ -220,6 +223,8 @@ export class AppComponent implements OnInit {
       next: (context) => {
         console.log('Contexto de compañía cambiado:', context);
         this.closeCompanySelector();
+        // Volver a cargar datos de páginas cacheadas
+        this.routeReuseStrategy.clearStoredRoutes();
         // Opcional: mostrar mensaje de éxito o recargar datos
       },
       error: (error) => {
