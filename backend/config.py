@@ -4,7 +4,7 @@ Soporta configuración por entornos (desarrollo/producción)
 """
 
 import os
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     
     # Configuración de CORS
     cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:4200")
+    cors_origin_regex: Optional[str] = os.getenv("CORS_ORIGIN_REGEX", r"http://localhost:\d+")
     
     # Configuración de JWT
     secret_key: str = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production")
@@ -57,6 +58,11 @@ class Settings(BaseSettings):
         if self.cors_origins:
             return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
         return ["http://localhost:4200"]
+    
+    def get_cors_origin_regex(self) -> Optional[str]:
+        """Obtener regex para permitir orígenes CORS dinámicamente"""
+        regex = self.cors_origin_regex.strip() if self.cors_origin_regex else None
+        return regex or None
     
     class Config:
         env_file = ".env"
