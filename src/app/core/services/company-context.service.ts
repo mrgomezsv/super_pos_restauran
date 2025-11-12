@@ -42,7 +42,7 @@ export class CompanyContextService {
   }
 
   private initializeContext(user: User): void {
-    const companies = user.companies || [];
+    const companies = user.companies ?? [];
     this.availableCompaniesSubject.next(companies);
 
     const defaultCompanyId = user.primaryCompanyId || companies[0]?.id || null;
@@ -61,13 +61,26 @@ export class CompanyContextService {
     }
   }
 
-  switchToCompany(companyId: string): Observable<CompanyContext> {
+  switchToCompany(companyId: string | null | undefined): Observable<CompanyContext> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
       return throwError(() => new Error('Usuario no autenticado'));
     }
 
-    const company = currentUser.companies.find(c => c.id === companyId) || null;
+    if (!companyId) {
+      const context: CompanyContext = {
+        user: this.mapUserToContext(currentUser),
+        permissions: currentUser.permissions ?? []
+      };
+      this.currentContextSubject.next(context);
+      this.selectedCompanyIdSubject.next(null);
+      localStorage.removeItem('selectedCompanyId');
+      localStorage.setItem('companyContext', JSON.stringify(context));
+      return of(context);
+    }
+
+    const companies = currentUser.companies ?? [];
+    const company = companies.find(c => c.id === companyId) || null;
 
     const context: CompanyContext = {
       user: this.mapUserToContext(currentUser),
