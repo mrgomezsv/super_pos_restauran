@@ -141,7 +141,9 @@ export class AuthService {
    */
   hasCompany(): boolean {
     const user = this.getCurrentUser();
-    return !!(user && (user.primaryCompanyId || user.companies.length > 0));
+    if (!user) return false;
+    const companies = user.companies ?? [];
+    return !!(user.primaryCompanyId || companies.length > 0);
   }
 
   /**
@@ -151,7 +153,8 @@ export class AuthService {
     const user = this.getCurrentUser();
     if (!user) return null;
 
-    return user.primaryCompanyId || user.companies[0]?.id || null;
+    const companies = user.companies ?? [];
+    return user.primaryCompanyId || companies[0]?.id || null;
   }
 
   /**
@@ -170,7 +173,8 @@ export class AuthService {
 
     if (user.role === 'sudo') return true;
 
-    return user.companies.length > 1;
+    const companies = user.companies ?? [];
+    return companies.length > 1;
   }
 
   /**
@@ -317,7 +321,14 @@ export class AuthService {
 
     if (token && userStr) {
       try {
-        const user: User = JSON.parse(userStr);
+        const parsed = JSON.parse(userStr);
+        const user: User = {
+          ...parsed,
+          companies: parsed?.companies ?? [],
+          permissions: parsed?.permissions ?? [],
+          status: parsed?.status ?? 'active',
+          isActive: parsed?.isActive ?? (parsed?.status ?? 'active') === 'active'
+        };
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
       } catch (error) {
