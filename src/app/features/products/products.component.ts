@@ -72,7 +72,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
   private loadProducts(): void {
     this.isLoading = true;
     
-    this.productService.getProducts()
+    // Usar getIngredients() para cargar desde Firestore
+    this.productService.getIngredients()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (products) => {
@@ -91,11 +92,32 @@ export class ProductsComponent implements OnInit, OnDestroy {
     const filters = this.filtersForm.value;
     this.isLoading = true;
 
-    this.productService.getProducts(filters)
+    // Usar getIngredients() y aplicar filtros localmente
+    this.productService.getIngredients()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (products) => {
-          this.products = products;
+          // Aplicar filtros localmente
+          let filtered = products;
+          
+          if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filtered = filtered.filter(p => 
+              p.name.toLowerCase().includes(searchLower) ||
+              p.code.toLowerCase().includes(searchLower) ||
+              (p.brand && p.brand.toLowerCase().includes(searchLower))
+            );
+          }
+          
+          if (filters.brand) {
+            filtered = filtered.filter(p => p.brand === filters.brand);
+          }
+          
+          if (filters.isActive !== undefined && filters.isActive !== null) {
+            filtered = filtered.filter(p => p.isActive === filters.isActive);
+          }
+          
+          this.products = filtered;
           this.isLoading = false;
         },
         error: (error) => {
