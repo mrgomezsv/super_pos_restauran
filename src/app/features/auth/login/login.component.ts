@@ -69,7 +69,12 @@ export class LoginComponent implements OnInit {
           this.playSound('success');
           const displayName = user.fullName || user.name || user.email;
           this.notificationService.success(`Bienvenido, ${displayName}`);
-          this.router.navigate(['/dashboard']);
+          // Redirigir cajeros directamente al POS, otros usuarios al dashboard
+          if (user.role === 'cashier') {
+            this.router.navigate(['/pos']);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
         },
         error: (error) => {
           this.isLoading = false;
