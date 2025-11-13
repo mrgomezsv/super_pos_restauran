@@ -104,13 +104,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
             const searchLower = filters.search.toLowerCase();
             filtered = filtered.filter(p => 
               p.name.toLowerCase().includes(searchLower) ||
-              p.code.toLowerCase().includes(searchLower) ||
-              (p.brand && p.brand.toLowerCase().includes(searchLower))
+              p.code.toLowerCase().includes(searchLower)
             );
-          }
-          
-          if (filters.brand) {
-            filtered = filtered.filter(p => p.brand === filters.brand);
           }
           
           if (filters.isActive !== undefined && filters.isActive !== null) {
