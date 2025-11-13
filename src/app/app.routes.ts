@@ -70,6 +70,11 @@ export const routes: Routes = [
     canActivate: [sudoGuard]
   },
   {
+    path: 'sudo/create-users',
+    loadComponent: () => import('./features/sudo/create-users/create-users.component').then(m => m.CreateUsersComponent),
+    canActivate: [sudoGuard]
+  },
+  {
     path: '**',
     redirectTo: '/login'
   }
