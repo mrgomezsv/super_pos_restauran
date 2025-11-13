@@ -24,7 +24,7 @@ export const routes: Routes = [
     canActivate: [authWithCompanyGuard]
   },
   {
-    path: 'products',
+    path: 'ingredients',
     loadComponent: () => import('./features/products/products.component').then(m => m.ProductsComponent),
     canActivate: [companyGuard]
   },

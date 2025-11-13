@@ -157,7 +157,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   goToProducts(): void {
-    this.router.navigate(['/products']);
+    this.router.navigate(['/ingredients']);
   }
 
   goToReports(): void {

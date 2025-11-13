@@ -75,14 +75,14 @@ export class TutorialGuideComponent implements OnInit, OnDestroy {
           id: 'step-1',
           title: '📦 Ingredientes Creados',
           description: 'Ya tienes 5 materias primas en inventario: Harina (100kg), Pollo Entero (50 unid), Aceite (30L), Sal (200kg), Cebolla (100kg)',
-          route: '/products',
+          route: '/ingredients',
           action: 'Revisar inventario en Gestión de Ingredientes'
         },
         {
           id: 'step-2',
           title: '🍽️ Producto Final Creado',
           description: 'El platillo "Pollo al Horno" ya existe como producto. Actualmente tiene 0 stock porque aún no se ha producido.',
-          route: '/products',
+          route: '/ingredients',
           action: 'Ver producto "Pollo al Horno"'
         },
         {
