@@ -15,25 +15,43 @@
   </div>
 
   <div class="filters-section">
+    <div class="filters-header">
+      <h3 class="filters-title">
+        <mat-icon>tune</mat-icon>
+        Filtros de Búsqueda
+      </h3>
+      <p class="filters-subtitle">Encuentra recetas específicas usando los filtros</p>
+    </div>
+    
     <div class="filters-card">
-      <form [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
-        <div class="filters-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Buscar receta</mat-label>
-            <input matInput formControlName="search" placeholder="Nombre, código...">
-            <mat-icon matPrefix>search</mat-icon>
-          </mat-form-field>
-
-          <div class="filter-actions">
-            <button mat-stroked-button type="submit" [disabled]="isLoading">
+      <form [formGroup]="filtersForm" class="filters-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
               <mat-icon>search</mat-icon>
-              Buscar
-            </button>
-            <button mat-stroked-button type="button" (click)="clearFilters()" [disabled]="isLoading">
-              <mat-icon>clear</mat-icon>
-              Limpiar
-            </button>
+              Buscar Recetas
+            </label>
+            <div class="input-container">
+              <input 
+                matInput 
+                formControlName="search" 
+                placeholder="Ingresa código, nombre o descripción de la receta"
+                class="search-input">
+              <mat-icon class="input-icon">search</mat-icon>
+            </div>
           </div>
+        </div>
+
+        <div class="filters-actions">
+          <button type="button" class="filter-btn primary" (click)="applyFilters()">
+            <mat-icon>filter_list</mat-icon>
+            <span>Aplicar Filtros</span>
+          </button>
+
+          <button type="button" class="filter-btn secondary" (click)="clearFilters()">
+            <mat-icon>clear_all</mat-icon>
+            <span>Limpiar Filtros</span>
+          </button>
         </div>
       </form>
     </div>

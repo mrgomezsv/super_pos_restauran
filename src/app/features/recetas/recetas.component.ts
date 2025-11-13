@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -42,6 +42,7 @@ import { Product } from '../../core/models/product.model';
 })
 export class RecetasComponent implements OnInit, OnDestroy {
   recipes: Recipe[] = [];
+  allRecipes: Recipe[] = []; // Lista completa para filtrar
   displayedColumns: string[] = ['code', 'name', 'product_name', 'batch_size', 'cost_per_batch', 'status', 'actions'];
   isLoading = true;
   filtersForm: FormGroup;
@@ -61,6 +62,15 @@ export class RecetasComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadRecipes();
+    
+    // Búsqueda en tiempo real
+    this.filtersForm.get('search')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   ngOnDestroy(): void {
@@ -75,7 +85,8 @@ export class RecetasComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (recipes) => {
-          this.recipes = recipes;
+          this.allRecipes = recipes;
+          this.applyFilters(); // Aplicar filtros después de cargar
           this.isLoading = false;
         },
         error: (error) => {
@@ -87,12 +98,26 @@ export class RecetasComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    this.loadRecipes();
+    const filters = this.filtersForm.value;
+    
+    // Aplicar filtros sobre la lista completa
+    let filtered = [...this.allRecipes];
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(recipe => 
+        recipe.name.toLowerCase().includes(searchLower) ||
+        recipe.code.toLowerCase().includes(searchLower) ||
+        (recipe.product_name && recipe.product_name.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    this.recipes = filtered;
   }
 
   clearFilters(): void {
     this.filtersForm.reset();
-    this.loadRecipes();
+    this.applyFilters(); // Aplicar filtros (que mostrará todos al estar vacío)
   }
 
   formatCurrency(amount: number): string {
