@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -43,9 +43,11 @@ import { TutorialGuideComponent } from '../../shared/components/tutorial-guide/t
 export class ProduccionComponent implements OnInit, OnDestroy {
   showTutorial = false;
   productionOrders: ProductionOrder[] = [];
+  allProductionOrders: ProductionOrder[] = []; // Lista completa para filtrar
   displayedColumns: string[] = ['production_number', 'recipe_name', 'quantity_to_produce', 'quantity_produced', 'status', 'createdAt', 'actions'];
   isLoading = true;
   filtersForm: FormGroup;
+  isStatusDropdownOpen = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -66,6 +68,30 @@ export class ProduccionComponent implements OnInit, OnDestroy {
     const tutorialShown = localStorage.getItem('production_tutorial_shown');
     if (!tutorialShown) {
       this.showTutorial = true;
+    }
+    
+    // Búsqueda en tiempo real
+    this.filtersForm.get('search')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
+    
+    // Filtro de estado en tiempo real
+    this.filtersForm.get('status')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select-field')) {
+      this.isStatusDropdownOpen = false;
     }
   }
   
@@ -90,7 +116,8 @@ export class ProduccionComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (orders) => {
-          this.productionOrders = orders;
+          this.allProductionOrders = orders;
+          this.applyFilters(); // Aplicar filtros después de cargar
           this.isLoading = false;
         },
         error: (error) => {
@@ -102,13 +129,54 @@ export class ProduccionComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    const status = this.filtersForm.value.status || undefined;
-    this.loadProductionOrders(status);
+    const filters = this.filtersForm.value;
+    
+    // Aplicar filtros sobre la lista completa
+    let filtered = [...this.allProductionOrders];
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(order => 
+        order.production_number.toLowerCase().includes(searchLower) ||
+        (order.recipe_name && order.recipe_name.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    if (filters.status && filters.status !== '') {
+      filtered = filtered.filter(order => order.status === filters.status);
+    }
+    
+    this.productionOrders = filtered;
   }
 
   clearFilters(): void {
     this.filtersForm.reset();
-    this.loadProductionOrders();
+    this.applyFilters(); // Aplicar filtros (que mostrará todos al estar vacío)
+  }
+
+  toggleStatusDropdown(): void {
+    this.isStatusDropdownOpen = !this.isStatusDropdownOpen;
+  }
+
+  selectStatus(value: string): void {
+    this.filtersForm.get('status')?.setValue(value);
+    this.isStatusDropdownOpen = false;
+  }
+
+  getStatusDisplayValue(): string {
+    const status = this.filtersForm.get('status')?.value;
+    if (status === '') {
+      return 'Todos los estados';
+    } else if (status === 'planned') {
+      return 'Planificada';
+    } else if (status === 'in_progress') {
+      return 'En Progreso';
+    } else if (status === 'completed') {
+      return 'Completada';
+    } else if (status === 'cancelled') {
+      return 'Cancelada';
+    }
+    return 'Todos los estados';
   }
 
   formatCurrency(amount: number): string {

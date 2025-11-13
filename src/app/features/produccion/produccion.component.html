@@ -27,36 +27,97 @@
   </div>
 
   <div class="filters-section">
+    <div class="filters-header">
+      <h3 class="filters-title">
+        <mat-icon>tune</mat-icon>
+        Filtros de Búsqueda
+      </h3>
+      <p class="filters-subtitle">Encuentra órdenes de producción específicas usando los filtros</p>
+    </div>
+    
     <div class="filters-card">
-      <form [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
-        <div class="filters-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Buscar orden</mat-label>
-            <input matInput formControlName="search" placeholder="Número, receta...">
-            <mat-icon matPrefix>search</mat-icon>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Estado</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="">Todos</mat-option>
-              <mat-option value="planned">Planificada</mat-option>
-              <mat-option value="in_progress">En Progreso</mat-option>
-              <mat-option value="completed">Completada</mat-option>
-              <mat-option value="cancelled">Cancelada</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <div class="filter-actions">
-            <button mat-stroked-button type="submit" [disabled]="isLoading">
+      <form [formGroup]="filtersForm" class="filters-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
               <mat-icon>search</mat-icon>
-              Buscar
-            </button>
-            <button mat-stroked-button type="button" (click)="clearFilters()" [disabled]="isLoading">
-              <mat-icon>clear</mat-icon>
-              Limpiar
-            </button>
+              Buscar Órdenes de Producción
+            </label>
+            <div class="input-container">
+              <input 
+                matInput 
+                formControlName="search" 
+                placeholder="Ingresa número de orden, receta o descripción"
+                class="search-input">
+              <mat-icon class="input-icon">search</mat-icon>
+            </div>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>toggle_on</mat-icon>
+              Estado de la Orden
+            </label>
+            <div class="custom-select-field">
+              <div class="select-wrapper">
+                <div 
+                  class="custom-select-display"
+                  (click)="toggleStatusDropdown()">
+                  <span class="select-value">{{ getStatusDisplayValue() }}</span>
+                  <span class="select-arrow" [class.open]="isStatusDropdownOpen">▼</span>
+                </div>
+                <div class="custom-dropdown" [class.open]="isStatusDropdownOpen">
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === ''"
+                    (click)="selectStatus('')">
+                    <mat-icon>help_outline</mat-icon>
+                    <span>Todos los estados</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'planned'"
+                    (click)="selectStatus('planned')">
+                    <mat-icon class="status-planned">schedule</mat-icon>
+                    <span>Planificada</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'in_progress'"
+                    (click)="selectStatus('in_progress')">
+                    <mat-icon class="status-progress">play_circle</mat-icon>
+                    <span>En Progreso</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'completed'"
+                    (click)="selectStatus('completed')">
+                    <mat-icon class="status-completed">check_circle</mat-icon>
+                    <span>Completada</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'cancelled'"
+                    (click)="selectStatus('cancelled')">
+                    <mat-icon class="status-cancelled">cancel</mat-icon>
+                    <span>Cancelada</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-actions">
+          <button type="button" class="filter-btn primary" (click)="applyFilters()">
+            <mat-icon>filter_list</mat-icon>
+            <span>Aplicar Filtros</span>
+          </button>
+
+          <button type="button" class="filter-btn secondary" (click)="clearFilters()">
+            <mat-icon>clear_all</mat-icon>
+            <span>Limpiar Filtros</span>
+          </button>
         </div>
       </form>
     </div>
