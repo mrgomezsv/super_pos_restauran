@@ -105,24 +105,6 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Proveedores', 'Producción')">
-              <a routerLink="/proveedores" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>local_shipping</mat-icon>
-                </div>
-                <span class="nav-text">Proveedores</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
-            <li class="nav-item" *ngIf="shouldShowMenuItem('Ordenes de Compra', 'Producción')">
-              <a routerLink="/purchase-orders" routerLinkActive="active" class="nav-link">
-                <div class="nav-icon">
-                  <mat-icon>shopping_cart</mat-icon>
-                </div>
-                <span class="nav-text">Ordenes de Compra</span>
-                <div class="nav-indicator"></div>
-              </a>
-            </li>
             
             <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Informes', 'Principal')">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link">
@@ -165,6 +147,24 @@
                   <mat-icon>precision_manufacturing</mat-icon>
                 </div>
                 <span class="nav-text">Ordenes de Producción</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Proveedores', 'Producción')">
+              <a routerLink="/proveedores" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>local_shipping</mat-icon>
+                </div>
+                <span class="nav-text">Proveedores</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Ordenes de Compra', 'Producción')">
+              <a routerLink="/purchase-orders" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>shopping_cart</mat-icon>
+                </div>
+                <span class="nav-text">Ordenes de Compra</span>
                 <div class="nav-indicator"></div>
               </a>
             </li>
