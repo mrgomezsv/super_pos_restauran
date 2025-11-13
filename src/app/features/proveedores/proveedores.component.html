@@ -107,7 +107,7 @@
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Nombre del Proveedor *</mat-label>
-              <input matInput formControlName="name" placeholder="Ej: Distribuidora ABC S.A." />
+              <input matInput formControlName="name" />
               <mat-icon matSuffix>business</mat-icon>
               <mat-error *ngIf="form.get('name')?.hasError('required') && form.get('name')?.touched">
                 El nombre es requerido
@@ -120,26 +120,26 @@
             <div class="form-row">
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>NIT</mat-label>
-                <input matInput formControlName="nit" placeholder="Ej: 12345678-9" />
+                <input matInput formControlName="nit" />
                 <mat-icon matSuffix>badge</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>NRC</mat-label>
-                <input matInput formControlName="nrc" placeholder="Ej: 12345-6" />
+                <input matInput formControlName="nrc" />
                 <mat-icon matSuffix>description</mat-icon>
               </mat-form-field>
             </div>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Giro</mat-label>
-              <input matInput formControlName="business_activity" placeholder="Ej: Venta al por mayor de productos alimenticios" />
+              <input matInput formControlName="business_activity" />
               <mat-icon matSuffix>category</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Contacto</mat-label>
-              <input matInput formControlName="contact_person" placeholder="Ej: Juan Pérez - Gerente de Ventas" />
+              <input matInput formControlName="contact_person" />
               <mat-icon matSuffix>person</mat-icon>
             </mat-form-field>
           </div>
@@ -152,7 +152,7 @@
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Dirección</mat-label>
-              <textarea matInput formControlName="address" rows="3" placeholder="Ej: Calle Principal 123, Colonia Centro, San Salvador"></textarea>
+              <textarea matInput formControlName="address" rows="3"></textarea>
               <mat-icon matSuffix>home</mat-icon>
             </mat-form-field>
           </div>
@@ -166,20 +166,20 @@
             <div class="form-row">
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Teléfono Principal</mat-label>
-                <input matInput formControlName="phone" placeholder="Ej: 22345678" />
+                <input matInput formControlName="phone" />
                 <mat-icon matSuffix>phone</mat-icon>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Teléfono Secundario</mat-label>
-                <input matInput formControlName="phone2" placeholder="Opcional" />
+                <input matInput formControlName="phone2" />
                 <mat-icon matSuffix>phone</mat-icon>
               </mat-form-field>
             </div>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Teléfono Adicional</mat-label>
-              <input matInput formControlName="phone3" placeholder="Opcional" />
+              <input matInput formControlName="phone3" />
               <mat-icon matSuffix>phone</mat-icon>
             </mat-form-field>
           </div>
@@ -193,7 +193,7 @@
             <div class="form-row">
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Email Principal</mat-label>
-                <input matInput formControlName="email" type="email" placeholder="ventas@proveedor.com" />
+                <input matInput formControlName="email" type="email" />
                 <mat-icon matSuffix>email</mat-icon>
                 <mat-error *ngIf="form.get('email')?.hasError('email') && form.get('email')?.touched">
                   Email inválido
@@ -202,7 +202,7 @@
 
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Email Secundario</mat-label>
-                <input matInput formControlName="email2" type="email" placeholder="Opcional" />
+                <input matInput formControlName="email2" type="email" />
                 <mat-icon matSuffix>email</mat-icon>
                 <mat-error *ngIf="form.get('email2')?.hasError('email') && form.get('email2')?.touched">
                   Email inválido
@@ -212,7 +212,7 @@
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Email Adicional</mat-label>
-              <input matInput formControlName="email3" type="email" placeholder="Opcional" />
+              <input matInput formControlName="email3" type="email" />
               <mat-icon matSuffix>email</mat-icon>
               <mat-error *ngIf="form.get('email3')?.hasError('email') && form.get('email3')?.touched">
                 Email inválido
