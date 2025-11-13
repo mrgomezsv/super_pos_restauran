@@ -21,6 +21,89 @@
         </button>
       </div>
 
+      <div class="filters-section">
+        <div class="filters-header">
+          <h3 class="filters-title">
+            <mat-icon>tune</mat-icon>
+            Filtros de Búsqueda
+          </h3>
+          <p class="filters-subtitle">Encuentra proveedores específicos usando los filtros</p>
+        </div>
+        
+        <div class="filters-card">
+          <form [formGroup]="filtersForm" class="filters-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">
+                  <mat-icon>search</mat-icon>
+                  Buscar Proveedores
+                </label>
+                <div class="input-container">
+                  <input 
+                    matInput 
+                    formControlName="search" 
+                    placeholder="Ingresa nombre, NIT, contacto o teléfono del proveedor"
+                    class="search-input">
+                  <mat-icon class="input-icon">search</mat-icon>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <mat-icon>toggle_on</mat-icon>
+                  Estado del Proveedor
+                </label>
+                <div class="custom-select-field">
+                  <div class="select-wrapper">
+                    <div 
+                      class="custom-select-display"
+                      (click)="toggleStatusDropdown()">
+                      <span class="select-value">{{ getStatusDisplayValue() }}</span>
+                      <span class="select-arrow" [class.open]="isStatusDropdownOpen">▼</span>
+                    </div>
+                    <div class="custom-dropdown" [class.open]="isStatusDropdownOpen">
+                      <div 
+                        class="dropdown-option" 
+                        [class.selected]="filtersForm.get('isActive')?.value === ''"
+                        (click)="selectStatus('')">
+                        <mat-icon>help_outline</mat-icon>
+                        <span>Todos los estados</span>
+                      </div>
+                      <div 
+                        class="dropdown-option" 
+                        [class.selected]="filtersForm.get('isActive')?.value === true"
+                        (click)="selectStatus(true)">
+                        <mat-icon class="status-active">check_circle</mat-icon>
+                        <span>Proveedores Activos</span>
+                      </div>
+                      <div 
+                        class="dropdown-option" 
+                        [class.selected]="filtersForm.get('isActive')?.value === false"
+                        (click)="selectStatus(false)">
+                        <mat-icon class="status-inactive">cancel</mat-icon>
+                        <span>Proveedores Inactivos</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="filters-actions">
+              <button type="button" class="filter-btn primary" (click)="applyFilters()">
+                <mat-icon>filter_list</mat-icon>
+                <span>Aplicar Filtros</span>
+              </button>
+
+              <button type="button" class="filter-btn secondary" (click)="clearFilters()">
+                <mat-icon>clear_all</mat-icon>
+                <span>Limpiar Filtros</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div class="table-container">
         <table mat-table [dataSource]="suppliers" class="mat-elevation-z2">
           <ng-container matColumnDef="name">

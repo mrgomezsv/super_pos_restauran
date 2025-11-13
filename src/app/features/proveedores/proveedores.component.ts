@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,8 +11,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
 import { Firestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, serverTimestamp } from '@angular/fire/firestore';
-import { from, Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { from, Observable, of, Subject } from 'rxjs';
+import { map, catchError, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 export interface Supplier {
   id: string;
@@ -54,11 +54,15 @@ export interface Supplier {
 export class ProveedoresComponent implements OnInit, OnDestroy {
   cols = ['name', 'nit', 'nrc', 'contact_person', 'phone', 'actions'];
   suppliers: Supplier[] = [];
+  allSuppliers: Supplier[] = []; // Lista completa para filtrar
   form: FormGroup;
+  filtersForm: FormGroup;
   loading = false;
   showDialog = false;
   editingSupplier: Supplier | null = null;
+  isStatusDropdownOpen = false;
   private readonly SUPPLIERS_COLLECTION = 'suppliers';
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -91,12 +95,34 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
         control?.updateValueAndValidity({ emitEvent: false });
       });
     });
+
+    // Formulario de filtros
+    this.filtersForm = this.fb.group({
+      search: [''],
+      isActive: ['']
+    });
   }
 
   ngOnInit(): void {
     this.load();
     // Crear proveedor de ejemplo si no existe ninguno
     this.createExampleSupplier();
+    
+    // Búsqueda en tiempo real
+    this.filtersForm.get('search')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
+    
+    // Filtro de estado en tiempo real
+    this.filtersForm.get('isActive')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   private async createExampleSupplier(): Promise<void> {
@@ -136,7 +162,16 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // No listeners por limpiar actualmente
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select-field')) {
+      this.isStatusDropdownOpen = false;
+    }
   }
 
   load(): void {
@@ -175,10 +210,60 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (suppliers) => {
-        this.suppliers = suppliers;
+        this.allSuppliers = suppliers;
+        this.applyFilters(); // Aplicar filtros después de cargar
         this.loading = false;
       }
     });
+  }
+
+  applyFilters(): void {
+    const filters = this.filtersForm.value;
+    
+    // Aplicar filtros sobre la lista completa
+    let filtered = [...this.allSuppliers];
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(s => 
+        s.name.toLowerCase().includes(searchLower) ||
+        (s.nit && s.nit.toLowerCase().includes(searchLower)) ||
+        (s.contact_person && s.contact_person.toLowerCase().includes(searchLower)) ||
+        (s.phone && s.phone.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    if (filters.isActive !== undefined && filters.isActive !== null && filters.isActive !== '') {
+      filtered = filtered.filter(s => s.isActive === filters.isActive);
+    }
+    
+    this.suppliers = filtered;
+  }
+
+  clearFilters(): void {
+    this.filtersForm.reset();
+    this.applyFilters(); // Aplicar filtros (que mostrará todos al estar vacío)
+  }
+
+  toggleStatusDropdown(): void {
+    this.isStatusDropdownOpen = !this.isStatusDropdownOpen;
+  }
+
+  selectStatus(value: string | boolean): void {
+    this.filtersForm.get('isActive')?.setValue(value);
+    this.isStatusDropdownOpen = false;
+  }
+
+  getStatusDisplayValue(): string {
+    const status = this.filtersForm.get('isActive')?.value;
+    if (status === '') {
+      return 'Todos los estados';
+    } else if (status === true) {
+      return 'Proveedores Activos';
+    } else if (status === false) {
+      return 'Proveedores Inactivos';
+    }
+    return 'Todos los estados';
   }
 
   openDialog(supplier?: Supplier): void {
