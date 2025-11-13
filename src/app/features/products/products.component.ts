@@ -40,7 +40,7 @@ import { ProductDialogComponent } from './product-dialog/product-dialog.componen
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products: Product[] = [];
-  displayedColumns: string[] = ['code', 'name', 'unitOfMeasure', 'cost', 'stock', 'status', 'actions'];
+  displayedColumns: string[] = ['code', 'name', 'unitOfMeasure', 'status', 'actions'];
   isLoading = true;
   filtersForm: FormGroup;
   private destroy$ = new Subject<void>();
@@ -181,7 +181,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   deleteProduct(product: Product): void {
     if (confirm(`¿Está seguro de eliminar el ingrediente "${product.name}"?`)) {
-      this.productService.deleteProduct(product.id)
+      // Obtener el ID de Firestore
+      const productId = (product as any)._firestoreId || 
+                       (typeof product.id === 'string' ? product.id : product.id.toString());
+      
+      this.productService.deleteIngredient(productId)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
@@ -189,20 +193,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
             this.loadProducts();
           },
           error: (error) => {
-            console.error('Error deleting product:', error);
+            console.error('Error deleting ingredient:', error);
             this.toastr.error('Error al eliminar el ingrediente');
           }
         });
-    }
-  }
-
-  getStockClass(stock: number, minStock: number): string {
-    if (stock <= minStock) {
-      return 'stock-low';
-    } else if (stock <= minStock * 2) {
-      return 'stock-normal';
-    } else {
-      return 'stock-high';
     }
   }
 
