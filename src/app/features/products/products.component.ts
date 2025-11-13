@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -40,6 +40,7 @@ import { ProductDialogComponent } from './product-dialog/product-dialog.componen
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products: Product[] = [];
+  allProducts: Product[] = []; // Lista completa para filtrar
   displayedColumns: string[] = ['code', 'name', 'unitOfMeasure', 'status', 'actions'];
   isLoading = true;
   filtersForm: FormGroup;
@@ -62,6 +63,22 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadProducts();
+    
+    // Búsqueda en tiempo real
+    this.filtersForm.get('search')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
+    
+    // Filtro de estado en tiempo real
+    this.filtersForm.get('isActive')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   ngOnDestroy(): void {
@@ -77,7 +94,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (products) => {
-          this.products = products;
+          this.allProducts = products;
+          this.applyFilters(); // Aplicar filtros después de cargar
           this.isLoading = false;
         },
         error: (error) => {
@@ -90,42 +108,28 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     const filters = this.filtersForm.value;
-    this.isLoading = true;
-
-    // Usar getIngredients() y aplicar filtros localmente
-    this.productService.getIngredients()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (products) => {
-          // Aplicar filtros localmente
-          let filtered = products;
-          
-          if (filters.search) {
-            const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(p => 
-              p.name.toLowerCase().includes(searchLower) ||
-              p.code.toLowerCase().includes(searchLower)
-            );
-          }
-          
-          if (filters.isActive !== undefined && filters.isActive !== null) {
-            filtered = filtered.filter(p => p.isActive === filters.isActive);
-          }
-          
-          this.products = filtered;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error filtering ingredients:', error);
-          this.toastr.error('Error al filtrar los ingredientes');
-          this.isLoading = false;
-        }
-      });
+    
+    // Aplicar filtros sobre la lista completa
+    let filtered = [...this.allProducts];
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchLower) ||
+        p.code.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    if (filters.isActive !== undefined && filters.isActive !== null && filters.isActive !== '') {
+      filtered = filtered.filter(p => p.isActive === filters.isActive);
+    }
+    
+    this.products = filtered;
   }
 
   clearFilters(): void {
     this.filtersForm.reset();
-    this.loadProducts();
+    this.applyFilters(); // Aplicar filtros (que mostrará todos al estar vacío)
   }
 
   showProductDialog = false;
