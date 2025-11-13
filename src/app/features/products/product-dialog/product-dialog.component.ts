@@ -88,16 +88,12 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
 
   private initializeForm(): void {
     this.productForm = this.fb.group({
-      code: [''], // Solo para mostrar, se genera automáticamente en el backend
+      code: [{ value: '', disabled: true }], // SKU autogenerado, solo lectura
       unitOfMeasure: ['unidad', [Validators.required, Validators.maxLength(20)]],
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
-      cost: [0, Validators.min(0)],
-      taxRate: [{ value: 13, disabled: true }],
+      name: ['', [Validators.required, Validators.minLength(2)]], // Descripción del ingrediente
       quantityToAdd: [0, [Validators.required, Validators.min(0)]],
       stock: [{ value: 0, disabled: true }],
       brand: [''],
-      barcode: [''],
       isActive: [true]
     });
   }
@@ -143,9 +139,12 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
       delete productData.quantityToAdd;
       
       if (this.isEdit && this.product) {
-        // Para edición, mantener el código existente pero no enviarlo
+        // Para edición, usar updateIngredient con Firestore
+        // Obtener el ID de Firestore (puede estar en _firestoreId o en id si es string)
+        const productId = (this.product as any)._firestoreId || 
+                         (typeof this.product.id === 'string' ? this.product.id : this.product.id.toString());
         delete productData.code;
-        this.productService.updateProduct(this.product.id, productData)
+        this.productService.updateIngredient(productId, productData)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: () => {
@@ -158,13 +157,13 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
             }
           });
       } else {
-        // Para creación, remover el código del payload (se genera automáticamente en el backend)
+        // Para creación, usar createIngredient con Firestore (SKU se genera automáticamente)
         delete productData.code;
-        this.productService.createProduct(productData)
+        this.productService.createIngredient(productData)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: (response) => {
-              // Mostrar el SKU asignado por el backend
+              // Mostrar el SKU asignado
               this.toastr.success(`✅ Ingrediente creado exitosamente`, `SKU asignado: ${response.code}`);
               this.close.emit(true);
             },
