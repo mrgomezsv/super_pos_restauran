@@ -123,6 +123,7 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
       code: [{ value: '', disabled: true }], // SKU autogenerado, solo lectura
       unitOfMeasure: ['unidad', [Validators.required, Validators.maxLength(20)]],
       name: ['', [Validators.required, Validators.minLength(2)]], // Descripción del ingrediente
+      presentation: [''], // Presentación del producto (ej: "500 ml", "1 kg")
       isActive: [true]
     });
   }

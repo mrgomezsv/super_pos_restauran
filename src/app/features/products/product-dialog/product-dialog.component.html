@@ -68,6 +68,18 @@
               {{ getErrorMessage('name') }}
             </mat-error>
           </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Presentación</mat-label>
+            <input 
+              matInput 
+              formControlName="presentation" 
+              placeholder="Ej: 500 ml, 1 kg, 24 unidades"
+              autocomplete="off"
+              maxlength="50">
+            <mat-icon matSuffix>inventory</mat-icon>
+            <mat-hint align="end">{{ productForm.get('presentation')?.value?.length || 0 }}/50</mat-hint>
+          </mat-form-field>
         </div>
 
         <!-- Información Adicional -->
