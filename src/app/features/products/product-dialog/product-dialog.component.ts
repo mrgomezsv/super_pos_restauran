@@ -105,8 +105,7 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
     if (this.isEdit && this.product) {
       this.ensureUnitOption(this.product.unitOfMeasure);
       this.productForm.patchValue({
-        ...this.product,
-        quantityToAdd: 0
+        ...this.product
       });
     } else {
       // Para ingredientes nuevos, consultar el siguiente SKU que se asignará
@@ -124,8 +123,6 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
       code: [{ value: '', disabled: true }], // SKU autogenerado, solo lectura
       unitOfMeasure: ['unidad', [Validators.required, Validators.maxLength(20)]],
       name: ['', [Validators.required, Validators.minLength(2)]], // Descripción del ingrediente
-      quantityToAdd: [0, [Validators.required, Validators.min(0)]],
-      stock: [{ value: 0, disabled: true }],
       isActive: [true]
     });
   }
@@ -157,18 +154,12 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
   onSave(): void {
     if (this.productForm.valid) {
       const productData = { ...this.productForm.getRawValue() };
-      const quantityToAdd = Number(productData.quantityToAdd) || 0;
-      const currentStock = this.product?.stock ?? 0;
-
-      if (this.isEdit) {
-        productData.stock = currentStock + quantityToAdd;
-      } else {
-        productData.stock = quantityToAdd;
-      }
-
+      
+      // El modal solo se usa para crear códigos de ingredientes
+      // No se maneja stock aquí
+      productData.stock = 0;
       productData.minStock = 0;
       productData.maxStock = null;
-      delete productData.quantityToAdd;
       
       if (this.isEdit && this.product) {
         // Para edición, usar updateIngredient con Firestore
