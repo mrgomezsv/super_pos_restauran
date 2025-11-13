@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, of } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -60,6 +60,7 @@ export interface PurchaseOrderItem {
 })
 export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   purchaseOrders: PurchaseOrder[] = [];
+  allPurchaseOrders: PurchaseOrder[] = []; // Lista completa para filtrar
   displayedColumns: string[] = ['orderNumber', 'supplierName', 'date', 'status', 'total', 'actions'];
   isLoading = true;
   filtersForm: FormGroup;
@@ -80,6 +81,22 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadPurchaseOrders();
+    
+    // Búsqueda en tiempo real
+    this.filtersForm.get('search')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
+    
+    // Filtro de estado en tiempo real
+    this.filtersForm.get('status')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   ngOnDestroy(): void {
@@ -91,25 +108,47 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     // TODO: Implementar carga desde Firestore
     // Por ahora, datos de ejemplo
-    setTimeout(() => {
-      this.purchaseOrders = [];
-      this.isLoading = false;
-    }, 500);
+    of([
+      { id: 'PO001', orderNumber: 'PO-000001', supplierName: 'Distribuidora Central', date: new Date(), status: 'pending' as const, total: 150.75, items: [], createdAt: new Date(), updatedAt: new Date() },
+      { id: 'PO002', orderNumber: 'PO-000002', supplierName: 'Agro Suministros', date: new Date(), status: 'approved' as const, total: 300.00, items: [], createdAt: new Date(), updatedAt: new Date() },
+    ]).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (orders) => {
+        this.allPurchaseOrders = orders;
+        this.applyFilters(); // Aplicar filtros después de cargar
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading purchase orders:', error);
+        this.toastr.error('Error al cargar las órdenes de compra');
+        this.isLoading = false;
+      }
+    });
   }
 
   applyFilters(): void {
     const filters = this.filtersForm.value;
-    this.isLoading = true;
-
-    // TODO: Implementar filtrado
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 300);
+    
+    // Aplicar filtros sobre la lista completa
+    let filtered = [...this.allPurchaseOrders];
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(order => 
+        order.orderNumber.toLowerCase().includes(searchLower) ||
+        (order.supplierName && order.supplierName.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    if (filters.status && filters.status !== '') {
+      filtered = filtered.filter(order => order.status === filters.status);
+    }
+    
+    this.purchaseOrders = filtered;
   }
 
   clearFilters(): void {
     this.filtersForm.reset();
-    this.loadPurchaseOrders();
+    this.applyFilters(); // Aplicar filtros (que mostrará todos al estar vacío)
   }
 
   showPurchaseOrderDialog = false;
