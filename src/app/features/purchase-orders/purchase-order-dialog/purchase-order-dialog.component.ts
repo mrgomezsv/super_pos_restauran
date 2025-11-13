@@ -9,11 +9,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Observable } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { Firestore, collection, getDocs, query, orderBy } from '@angular/fire/firestore';
+import { Firestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, limit, serverTimestamp } from '@angular/fire/firestore';
 import { from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 import { PurchaseOrder, PurchaseOrderItem } from '../purchase-orders.component';
 import { ProductService } from '../../../core/services/product.service';
@@ -63,16 +64,25 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
     this.loadSuppliers();
 
     if (this.isEdit && this.purchaseOrder) {
+      // Cargar datos de la orden existente
       this.purchaseOrderForm.patchValue({
-        ...this.purchaseOrder,
-        date: this.purchaseOrder.date
+        orderNumber: this.purchaseOrder.orderNumber,
+        supplierId: this.purchaseOrder.supplierId || '',
+        supplierName: this.purchaseOrder.supplierName || '',
+        date: this.purchaseOrder.date instanceof Date ? this.purchaseOrder.date : new Date(this.purchaseOrder.date),
+        status: this.purchaseOrder.status || 'pending'
       });
+      
       // Cargar items
       const itemsArray = this.purchaseOrderForm.get('items') as FormArray;
       itemsArray.clear();
-      this.purchaseOrder.items.forEach(item => {
-        itemsArray.push(this.createItemFormGroup(item));
-      });
+      if (this.purchaseOrder.items && this.purchaseOrder.items.length > 0) {
+        this.purchaseOrder.items.forEach(item => {
+          itemsArray.push(this.createItemFormGroup(item));
+        });
+      } else {
+        this.addItem();
+      }
     } else {
       // Nueva orden - agregar un item por defecto
       this.addItem();
@@ -234,17 +244,115 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
+  private getNextOrderNumber(): Observable<string> {
+    const ordersRef = collection(this.firestore, 'purchase-orders');
+    const q = query(ordersRef, orderBy('orderNumber', 'desc'), limit(1));
+    
+    return from(getDocs(q)).pipe(
+      map((snapshot) => {
+        if (snapshot.empty) {
+          return 'PO-000001';
+        }
+        const lastDoc = snapshot.docs[0];
+        const lastOrderNumber = lastDoc.data()['orderNumber'] || 'PO-000000';
+        const lastNumber = parseInt(lastOrderNumber.replace('PO-', ''), 10) || 0;
+        const nextNumber = lastNumber + 1;
+        const nextOrderNumber = `PO-${nextNumber.toString().padStart(6, '0')}`;
+        return nextOrderNumber;
+      }),
+      catchError((error) => {
+        console.error('Error getting next order number:', error);
+        return of('PO-000001');
+      })
+    );
+  }
+
   onSave(): void {
     if (this.purchaseOrderForm.valid) {
-      const orderData = {
-        ...this.purchaseOrderForm.value,
-        total: this.getTotal(),
-        items: this.itemsFormArray.value
+      const formData = this.purchaseOrderForm.getRawValue();
+      
+      // Obtener el nombre del proveedor desde la lista
+      const supplierId = formData.supplierId;
+      const supplier = this.suppliers.find(s => s.id === supplierId);
+      const supplierName = supplier?.name || formData.supplierName || '';
+      
+      const saveOrder = (orderNumber: string) => {
+        const orderData: any = {
+          orderNumber: orderNumber,
+          supplierId: supplierId,
+          supplierName: supplierName,
+          date: formData.date instanceof Date ? formData.date : new Date(formData.date),
+          status: formData.status || 'pending',
+          total: this.getTotal(),
+          items: this.itemsFormArray.value.map((item: any) => ({
+            ingredientId: item.ingredientId,
+            ingredientName: item.ingredientName,
+            quantity: item.quantity,
+            unitOfMeasure: item.unitOfMeasure,
+            unitPrice: item.unitPrice,
+            total: item.total
+          })),
+          updatedAt: serverTimestamp()
+        };
+
+        if (this.isEdit && this.purchaseOrder) {
+          // Actualizar orden existente
+          const orderRef = doc(this.firestore, 'purchase-orders', this.purchaseOrder.id);
+          from(setDoc(orderRef, orderData, { merge: true }))
+            .pipe(
+              catchError((error) => {
+                console.error('Error updating purchase order:', error);
+                this.toastr.error('Error al actualizar la orden de compra');
+                return of(null);
+              })
+            )
+            .subscribe({
+              next: () => {
+                this.toastr.success('Orden de compra actualizada exitosamente');
+                this.close.emit(true);
+              }
+            });
+        } else {
+          // Crear nueva orden
+          const ordersRef = collection(this.firestore, 'purchase-orders');
+          const newOrderRef = doc(ordersRef);
+          const newOrderData = {
+            ...orderData,
+            id: newOrderRef.id,
+            createdAt: serverTimestamp()
+          };
+          
+          from(setDoc(newOrderRef, newOrderData))
+            .pipe(
+              catchError((error) => {
+                console.error('Error creating purchase order:', error);
+                this.toastr.error('Error al crear la orden de compra');
+                return of(null);
+              })
+            )
+            .subscribe({
+              next: () => {
+                this.toastr.success('Orden de compra creada exitosamente');
+                this.close.emit(true);
+              }
+            });
+        }
       };
 
-      // TODO: Implementar guardado en Firestore
-      this.toastr.success('Orden de compra guardada exitosamente');
-      this.close.emit(true);
+      // Si es nueva orden y no tiene número, generar uno automáticamente
+      if (!this.isEdit && (!formData.orderNumber || formData.orderNumber.trim() === '')) {
+        this.getNextOrderNumber()
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (orderNumber) => {
+              saveOrder(orderNumber);
+            }
+          });
+      } else {
+        // Usar el número proporcionado o el existente
+        const orderNumber = formData.orderNumber || this.purchaseOrder?.orderNumber || '';
+        saveOrder(orderNumber);
+      }
     } else {
       this.markFormGroupTouched();
       this.toastr.warning('Por favor, completa todos los campos requeridos');

@@ -13,6 +13,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
+import { Firestore, collection, getDocs, doc, deleteDoc, query, orderBy } from '@angular/fire/firestore';
+import { from } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 import { PurchaseOrderDialogComponent } from './purchase-order-dialog/purchase-order-dialog.component';
 
@@ -71,7 +74,8 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private firestore: Firestore
   ) {
     this.filtersForm = this.fb.group({
       search: [''],
@@ -106,23 +110,42 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   private loadPurchaseOrders(): void {
     this.isLoading = true;
-    // TODO: Implementar carga desde Firestore
-    // Por ahora, datos de ejemplo
-    of([
-      { id: 'PO001', orderNumber: 'PO-000001', supplierName: 'Distribuidora Central', date: new Date(), status: 'pending' as const, total: 150.75, items: [], createdAt: new Date(), updatedAt: new Date() },
-      { id: 'PO002', orderNumber: 'PO-000002', supplierName: 'Agro Suministros', date: new Date(), status: 'approved' as const, total: 300.00, items: [], createdAt: new Date(), updatedAt: new Date() },
-    ]).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (orders) => {
-        this.allPurchaseOrders = orders;
-        this.applyFilters(); // Aplicar filtros después de cargar
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading purchase orders:', error);
-        this.toastr.error('Error al cargar las órdenes de compra');
-        this.isLoading = false;
-      }
-    });
+    const ordersRef = collection(this.firestore, 'purchase-orders');
+    const q = query(ordersRef, orderBy('createdAt', 'desc'));
+    
+    from(getDocs(q))
+      .pipe(
+        map((snapshot) => {
+          return snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              orderNumber: data['orderNumber'] || '',
+              supplierId: data['supplierId'] || undefined,
+              supplierName: data['supplierName'] || undefined,
+              date: data['date']?.toDate() || new Date(),
+              status: (data['status'] || 'pending') as 'pending' | 'approved' | 'received' | 'cancelled',
+              total: data['total'] || 0,
+              items: (data['items'] || []) as PurchaseOrderItem[],
+              createdAt: data['createdAt']?.toDate() || new Date(),
+              updatedAt: data['updatedAt']?.toDate() || new Date()
+            } as PurchaseOrder;
+          });
+        }),
+        catchError((error) => {
+          console.error('Error loading purchase orders:', error);
+          this.toastr.error('Error al cargar las órdenes de compra');
+          return of([]);
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (orders) => {
+          this.allPurchaseOrders = orders;
+          this.applyFilters(); // Aplicar filtros después de cargar
+          this.isLoading = false;
+        }
+      });
   }
 
   applyFilters(): void {
@@ -192,9 +215,22 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   deletePurchaseOrder(order: PurchaseOrder): void {
     if (confirm(`¿Está seguro de eliminar la orden de compra "${order.orderNumber}"?`)) {
-      // TODO: Implementar eliminación en Firestore
-      this.toastr.success('Orden de compra eliminada exitosamente');
-      this.loadPurchaseOrders();
+      const orderRef = doc(this.firestore, 'purchase-orders', order.id);
+      from(deleteDoc(orderRef))
+        .pipe(
+          catchError((error) => {
+            console.error('Error deleting purchase order:', error);
+            this.toastr.error('Error al eliminar la orden de compra');
+            return of(null);
+          }),
+          takeUntil(this.destroy$)
+        )
+        .subscribe({
+          next: () => {
+            this.toastr.success('Orden de compra eliminada exitosamente');
+            this.loadPurchaseOrders();
+          }
+        });
     }
   }
 
