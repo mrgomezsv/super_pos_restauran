@@ -14,7 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from './core/services/auth.service';
-import { CompanyContextService, AvailableCompany, CompanyInfo } from './core/services/company-context.service';
+import { CompanyContextService } from './core/services/company-context.service';
 import { User } from './core/models/user.model';
 import { AppRouteReuseStrategy } from './core/route-reuse.strategy';
 
@@ -54,11 +54,6 @@ export class AppComponent implements OnInit {
   currentUser: User | null = null;
   isUserMenuOpen = false;
   isLoginRoute = false;
-  
-  // Propiedades del selector de compañía
-  availableCompanies: AvailableCompany[] = [];
-  selectedCompany: CompanyInfo | null = null;
-  isCompanySelectorOpen = false;
 
   // Propiedades de búsqueda
   searchQuery = '';
@@ -97,16 +92,6 @@ export class AppComponent implements OnInit {
       this.currentUser = user;
       // Actualizar items del menú cuando cambia el usuario
       this.buildMenuItems();
-    });
-
-    // Suscribirse a los cambios de contexto de compañía
-    this.companyContextService.currentContext$.subscribe(context => {
-      this.selectedCompany = context?.company || null;
-    });
-
-    // Suscribirse a las compañías disponibles
-    this.companyContextService.availableCompanies$.subscribe(companies => {
-      this.availableCompanies = companies;
     });
 
     // Construir items del menú
@@ -209,65 +194,15 @@ export class AppComponent implements OnInit {
     this.isUserMenuOpen = false;
   }
 
-  // Métodos para selector de compañía
-  toggleCompanySelector() {
-    this.isCompanySelectorOpen = !this.isCompanySelectorOpen;
-  }
-
-  closeCompanySelector() {
-    this.isCompanySelectorOpen = false;
-  }
-
-  selectCompany(company: AvailableCompany) {
-    this.companyContextService.switchToCompany(company.id).subscribe({
-      next: (context) => {
-        console.log('Contexto de compañía cambiado:', context);
-        this.closeCompanySelector();
-        // Volver a cargar datos de páginas cacheadas
-        this.routeReuseStrategy.clearStoredRoutes();
-        // Opcional: mostrar mensaje de éxito o recargar datos
-      },
-      error: (error) => {
-        console.error('Error al cambiar compañía:', error);
-        // Opcional: mostrar mensaje de error
-      }
-    });
-  }
-
-  canChangeCompany(): boolean {
-    return this.authService.canManageMultipleCompanies();
-  }
-
-  getCompanyDisplayName(company: CompanyInfo | null): string {
-    if (!company) return 'Seleccionar compañía';
-    return company.nombre;
-  }
-
-  getCompanyStatusColor(estado?: string): string {
-    switch (estado) {
-      case 'activa': return '#4caf50';
-      case 'inactiva': return '#f44336';
-      case 'suspendida': return '#ff9800';
-      default: return '#757575';
-    }
-  }
-
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     const target = event.target as HTMLElement;
     const userInfo = target.closest('.user-info');
     const userPopover = target.closest('.user-popover');
-    const companySelector = target.closest('.company-selector');
-    const companyPopover = target.closest('.company-popover');
     
     // Cerrar menú de usuario
     if (!userInfo && !userPopover) {
       this.closeUserMenu();
-    }
-
-    // Cerrar selector de compañía
-    if (!companySelector && !companyPopover) {
-      this.closeCompanySelector();
     }
   }
 }
