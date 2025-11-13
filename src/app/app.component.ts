@@ -123,6 +123,7 @@ export class AppComponent implements OnInit {
       { text: 'Ingredientes', section: 'Producción', route: '/products', icon: 'inventory_2', role: '!cashier' },
       { text: 'Recetas', section: 'Producción', route: '/recetas', icon: 'menu_book', role: '!cashier' },
       { text: 'Ordenes de Producción', section: 'Producción', route: '/produccion', icon: 'precision_manufacturing', role: '!cashier' },
+      { text: 'Proveedores', section: 'Producción', route: '/proveedores', icon: 'local_shipping', role: '!cashier' },
       
       // Administración
       { text: 'Usuarios', section: 'Administración', route: '/users', icon: 'people', role: '!cashier' },

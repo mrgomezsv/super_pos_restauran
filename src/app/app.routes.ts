@@ -29,6 +29,11 @@ export const routes: Routes = [
     canActivate: [companyGuard]
   },
   {
+    path: 'proveedores',
+    loadComponent: () => import('./features/proveedores/proveedores.component').then(m => m.ProveedoresComponent),
+    canActivate: [companyGuard]
+  },
+  {
     path: 'users',
     loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent),
     canActivate: [companyGuard, noCashierGuard]

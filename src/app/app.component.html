@@ -161,6 +161,15 @@
                 <div class="nav-indicator"></div>
               </a>
             </li>
+            <li class="nav-item" *ngIf="shouldShowMenuItem('Proveedores', 'Producción')">
+              <a routerLink="/proveedores" routerLinkActive="active" class="nav-link">
+                <div class="nav-icon">
+                  <mat-icon>local_shipping</mat-icon>
+                </div>
+                <span class="nav-text">Proveedores</span>
+                <div class="nav-indicator"></div>
+              </a>
+            </li>
             
             <li class="nav-item" *ngIf="currentUser?.role !== 'cashier' && shouldShowMenuItem('Informes', 'Principal')">
               <a routerLink="/reports" routerLinkActive="active" class="nav-link">
