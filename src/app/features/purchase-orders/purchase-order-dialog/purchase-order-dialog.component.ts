@@ -8,10 +8,16 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
+import { Firestore, collection, getDocs, query, orderBy } from '@angular/fire/firestore';
+import { from } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { PurchaseOrder, PurchaseOrderItem } from '../purchase-orders.component';
+import { ProductService } from '../../../core/services/product.service';
+import { Product } from '../../../core/models/product.model';
 
 @Component({
     selector: 'app-purchase-order-dialog',
@@ -24,7 +30,8 @@ import { PurchaseOrder, PurchaseOrderItem } from '../purchase-orders.component';
         MatInputModule,
         MatSelectModule,
         MatDatepickerModule,
-        MatNativeDateModule
+        MatNativeDateModule,
+        MatTooltipModule
     ],
     templateUrl: './purchase-order-dialog.component.html',
     styleUrls: ['./purchase-order-dialog.component.scss']
@@ -35,17 +42,25 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
 
   purchaseOrderForm!: FormGroup;
   isEdit = false;
+  ingredients: Product[] = [];
+  suppliers: Array<{ id: string; name: string }> = [];
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private productService: ProductService,
+    private firestore: Firestore
   ) {
     this.initializeForm();
   }
 
   ngOnInit(): void {
     this.isEdit = !!this.purchaseOrder;
+    
+    // Cargar ingredientes y proveedores
+    this.loadIngredients();
+    this.loadSuppliers();
 
     if (this.isEdit && this.purchaseOrder) {
       this.purchaseOrderForm.patchValue({
@@ -64,6 +79,50 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadIngredients(): void {
+    this.productService.getIngredients()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (ingredients) => {
+          // Filtrar solo ingredientes activos
+          this.ingredients = ingredients.filter(ing => ing.isActive);
+        },
+        error: (error) => {
+          console.error('Error loading ingredients:', error);
+          this.toastr.error('Error al cargar los ingredientes');
+        }
+      });
+  }
+
+  private loadSuppliers(): void {
+    const suppliersRef = collection(this.firestore, 'suppliers');
+    const q = query(suppliersRef, orderBy('name', 'asc'));
+    
+    from(getDocs(q))
+      .pipe(
+        map((snapshot) => {
+          return snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              name: data['name'] || '',
+              isActive: data['isActive'] !== undefined ? data['isActive'] : true
+            };
+          }).filter(supplier => supplier.name && supplier.isActive); // Filtrar solo proveedores activos con nombre
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (suppliers) => {
+          this.suppliers = suppliers;
+        },
+        error: (error) => {
+          console.error('Error loading suppliers:', error);
+          this.toastr.error('Error al cargar los proveedores');
+        }
+      });
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -72,7 +131,7 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
   private initializeForm(): void {
     this.purchaseOrderForm = this.fb.group({
       orderNumber: ['', [Validators.required]],
-      supplierId: [''],
+      supplierId: ['', [Validators.required]],
       supplierName: [''],
       date: [new Date(), [Validators.required]],
       status: ['pending', [Validators.required]],
@@ -93,6 +152,47 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
       unitPrice: [item?.unitPrice || 0, [Validators.required, Validators.min(0)]],
       total: [item?.total || 0]
     });
+  }
+
+  onIngredientSelected(index: number): void {
+    const itemGroup = this.itemsFormArray.at(index);
+    const ingredientId = itemGroup.get('ingredientId')?.value;
+    
+    if (ingredientId) {
+      const ingredient = this.ingredients.find(ing => {
+        const ingId = (ing as any)._firestoreId || (typeof ing.id === 'string' ? ing.id : ing.id.toString());
+        return ingId === ingredientId;
+      });
+      
+      if (ingredient) {
+        // Auto-completar nombre y unidad de medida
+        itemGroup.patchValue({
+          ingredientName: ingredient.name,
+          unitOfMeasure: ingredient.unitOfMeasure
+        }, { emitEvent: false });
+      }
+    }
+  }
+
+  onSupplierSelected(): void {
+    const supplierId = this.purchaseOrderForm.get('supplierId')?.value;
+    
+    if (supplierId) {
+      const supplier = this.suppliers.find(s => s.id === supplierId);
+      if (supplier) {
+        this.purchaseOrderForm.patchValue({
+          supplierName: supplier.name
+        }, { emitEvent: false });
+      }
+    }
+  }
+
+  getIngredientDisplay(ingredient: Product): string {
+    return `${ingredient.code} - ${ingredient.name}`;
+  }
+
+  getIngredientId(ingredient: Product): string {
+    return (ingredient as any)._firestoreId || (typeof ingredient.id === 'string' ? ingredient.id : ingredient.id.toString());
   }
 
   addItem(): void {

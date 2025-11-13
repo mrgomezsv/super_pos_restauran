@@ -53,13 +53,16 @@
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Proveedor</mat-label>
-              <input 
-                matInput 
-                formControlName="supplierName" 
-                placeholder="Nombre del proveedor"
-                autocomplete="off"
-                maxlength="100">
+              <mat-label>Proveedor *</mat-label>
+              <mat-select formControlName="supplierId" (selectionChange)="onSupplierSelected()">
+                <mat-option value="">Seleccione un proveedor</mat-option>
+                <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                  {{ supplier.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="purchaseOrderForm.get('supplierId')?.hasError('required') && purchaseOrderForm.get('supplierId')?.touched">
+                Este campo es requerido
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field">
@@ -91,12 +94,13 @@
             <div [formGroupName]="i" class="item-row">
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Ingrediente *</mat-label>
-                <input 
-                  matInput 
-                  formControlName="ingredientName" 
-                  placeholder="Nombre del ingrediente"
-                  autocomplete="off">
-                <mat-error *ngIf="item.get('ingredientName')?.hasError('required') && item.get('ingredientName')?.touched">
+                <mat-select formControlName="ingredientId" (selectionChange)="onIngredientSelected(i)">
+                  <mat-option value="">Seleccione un ingrediente</mat-option>
+                  <mat-option *ngFor="let ingredient of ingredients" [value]="getIngredientId(ingredient)">
+                    {{ ingredient.code }} - {{ ingredient.name }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="item.get('ingredientId')?.hasError('required') && item.get('ingredientId')?.touched">
                   Requerido
                 </mat-error>
               </mat-form-field>
@@ -122,7 +126,10 @@
                   matInput 
                   formControlName="unitOfMeasure" 
                   placeholder="Ej: kg, unidad"
-                  autocomplete="off">
+                  autocomplete="off"
+                  readonly>
+                <mat-icon matSuffix>info</mat-icon>
+                <mat-hint>Se completa automáticamente al seleccionar el ingrediente</mat-hint>
                 <mat-error *ngIf="item.get('unitOfMeasure')?.hasError('required') && item.get('unitOfMeasure')?.touched">
                   Requerido
                 </mat-error>
