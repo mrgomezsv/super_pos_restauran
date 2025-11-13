@@ -3,13 +3,14 @@ export interface Product {
   code: string;
   name: string;
   description?: string;
+  presentation?: string; // Presentación del producto (ej: "500 ml", "1 kg", etc.)
   price: number;
   cost: number;
   category?: string;
   brand?: string;
   stock: number;
   minStock: number;
-  maxStock: number;
+  maxStock: number | null;
   isActive: boolean;
   barcode?: string;
   taxRate: number; // Porcentaje de impuesto (ej: 15 para 15%)
