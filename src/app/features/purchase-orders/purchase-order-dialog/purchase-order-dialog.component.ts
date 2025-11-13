@@ -52,7 +52,6 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
         ...this.purchaseOrder,
         date: this.purchaseOrder.date
       });
-      
       // Cargar items
       const itemsArray = this.purchaseOrderForm.get('items') as FormArray;
       itemsArray.clear();
