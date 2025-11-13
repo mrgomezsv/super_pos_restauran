@@ -143,45 +143,17 @@ export class AuthService {
     const user = this.getCurrentUser();
     if (!user) return false;
     const companies = user.companies ?? [];
-    return !!(user.primaryCompanyId || companies.length > 0);
+    return companies.length > 0;
   }
 
   /**
-   * Obtener ID de compañía principal del usuario
+   * Obtener ID de compañía del usuario (primera compañía)
    */
   getUserCompanyId(): string | null {
     const user = this.getCurrentUser();
     if (!user) return null;
-
     const companies = user.companies ?? [];
-    return user.primaryCompanyId || companies[0]?.id || null;
-  }
-
-  /**
-   * Verificar si el usuario puede gestionar múltiples compañías
-   */
-  canManageMultipleCompanies(): boolean {
-    return this.isSudo();
-  }
-
-  /**
-   * Verificar si el usuario necesita seleccionar una compañía para trabajar
-   */
-  needsCompanySelection(): boolean {
-    const user = this.getCurrentUser();
-    if (!user) return false;
-
-    if (user.role === 'sudo') return true;
-
-    const companies = user.companies ?? [];
-    return companies.length > 1;
-  }
-
-  /**
-   * Verificar si el usuario puede crear compañías
-   */
-  canCreateCompanies(): boolean {
-    return this.isSudo();
+    return companies[0]?.id || null;
   }
 
   /**
