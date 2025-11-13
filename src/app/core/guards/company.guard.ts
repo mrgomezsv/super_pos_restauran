@@ -29,14 +29,8 @@ export const companyGuard = () => {
     return false;
   }
 
-  // Para usuarios SUDO, siempre permitir acceso pero verificar selección de compañía
+  // Para usuarios SUDO, permitir acceso aunque no haya compañía seleccionada
   if (authService.isSudo()) {
-    const hasCompanySelected = companyContextService.hasCompanySelected();
-    if (!hasCompanySelected) {
-      // Redirigir a una página de selección de compañía o dashboard
-      router.navigate(['/dashboard']); // Asumiendo que el dashboard maneja la selección
-      return false;
-    }
     return true;
   }
 
