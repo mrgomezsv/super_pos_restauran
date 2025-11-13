@@ -435,22 +435,107 @@
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
     }
     
-    // Mat chips styling
-    ::ng-deep .mat-mdc-chip {
-      font-size: 14px;
-      font-weight: 500;
-      padding: 8px 12px;
-      border-radius: 20px;
-      
-      &.mat-mdc-chip.mat-primary {
-        background: linear-gradient(135deg, #017E84, #20C997);
-        color: white;
+    // Mat chips styling - Eliminar todos los bordes completamente
+    ::ng-deep {
+      .mat-mdc-chip,
+      mat-chip,
+      .mat-mdc-chip-set,
+      .mat-chip-list {
+        font-size: 14px;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: none !important;
+        border-width: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        
+        // Eliminar bordes de todos los elementos internos y externos
+        *,
+        &::before,
+        &::after {
+          border: none !important;
+          border-width: 0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        // Contenedores internos de Material Design
+        .mdc-evolution-chip,
+        .mdc-evolution-chip__cell,
+        .mdc-evolution-chip__cell--primary,
+        .mdc-evolution-chip__action,
+        .mdc-evolution-chip__action--primary,
+        .mdc-evolution-chip__ripple,
+        .mat-mdc-chip-action-label,
+        .mdc-evolution-chip__surface,
+        .mdc-evolution-chip__surface--primary {
+          border: none !important;
+          border-width: 0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+          
+          &::before,
+          &::after {
+            border: none !important;
+            border-width: 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
+          }
+        }
+        
+        &.mat-mdc-chip.mat-primary,
+        &[color="primary"] {
+          background: linear-gradient(135deg, #017E84, #20C997) !important;
+          color: white !important;
+          border: none !important;
+          border-width: 0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        &.mat-mdc-chip.mat-warn,
+        &[color="warn"] {
+          background: #dc2626 !important;
+          color: white !important;
+          border: none !important;
+          border-width: 0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        &.mat-mdc-chip.mat-accent,
+        &[color="accent"] {
+          border: none !important;
+          border-width: 0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        // Eliminar bordes de todos los estados posibles
+        &[class*="mat-accent"],
+        &[class*="mat-primary"],
+        &[class*="mat-warn"],
+        &[color] {
+          border: none !important;
+          border-width: 0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
       }
       
-      &.mat-mdc-chip.mat-warn {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
+      // Asegurar que no haya bordes en ningún nivel
+      td .mat-mdc-chip,
+      td mat-chip {
+        border: none !important;
+        border-width: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        
+        * {
+          border: none !important;
+          border-width: 0 !important;
+        }
       }
     }
     

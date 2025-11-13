@@ -447,6 +447,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
+  getStatusColor(isActive: boolean): string {
+    return isActive ? 'primary' : 'warn';
+  }
+
+  getStatusText(isActive: boolean): string {
+    return isActive ? 'Activo' : 'Inactivo';
+  }
+
   exportToExcel(): void {
     if (this.products.length === 0) {
       this.toastr.warning('No hay ingredientes para exportar');
