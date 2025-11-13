@@ -138,10 +138,8 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.authService.hasCompany() && !this.authService.isSudo()) {
-      this.toastr.error('Debes seleccionar una compañía para agregar proveedores');
-      return;
-    }
+    // Para una sola compañía, no es necesario verificar selección de compañía
+    // El sistema usa automáticamente la compañía del usuario
 
     this.loading = true;
     const payload = {
