@@ -1,64 +1,20 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { CompanyContextService } from '../services/company-context.service';
 
 /**
- * Guard para verificar que el usuario tenga acceso a una compañía
- * y que haya seleccionado una compañía válida para trabajar
+ * Guard para verificar autenticación
+ * Simplificado para una sola compañía
  */
-// Modo desarrollo
-const DEVELOPMENT_MODE = false; // Cambiar a false en producción
-
 export const companyGuard = () => {
   const authService = inject(AuthService);
-  const companyContextService = inject(CompanyContextService);
   const router = inject(Router);
 
-  // En desarrollo, permitir acceso
-  if (DEVELOPMENT_MODE) {
-    console.warn('⚠️ DEVELOPMENT MODE: Acceso sin verificación de compañía');
-    return true;
-  }
-
-  // Primero verificar autenticación
+  // Verificar autenticación
   if (!authService.isAuthenticated()) {
     router.navigate(['/login']);
     return false;
-  }
-
-  // Para usuarios SUDO, permitir acceso aunque no haya compañía seleccionada
-  if (authService.isSudo()) {
-    return true;
-  }
-
-  // Para usuarios normales, verificar que tengan una compañía asignada
-  if (!authService.hasCompany()) {
-    console.error('Usuario sin compañía asignada');
-    router.navigate(['/login']);
-    return false;
-  }
-
-  // Verificar que el contexto esté inicializado
-  const context = companyContextService.getCurrentContext();
-  if (!context || !context.company) {
-    // Intentar inicializar contexto
-    const userCompanyId = authService.getUserCompanyId();
-    if (userCompanyId) {
-      return companyContextService.switchToCompany(userCompanyId).pipe(
-        map(() => true),
-        catchError((error) => {
-          console.error('Error al inicializar contexto de compañía:', error);
-          router.navigate(['/login']);
-          return of(false);
-        })
-      );
-    } else {
-      router.navigate(['/login']);
-      return false;
-    }
   }
 
   return true;
