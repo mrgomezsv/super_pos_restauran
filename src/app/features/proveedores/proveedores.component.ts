@@ -1,7 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,8 +10,28 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../../environments/environment';
-import { AuthService } from '../../core/services/auth.service';
+import { Firestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, serverTimestamp } from '@angular/fire/firestore';
+import { from, Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+
+export interface Supplier {
+  id: string;
+  name: string;
+  nit?: string | null;
+  nrc?: string | null;
+  email?: string | null;
+  email2?: string | null;
+  email3?: string | null;
+  phone?: string | null;
+  phone2?: string | null;
+  phone3?: string | null;
+  address?: string | null;
+  contact_person?: string | null;
+  business_activity?: string | null;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 @Component({
   selector: 'app-proveedores',
@@ -34,18 +53,17 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class ProveedoresComponent implements OnInit, OnDestroy {
   cols = ['name', 'nit', 'nrc', 'contact_person', 'phone', 'actions'];
-  suppliers: any[] = [];
+  suppliers: Supplier[] = [];
   form: FormGroup;
   loading = false;
   showDialog = false;
-  editingSupplier: any = null;
-  private readonly api = `${environment.apiUrl}/suppliers`;
+  editingSupplier: Supplier | null = null;
+  private readonly SUPPLIERS_COLLECTION = 'suppliers';
 
   constructor(
     private fb: FormBuilder,
     private toastr: ToastrService,
-    private http: HttpClient,
-    private authService: AuthService
+    private firestore: Firestore
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -85,20 +103,47 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
 
   load(): void {
     this.loading = true;
-    this.http.get<any[]>(this.api).subscribe({
-      next: (rows) => {
-        this.suppliers = rows || [];
-        this.loading = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Error cargando proveedores:', err);
-        this.toastr.error(err.error?.detail || 'Error al cargar proveedores');
+    const suppliersRef = collection(this.firestore, this.SUPPLIERS_COLLECTION);
+    const q = query(suppliersRef, orderBy('name', 'asc'));
+    
+    from(getDocs(q)).pipe(
+      map((snapshot) => {
+        return snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            name: data['name'] || '',
+            nit: data['nit'] || null,
+            nrc: data['nrc'] || null,
+            email: data['email'] || null,
+            email2: data['email2'] || null,
+            email3: data['email3'] || null,
+            phone: data['phone'] || null,
+            phone2: data['phone2'] || null,
+            phone3: data['phone3'] || null,
+            address: data['address'] || null,
+            contact_person: data['contact_person'] || null,
+            business_activity: data['business_activity'] || null,
+            isActive: data['isActive'] !== undefined ? data['isActive'] : true,
+            createdAt: data['createdAt']?.toDate() || new Date(),
+            updatedAt: data['updatedAt']?.toDate() || new Date()
+          } as Supplier;
+        });
+      }),
+      catchError((error) => {
+        console.error('Error cargando proveedores:', error);
+        this.toastr.error('Error al cargar proveedores');
+        return of([]);
+      })
+    ).subscribe({
+      next: (suppliers) => {
+        this.suppliers = suppliers;
         this.loading = false;
       }
     });
   }
 
-  openDialog(supplier?: any): void {
+  openDialog(supplier?: Supplier): void {
     this.editingSupplier = supplier || null;
     if (supplier) {
       this.form.patchValue({
@@ -138,11 +183,8 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Para una sola compañía, no es necesario verificar selección de compañía
-    // El sistema usa automáticamente la compañía del usuario
-
     this.loading = true;
-    const payload = {
+    const supplierData = {
       name: this.form.value.name?.trim() || '',
       nit: this.form.value.nit?.trim() || null,
       nrc: this.form.value.nrc?.trim() || null,
@@ -155,47 +197,75 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
       address: this.form.value.address?.trim() || null,
       contact_person: this.form.value.contact_person?.trim() || null,
       business_activity: this.form.value.business_activity?.trim() || null,
-      isActive: true
+      isActive: true,
+      updatedAt: serverTimestamp()
     };
 
-    const request = this.editingSupplier
-      ? this.http.put<any>(`${this.api}/${this.editingSupplier.id}`, payload)
-      : this.http.post<any>(this.api, payload);
-
-    request.subscribe({
-      next: () => {
-        this.toastr.success(this.editingSupplier ? 'Proveedor actualizado exitosamente' : 'Proveedor agregado exitosamente');
-        this.closeDialog();
-        this.load();
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Error guardando proveedor:', err);
-        const message = err.error?.detail || err.error?.message || (this.editingSupplier ? 'Error al actualizar proveedor' : 'Error al agregar proveedor');
-        this.toastr.error(message);
-        this.loading = false;
-      }
-    });
+    if (this.editingSupplier) {
+      // Actualizar proveedor existente
+      const supplierRef = doc(this.firestore, this.SUPPLIERS_COLLECTION, this.editingSupplier.id);
+      from(setDoc(supplierRef, supplierData, { merge: true })).pipe(
+        catchError((error) => {
+          console.error('Error actualizando proveedor:', error);
+          this.toastr.error('Error al actualizar proveedor');
+          this.loading = false;
+          return of(null);
+        })
+      ).subscribe({
+        next: () => {
+          this.toastr.success('Proveedor actualizado exitosamente');
+          this.closeDialog();
+          this.load();
+        }
+      });
+    } else {
+      // Crear nuevo proveedor
+      const suppliersRef = collection(this.firestore, this.SUPPLIERS_COLLECTION);
+      const newDocRef = doc(suppliersRef);
+      const newSupplierData = {
+        ...supplierData,
+        createdAt: serverTimestamp()
+      };
+      
+      from(setDoc(newDocRef, newSupplierData)).pipe(
+        catchError((error) => {
+          console.error('Error creando proveedor:', error);
+          this.toastr.error('Error al agregar proveedor');
+          this.loading = false;
+          return of(null);
+        })
+      ).subscribe({
+        next: () => {
+          this.toastr.success('Proveedor agregado exitosamente');
+          this.closeDialog();
+          this.load();
+        }
+      });
+    }
   }
 
-  editSupplier(supplier: any): void {
+  editSupplier(supplier: Supplier): void {
     this.openDialog(supplier);
   }
 
-  deleteSupplier(supplier: any): void {
+  deleteSupplier(supplier: Supplier): void {
     if (!confirm(`¿Estás seguro de eliminar al proveedor "${supplier.name}"?`)) {
       return;
     }
 
     this.loading = true;
-    this.http.delete(`${this.api}/${supplier.id}`).subscribe({
+    const supplierRef = doc(this.firestore, this.SUPPLIERS_COLLECTION, supplier.id);
+    from(deleteDoc(supplierRef)).pipe(
+      catchError((error) => {
+        console.error('Error eliminando proveedor:', error);
+        this.toastr.error('Error al eliminar proveedor');
+        this.loading = false;
+        return of(null);
+      })
+    ).subscribe({
       next: () => {
         this.toastr.success('Proveedor eliminado exitosamente');
         this.load();
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Error eliminando proveedor:', err);
-        this.toastr.error(err.error?.detail || 'Error al eliminar proveedor');
-        this.loading = false;
       }
     });
   }
