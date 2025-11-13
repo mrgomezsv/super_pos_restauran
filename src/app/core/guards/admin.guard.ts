@@ -45,17 +45,7 @@ export const adminWithCompanyGuard = () => {
     return false;
   }
 
-  // Verificar que tenga compañía asignada
-  if (!authService.hasCompany()) {
-    router.navigate(['/login']);
-    return false;
-  }
-
-  // Verificar permisos específicos de administración en la compañía
-  if (!companyContextService.hasPermission('company.manage')) {
-    router.navigate(['/dashboard']);
-    return false;
-  }
-
+  // Para una sola compañía, si es admin o SUDO, permitir acceso
+  // Los permisos específicos se verifican en el componente si es necesario
   return true;
 };

@@ -49,17 +49,7 @@ export const authWithCompanyGuard = () => {
     return false;
   }
 
-  // Para usuarios SUDO, permitir acceso pero sugerir selección de compañía
-  if (authService.isSudo()) {
-    return true; // SUDO puede acceder a todo, la selección de compañía es opcional
-  }
-
-  // Para usuarios normales, verificar que tengan compañía asignada
-  if (!authService.hasCompany()) {
-    console.error('Usuario sin compañía asignada');
-    router.navigate(['/login']);
-    return false;
-  }
-
+  // Para una sola compañía, permitir acceso a todos los usuarios autenticados
+  // La compañía se asigna automáticamente si existe
   return true;
 };
