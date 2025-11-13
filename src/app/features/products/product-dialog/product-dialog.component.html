@@ -112,20 +112,6 @@
             Información Adicional
           </h3>
           
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Marca / Proveedor</mat-label>
-              <input 
-                matInput 
-                formControlName="brand" 
-                placeholder="Ej: Marca, proveedor o referencia"
-                autocomplete="off"
-                maxlength="50">
-              <mat-hint align="end">{{ productForm.get('brand')?.value?.length || 0 }}/50</mat-hint>
-            </mat-form-field>
-
-          </div>
-
           <div class="checkbox-container">
             <mat-checkbox formControlName="isActive" class="status-checkbox">
               <span class="checkbox-label">
