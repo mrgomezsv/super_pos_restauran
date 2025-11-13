@@ -84,9 +84,30 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
         this.addItem();
       }
     } else {
-      // Nueva orden - agregar un item por defecto
+      // Nueva orden - generar número automáticamente
+      this.generateOrderNumber();
+      // Agregar un item por defecto
       this.addItem();
     }
+  }
+
+  private generateOrderNumber(): void {
+    this.getNextOrderNumber()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (orderNumber) => {
+          this.purchaseOrderForm.patchValue({
+            orderNumber: orderNumber
+          });
+        },
+        error: (error) => {
+          console.error('Error generating order number:', error);
+          // En caso de error, usar un número temporal
+          this.purchaseOrderForm.patchValue({
+            orderNumber: 'PO-000001'
+          });
+        }
+      });
   }
 
   private loadIngredients(): void {
@@ -140,7 +161,7 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
 
   private initializeForm(): void {
     this.purchaseOrderForm = this.fb.group({
-      orderNumber: ['', [Validators.required]],
+      orderNumber: [{ value: '', disabled: true }], // Solo lectura, autogenerado
       supplierId: ['', [Validators.required]],
       supplierName: [''],
       date: [new Date(), [Validators.required]],
@@ -339,20 +360,10 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
         }
       };
 
-      // Si es nueva orden y no tiene número, generar uno automáticamente
-      if (!this.isEdit && (!formData.orderNumber || formData.orderNumber.trim() === '')) {
-        this.getNextOrderNumber()
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (orderNumber) => {
-              saveOrder(orderNumber);
-            }
-          });
-      } else {
-        // Usar el número proporcionado o el existente
-        const orderNumber = formData.orderNumber || this.purchaseOrder?.orderNumber || '';
-        saveOrder(orderNumber);
-      }
+      // El número de orden siempre está disponible (se genera automáticamente o viene de la orden existente)
+      // getRawValue() incluye campos deshabilitados
+      const orderNumber = this.purchaseOrderForm.getRawValue().orderNumber || this.purchaseOrder?.orderNumber || '';
+      saveOrder(orderNumber);
     } else {
       this.markFormGroupTouched();
       this.toastr.warning('Por favor, completa todos los campos requeridos');

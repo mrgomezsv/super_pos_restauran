@@ -28,16 +28,16 @@
           
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Número de Orden *</mat-label>
+              <mat-label>Número de Orden</mat-label>
               <input 
                 matInput 
                 formControlName="orderNumber" 
-                placeholder="Ej: OC-000001"
+                [placeholder]="isEdit ? 'Número de orden' : (purchaseOrderForm.get('orderNumber')?.value || 'Generando...')"
                 autocomplete="off"
-                maxlength="50">
-              <mat-error *ngIf="purchaseOrderForm.get('orderNumber')?.hasError('required') && purchaseOrderForm.get('orderNumber')?.touched">
-                {{ getErrorMessage('orderNumber') }}
-              </mat-error>
+                readonly>
+              <mat-icon matSuffix class="sku-info-icon" matTooltip="Número de orden autogenerado por el sistema, solo lectura" matTooltipPosition="above">
+                info
+              </mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field">
