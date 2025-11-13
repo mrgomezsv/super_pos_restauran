@@ -215,12 +215,12 @@ import { Overlay } from '@angular/cdk/overlay';
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(255, 255, 255, 0.1) !important;
-      backdrop-filter: blur(3px);
+      background: rgba(15, 23, 42, 0.35);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10000;
+      z-index: 20000;
       padding: var(--spacing-lg);
       box-sizing: border-box;
       animation: fadeIn 0.3s ease;
@@ -233,21 +233,8 @@ import { Overlay } from '@angular/cdk/overlay';
         }
         to {
           opacity: 1;
-          backdrop-filter: blur(3px);
+          backdrop-filter: blur(6px);
         }
-      }
-      
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(3px);
-        z-index: -1;
-        pointer-events: all;
       }
     }
 

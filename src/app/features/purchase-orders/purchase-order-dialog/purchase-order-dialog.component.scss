@@ -4,8 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.75) !important; // Fondo oscuro translúcido
-  backdrop-filter: blur(3px); // Desenfoque leve
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,7 +13,7 @@
   padding: var(--spacing-lg);
   box-sizing: border-box;
   animation: fadeIn 0.3s ease;
-  pointer-events: all; // Bloquear interacciones fuera del modal
+  pointer-events: all;
   
   // Animación para el desenfoque
   @keyframes fadeIn {
@@ -23,22 +23,8 @@
     }
     to {
       opacity: 1;
-      backdrop-filter: blur(3px);
+      backdrop-filter: blur(6px);
     }
-  }
-  
-  // Asegurar que el overlay cubra completamente
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(3px);
-    z-index: -1;
-    pointer-events: all;
   }
 }
 
