@@ -927,7 +927,7 @@ export class PosComponent implements OnInit, OnDestroy {
       </head>
       <body>
         <div class="header">
-          <h1>SUPER POS</h1>
+          <h1>Wave POSv2</h1>
           <p>Sistema de Punto de Ventas</p>
           <p>Fecha: ${date}</p>
           <p>Cajero: ${this.currentUser?.name || 'N/A'}</p>
