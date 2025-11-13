@@ -95,6 +95,44 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.load();
+    // Crear proveedor de ejemplo si no existe ninguno
+    this.createExampleSupplier();
+  }
+
+  private async createExampleSupplier(): Promise<void> {
+    try {
+      const suppliersRef = collection(this.firestore, this.SUPPLIERS_COLLECTION);
+      const snapshot = await getDocs(suppliersRef);
+      
+      // Solo crear si no hay proveedores
+      if (snapshot.empty) {
+        const exampleSupplierRef = doc(suppliersRef);
+        const exampleSupplier = {
+          name: 'Distribuidora Central S.A. de C.V.',
+          nit: '0614-123456-101-1',
+          nrc: '12345-6',
+          email: 'ventas@distribuidoracentral.com',
+          email2: 'compras@distribuidoracentral.com',
+          email3: null,
+          phone: '22345678',
+          phone2: '22345679',
+          phone3: null,
+          address: 'Calle Principal 123, Colonia Centro, San Salvador',
+          contact_person: 'Carlos Ramírez - Gerente de Ventas',
+          business_activity: 'Distribución al por mayor de productos alimenticios y bebidas',
+          isActive: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        await setDoc(exampleSupplierRef, exampleSupplier);
+        console.log('✅ Proveedor de ejemplo creado exitosamente');
+        // Recargar la lista
+        this.load();
+      }
+    } catch (error) {
+      console.error('Error creando proveedor de ejemplo:', error);
+    }
   }
 
   ngOnDestroy(): void {
