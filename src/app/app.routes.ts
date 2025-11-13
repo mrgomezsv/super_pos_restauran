@@ -34,6 +34,11 @@ export const routes: Routes = [
     canActivate: [companyGuard]
   },
   {
+    path: 'purchase-orders',
+    loadComponent: () => import('./features/purchase-orders/purchase-orders.component').then(m => m.PurchaseOrdersComponent),
+    canActivate: [companyGuard]
+  },
+  {
     path: 'users',
     loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent),
     canActivate: [companyGuard, noCashierGuard]

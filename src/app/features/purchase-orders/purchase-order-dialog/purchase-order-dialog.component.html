@@ -1,0 +1,186 @@
+<div class="modal-overlay">
+  <div class="modal-container product-modal">
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <div class="header-content">
+        <mat-icon class="header-icon">{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+        <div class="header-text">
+          <h2 class="modal-title">{{ isEdit ? 'Editar Orden de Compra' : 'Nueva Orden de Compra' }}</h2>
+          <p class="modal-subtitle">
+            {{ isEdit ? 'Actualiza la información de la orden de compra' : 'Crea una nueva orden de compra de ingredientes' }}
+          </p>
+        </div>
+      </div>
+      <button mat-icon-button class="close-btn" (click)="onCancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Contenido del Modal -->
+    <div class="modal-content">
+      <form [formGroup]="purchaseOrderForm" class="product-form">
+        <!-- Datos de la Orden -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>info</mat-icon>
+            Datos de la Orden
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Número de Orden *</mat-label>
+              <input 
+                matInput 
+                formControlName="orderNumber" 
+                placeholder="Ej: OC-000001"
+                autocomplete="off"
+                maxlength="50">
+              <mat-error *ngIf="purchaseOrderForm.get('orderNumber')?.hasError('required') && purchaseOrderForm.get('orderNumber')?.touched">
+                {{ getErrorMessage('orderNumber') }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Fecha *</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="date">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error *ngIf="purchaseOrderForm.get('date')?.hasError('required') && purchaseOrderForm.get('date')?.touched">
+                {{ getErrorMessage('date') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Proveedor</mat-label>
+              <input 
+                matInput 
+                formControlName="supplierName" 
+                placeholder="Nombre del proveedor"
+                autocomplete="off"
+                maxlength="100">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Estado *</mat-label>
+              <mat-select formControlName="status">
+                <mat-option value="pending">Pendiente</mat-option>
+                <mat-option value="approved">Aprobada</mat-option>
+                <mat-option value="received">Recibida</mat-option>
+                <mat-option value="cancelled">Cancelada</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Items de la Orden -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <mat-icon>list</mat-icon>
+              Items de la Orden
+            </h3>
+            <button type="button" mat-button color="primary" (click)="addItem()">
+              <mat-icon>add</mat-icon>
+              Agregar Item
+            </button>
+          </div>
+
+          <div formArrayName="items" *ngFor="let item of itemsFormArray.controls; let i = index">
+            <div [formGroupName]="i" class="item-row">
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Ingrediente *</mat-label>
+                <input 
+                  matInput 
+                  formControlName="ingredientName" 
+                  placeholder="Nombre del ingrediente"
+                  autocomplete="off">
+                <mat-error *ngIf="item.get('ingredientName')?.hasError('required') && item.get('ingredientName')?.touched">
+                  Requerido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Cantidad *</mat-label>
+                <input 
+                  matInput 
+                  type="number"
+                  formControlName="quantity" 
+                  (blur)="calculateItemTotal(i)"
+                  placeholder="0"
+                  min="0.01"
+                  step="0.01">
+                <mat-error *ngIf="item.get('quantity')?.hasError('required') && item.get('quantity')?.touched">
+                  Requerido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Unidad *</mat-label>
+                <input 
+                  matInput 
+                  formControlName="unitOfMeasure" 
+                  placeholder="Ej: kg, unidad"
+                  autocomplete="off">
+                <mat-error *ngIf="item.get('unitOfMeasure')?.hasError('required') && item.get('unitOfMeasure')?.touched">
+                  Requerido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Precio Unitario *</mat-label>
+                <input 
+                  matInput 
+                  type="number"
+                  formControlName="unitPrice" 
+                  (blur)="calculateItemTotal(i)"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01">
+                <mat-error *ngIf="item.get('unitPrice')?.hasError('required') && item.get('unitPrice')?.touched">
+                  Requerido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Total</mat-label>
+                <input 
+                  matInput 
+                  formControlName="total" 
+                  readonly
+                  [value]="item.get('total')?.value || 0">
+              </mat-form-field>
+
+              <button type="button" mat-icon-button (click)="removeItem(i)" matTooltip="Eliminar item">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="total-section">
+            <h4>Total de la Orden: ${{ getTotal() | number:'1.2-2' }}</h4>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Acciones del Modal -->
+    <div class="modal-actions">
+      <button mat-button (click)="onCancel()" class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary"
+        (click)="onSave()"
+        [disabled]="purchaseOrderForm.invalid"
+        class="save-btn">
+        <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
+        {{ isEdit ? 'Actualizar orden' : 'Crear orden' }}
+      </button>
+    </div>
+  </div>
+</div>
+

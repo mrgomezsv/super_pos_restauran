@@ -1,0 +1,187 @@
+<div class="products-container">
+  <div class="products-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">Órdenes de Compra</h1>
+        <p class="page-subtitle">
+          Administra las órdenes de compra de ingredientes y materias primas
+        </p>
+      </div>
+      <button class="add-product-btn" mat-raised-button color="primary" (click)="openPurchaseOrderDialog()">
+        <mat-icon>add</mat-icon>
+        <span>Nueva Orden de Compra</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-header">
+      <h3 class="filters-title">
+        <mat-icon>tune</mat-icon>
+        Filtros de Búsqueda
+      </h3>
+      <p class="filters-subtitle">Encuentra órdenes de compra específicas usando los filtros</p>
+    </div>
+    
+    <div class="filters-card">
+      <form [formGroup]="filtersForm" class="filters-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>search</mat-icon>
+              Buscar Órdenes
+            </label>
+            <div class="input-container">
+              <input 
+                matInput 
+                formControlName="search" 
+                placeholder="Ingresa número de orden o proveedor"
+                class="search-input">
+              <mat-icon class="input-icon">search</mat-icon>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>toggle_on</mat-icon>
+              Estado de la Orden
+            </label>
+            <div class="custom-select-field">
+              <div class="select-wrapper">
+                <div 
+                  class="custom-select-display"
+                  (click)="toggleStatusDropdown()">
+                  <span class="select-value">{{ getStatusDisplayValue() }}</span>
+                  <span class="select-arrow" [class.open]="isStatusDropdownOpen">▼</span>
+                </div>
+                <div class="custom-dropdown" [class.open]="isStatusDropdownOpen">
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === ''"
+                    (click)="selectStatus('')">
+                    <mat-icon>help_outline</mat-icon>
+                    <span>Todos los estados</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'pending'"
+                    (click)="selectStatus('pending')">
+                    <mat-icon class="status-active">schedule</mat-icon>
+                    <span>Pendientes</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'approved'"
+                    (click)="selectStatus('approved')">
+                    <mat-icon class="status-active">check_circle</mat-icon>
+                    <span>Aprobadas</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'received'"
+                    (click)="selectStatus('received')">
+                    <mat-icon class="status-active">done_all</mat-icon>
+                    <span>Recibidas</span>
+                  </div>
+                  <div 
+                    class="dropdown-option" 
+                    [class.selected]="filtersForm.get('status')?.value === 'cancelled'"
+                    (click)="selectStatus('cancelled')">
+                    <mat-icon class="status-inactive">cancel</mat-icon>
+                    <span>Canceladas</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-actions">
+          <button type="button" class="filter-btn primary" (click)="applyFilters()">
+            <mat-icon>filter_list</mat-icon>
+            <span>Aplicar Filtros</span>
+          </button>
+
+          <button type="button" class="filter-btn secondary" (click)="clearFilters()">
+            <mat-icon>clear_all</mat-icon>
+            <span>Limpiar Filtros</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <mat-card class="products-table-card">
+    <mat-card-content>
+      <div class="table-container" *ngIf="!isLoading; else loadingTemplate">
+        <table mat-table [dataSource]="purchaseOrders" class="products-table">
+          <ng-container matColumnDef="orderNumber">
+            <th mat-header-cell *matHeaderCellDef>Número de Orden</th>
+            <td mat-cell *matCellDef="let order">{{ order.orderNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="supplierName">
+            <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+            <td mat-cell *matCellDef="let order">{{ order.supplierName || 'N/A' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let order">{{ order.date | date:'short' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let order">
+              <mat-chip [color]="getStatusColor(order.status)">
+                {{ getStatusText(order.status) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let order">
+              <span class="price">${{ order.total | number:'1.2-2' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let order">
+              <button mat-icon-button (click)="editPurchaseOrder(order)" matTooltip="Editar">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deletePurchaseOrder(order)" matTooltip="Eliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div class="no-data" *ngIf="purchaseOrders.length === 0">
+          <mat-icon>shopping_cart</mat-icon>
+          <p>No se encontraron órdenes de compra</p>
+        </div>
+      </div>
+
+      <ng-template #loadingTemplate>
+        <div class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Cargando órdenes de compra...</p>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Modal de Orden de Compra -->
+  <app-purchase-order-dialog 
+    *ngIf="showPurchaseOrderDialog"
+    [purchaseOrder]="selectedPurchaseOrder"
+    (close)="onPurchaseOrderDialogResult($event)">
+  </app-purchase-order-dialog>
+</div>
+
