@@ -201,6 +201,14 @@ export class ProductService {
   }
 
   /**
+   * Eliminar ingrediente de Firestore
+   */
+  deleteIngredient(id: string): Observable<void> {
+    const ingredientRef = doc(this.firestore, this.INGREDIENTS_COLLECTION, id);
+    return from(deleteDoc(ingredientRef));
+  }
+
+  /**
    * Actualizar ingrediente en Firestore
    */
   updateIngredient(id: string, ingredient: Partial<Product>): Observable<Product> {
