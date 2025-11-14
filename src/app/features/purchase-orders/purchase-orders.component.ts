@@ -366,7 +366,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       const rect = container.getBoundingClientRect();
       dropdown.style.position = 'fixed';
       dropdown.style.left = `${rect.left}px`;
-      dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+      dropdown.style.top = `${rect.bottom + 4}px`;
       dropdown.style.minWidth = `${Math.max(180, rect.width)}px`;
     }
   }
