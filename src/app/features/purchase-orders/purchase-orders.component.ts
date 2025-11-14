@@ -342,7 +342,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   // Actualizar posición del dropdown cuando se hace scroll
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   onWindowScroll(): void {
     if (this.statusDropdownOpenFor) {
       this.updateDropdownPosition(this.statusDropdownOpenFor);
@@ -350,7 +350,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   // Actualizar posición del dropdown cuando se redimensiona la ventana
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onWindowResize(): void {
     if (this.statusDropdownOpenFor) {
       this.updateDropdownPosition(this.statusDropdownOpenFor);
@@ -453,6 +453,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     if (status === 'received') {
       this.openReceiveOrderDialog(order);
       this.statusDropdownOpenFor = null;
+      this.removeScrollListener();
       return;
     }
 
@@ -497,6 +498,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
         next: () => {
           this.toastr.success(`Estado cambiado a ${this.getStatusText(newStatus)}`);
           this.statusDropdownOpenFor = null;
+          this.removeScrollListener();
           this.loadPurchaseOrders();
         }
       });
