@@ -26,53 +26,67 @@
             Datos de la Orden
           </h3>
           
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Número de Orden</mat-label>
-              <input 
-                matInput 
-                formControlName="orderNumber" 
-                [placeholder]="isEdit ? 'Número de orden' : (purchaseOrderForm.get('orderNumber')?.value || 'Generando...')"
-                autocomplete="off"
-                readonly>
-              <mat-icon matSuffix class="sku-info-icon" matTooltip="Número de orden autogenerado por el sistema, solo lectura" matTooltipPosition="above">
-                info
-              </mat-icon>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Fecha *</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="date">
-              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
-              <mat-error *ngIf="purchaseOrderForm.get('date')?.hasError('required') && purchaseOrderForm.get('date')?.touched">
-                {{ getErrorMessage('date') }}
-              </mat-error>
-            </mat-form-field>
-          </div>
-
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Proveedor *</mat-label>
-              <mat-select formControlName="supplierId" (selectionChange)="onSupplierSelected()">
-                <mat-option value="">Seleccione un proveedor</mat-option>
-                <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
-                  {{ supplier.name }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="purchaseOrderForm.get('supplierId')?.hasError('required') && purchaseOrderForm.get('supplierId')?.touched">
-                Este campo es requerido
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Estado</mat-label>
-              <input 
-                matInput 
-                formControlName="status" 
-                readonly
-                [value]="isEdit ? getStatusText(purchaseOrderForm.get('status')?.value) : 'Creada'">
-            </mat-form-field>
+          <!-- Tabla de datos de la orden -->
+          <div class="order-info-table">
+            <table class="info-table">
+              <thead>
+                <tr>
+                  <th>Número de Orden</th>
+                  <th>Proveedor</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ purchaseOrderForm.get('orderNumber')?.value || 'Generando...' }}</td>
+                  <td>
+                    <ng-container *ngIf="!viewMode">
+                      <mat-form-field appearance="outline" class="form-field-inline">
+                        <mat-select formControlName="supplierId" (selectionChange)="onSupplierSelected()">
+                          <mat-option value="">Seleccione un proveedor</mat-option>
+                          <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                            {{ supplier.name }}
+                          </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="purchaseOrderForm.get('supplierId')?.hasError('required') && purchaseOrderForm.get('supplierId')?.touched">
+                          Este campo es requerido
+                        </mat-error>
+                      </mat-form-field>
+                    </ng-container>
+                    <ng-container *ngIf="viewMode">
+                      {{ purchaseOrderForm.get('supplierName')?.value || 'N/A' }}
+                    </ng-container>
+                  </td>
+                  <td>
+                    <ng-container *ngIf="!viewMode">
+                      <mat-form-field appearance="outline" class="form-field-inline">
+                        <input matInput [matDatepicker]="picker" formControlName="date">
+                        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        <mat-error *ngIf="purchaseOrderForm.get('date')?.hasError('required') && purchaseOrderForm.get('date')?.touched">
+                          {{ getErrorMessage('date') }}
+                        </mat-error>
+                      </mat-form-field>
+                    </ng-container>
+                    <ng-container *ngIf="viewMode">
+                      {{ purchaseOrderForm.get('date')?.value | date:'short' }}
+                    </ng-container>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Estado (fuera de la tabla) -->
+            <div class="status-row" *ngIf="viewMode || isEdit">
+              <mat-form-field appearance="outline" class="form-field status-field">
+                <mat-label>Estado</mat-label>
+                <input 
+                  matInput 
+                  formControlName="status" 
+                  readonly
+                  [value]="isEdit ? getStatusText(purchaseOrderForm.get('status')?.value) : 'Creada'">
+              </mat-form-field>
+            </div>
           </div>
         </div>
 
@@ -138,7 +152,7 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="form-field">
-                <mat-label>Precio Unitario *</mat-label>
+                <mat-label>P Unitario *</mat-label>
                 <input 
                   matInput 
                   type="number"
