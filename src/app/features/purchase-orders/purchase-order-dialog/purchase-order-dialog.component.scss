@@ -848,5 +848,9 @@
   .item-row {
     grid-template-columns: 1fr;
     gap: var(--spacing-sm);
+    
+    &:has(ng-container[ng-reflect-ng-if="true"]) {
+      grid-template-columns: 1fr;
+    }
   }
 }
