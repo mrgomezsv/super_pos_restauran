@@ -296,18 +296,22 @@
             display: block !important;
           }
 
-          // Label mejorado - FORZAR POSICIÓN CORRECTA
-          .mat-mdc-form-field-label {
+          // Label mejorado - Estilo moderno y armónico
+          .mat-mdc-form-field-label,
+          .mdc-floating-label,
+          .mat-mdc-form-field-label-wrapper {
             position: absolute !important;
-            top: -8px !important;
+            top: -10px !important;
             left: 12px !important;
-            background: #ffffff !important;
-            padding: 0 4px !important;
-            font-size: 12px !important;
+            background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+            padding: 0 6px !important;
+            font-size: 11px !important;
             font-weight: 600 !important;
-            color: #017E84 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
             z-index: 1 !important;
-            transition: all 0.3s ease !important;
+            transition: all 0.2s ease !important;
             transform: none !important;
             transform-origin: unset !important;
             
@@ -316,15 +320,26 @@
             &.mat-mdc-form-field-label-floating,
             &.mdc-floating-label--float-above {
               position: absolute !important;
-              top: -8px !important;
+              top: -10px !important;
               left: 12px !important;
-              background: #ffffff !important;
-              padding: 0 4px !important;
-              font-size: 12px !important;
+              background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+              padding: 0 6px !important;
+              font-size: 11px !important;
               font-weight: 600 !important;
-              color: #017E84 !important;
+              color: #64748b !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.5px !important;
               z-index: 1 !important;
               transform: none !important;
+            }
+          }
+          
+          // Cuando el campo está enfocado, cambiar color del label
+          &.mat-focused {
+            .mat-mdc-form-field-label,
+            .mdc-floating-label,
+            .mat-mdc-form-field-label-wrapper {
+              color: #017E84 !important;
             }
           }
 
@@ -431,18 +446,23 @@
 ::ng-deep .product-modal {
   // Sobrescribir completamente los estilos globales para este modal
   mat-form-field.mat-mdc-form-field {
-    .mat-mdc-form-field-label {
+    .mat-mdc-form-field-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label-wrapper {
       position: absolute !important;
-      top: -8px !important;
+      top: -10px !important;
       left: 12px !important;
-      background: #ffffff !important;
-      padding: 0 4px !important;
-      font-size: 12px !important;
+      background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+      padding: 0 6px !important;
+      font-size: 11px !important;
       font-weight: 600 !important;
-      color: #017E84 !important;
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
       z-index: 1 !important;
       transform: none !important;
       transform-origin: unset !important;
+      transition: all 0.2s ease !important;
       
       // Forzar todas las variantes del label
       &.mat-mdc-form-field-label-filled,
@@ -451,16 +471,26 @@
       &.mat-form-field-label-filled,
       &.mat-form-field-label-floating {
         position: absolute !important;
-        top: -8px !important;
+        top: -10px !important;
         left: 12px !important;
-        background: #ffffff !important;
-        padding: 0 4px !important;
-        font-size: 12px !important;
+        background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        color: #017E84 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
         z-index: 1 !important;
         transform: none !important;
         transform-origin: unset !important;
+      }
+    }
+    
+    &.mat-focused {
+      .mat-mdc-form-field-label,
+      .mdc-floating-label,
+      .mat-mdc-form-field-label-wrapper {
+        color: #017E84 !important;
       }
     }
 
@@ -507,17 +537,13 @@
         color: #64748b !important;
         position: absolute !important;
         top: -10px !important;
+        left: 12px !important;
         background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
         padding: 0 6px !important;
         font-size: 11px !important;
         font-weight: 600 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.5px !important;
-        left: 12px !important;
-        background: #ffffff !important;
-        padding: 0 4px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
         z-index: 1 !important;
         transform: none !important;
       }
@@ -532,17 +558,19 @@
     .mdc-floating-label,
     .mat-mdc-form-field-label-wrapper {
       position: absolute !important;
-      top: -8px !important;
+      top: -10px !important;
       left: 12px !important;
-      background: #ffffff !important;
-      padding: 0 4px !important;
-      font-size: 12px !important;
+      background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+      padding: 0 6px !important;
+      font-size: 11px !important;
       font-weight: 600 !important;
-      color: #017E84 !important;
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
       z-index: 1 !important;
       transform: none !important;
       transform-origin: unset !important;
-      transition: none !important;
+      transition: all 0.2s ease !important;
       
       // Forzar todas las variantes
       &.mat-mdc-form-field-label-filled,
@@ -552,17 +580,27 @@
       &.mat-form-field-label-floating,
       &.mdc-floating-label {
         position: absolute !important;
-        top: -8px !important;
+        top: -10px !important;
         left: 12px !important;
-        background: #ffffff !important;
-        padding: 0 4px !important;
-        font-size: 12px !important;
+        background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        color: #017E84 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
         z-index: 1 !important;
         transform: none !important;
         transform-origin: unset !important;
-        transition: none !important;
+        transition: all 0.2s ease !important;
+      }
+    }
+    
+    &.mat-focused {
+      .mat-mdc-form-field-label,
+      .mdc-floating-label,
+      .mat-mdc-form-field-label-wrapper {
+        color: #017E84 !important;
       }
     }
 
