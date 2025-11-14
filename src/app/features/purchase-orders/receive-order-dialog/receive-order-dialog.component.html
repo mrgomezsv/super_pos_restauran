@@ -72,7 +72,7 @@
 
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Precio Unitario</mat-label>
-                <input matInput formControlName="unitPrice" readonly [value]="'$' + (item.get('unitPrice')?.value | number:'1.2-2')">
+                <input matInput formControlName="unitPrice" readonly [value]="formatCurrency(item.get('unitPrice')?.value)">
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="form-field">
@@ -99,7 +99,7 @@
                   matInput 
                   formControlName="total" 
                   readonly
-                  [value]="'$' + (((item.get('receivedQuantity')?.value || 0) * (item.get('unitPrice')?.value || 0)) | number:'1.2-2')">
+                  [value]="getItemTotal(item)">
               </mat-form-field>
             </div>
           </div>

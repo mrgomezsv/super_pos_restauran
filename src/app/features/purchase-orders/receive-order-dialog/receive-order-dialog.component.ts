@@ -155,5 +155,19 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
       return sum + (item.receivedQuantity || 0) * (item.unitPrice || 0);
     }, 0);
   }
+
+  formatCurrency(value: number | null | undefined): string {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '$0.00';
+    }
+    return '$' + value.toFixed(2);
+  }
+
+  getItemTotal(item: any): string {
+    const quantity = item.get('receivedQuantity')?.value || 0;
+    const unitPrice = item.get('unitPrice')?.value || 0;
+    const total = quantity * unitPrice;
+    return this.formatCurrency(total);
+  }
 }
 
