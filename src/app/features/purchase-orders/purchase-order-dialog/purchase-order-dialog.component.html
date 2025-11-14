@@ -132,7 +132,6 @@
                   placeholder="Ej: kg, unidad"
                   autocomplete="off"
                   readonly>
-                <mat-hint>Se completa automáticamente al seleccionar el ingrediente</mat-hint>
                 <mat-error *ngIf="item.get('unitOfMeasure')?.hasError('required') && item.get('unitOfMeasure')?.touched">
                   Requerido
                 </mat-error>

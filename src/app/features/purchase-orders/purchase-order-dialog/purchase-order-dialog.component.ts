@@ -78,6 +78,8 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
         date: this.purchaseOrder.date instanceof Date ? this.purchaseOrder.date : new Date(this.purchaseOrder.date),
         status: this.purchaseOrder.status || 'pending'
       });
+      // En modo edición, también deshabilitar el estado (solo lectura)
+      this.purchaseOrderForm.get('status')?.disable();
       
       // Cargar items
       const itemsArray = this.purchaseOrderForm.get('items') as FormArray;
