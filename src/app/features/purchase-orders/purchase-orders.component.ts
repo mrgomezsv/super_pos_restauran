@@ -340,11 +340,34 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   // Métodos para cambiar estado de una orden específica
-  toggleOrderStatusDropdown(orderId: string): void {
-    if (this.statusDropdownOpenFor === orderId) {
-      this.statusDropdownOpenFor = null;
-    } else {
+  toggleOrderStatusDropdown(orderId: string, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    
+    // Cerrar otros dropdowns abiertos
+    if (this.statusDropdownOpenFor !== orderId) {
       this.statusDropdownOpenFor = orderId;
+      // Usar setTimeout para asegurar que el DOM se actualice
+      setTimeout(() => {
+        this.updateDropdownPosition(orderId);
+      }, 0);
+    } else {
+      this.statusDropdownOpenFor = null;
+    }
+  }
+
+  private updateDropdownPosition(orderId: string): void {
+    const container = document.querySelector(`[data-order-id="${orderId}"]`) as HTMLElement;
+    const dropdown = container?.querySelector('.status-dropdown') as HTMLElement;
+    
+    if (container && dropdown) {
+      const rect = container.getBoundingClientRect();
+      dropdown.style.position = 'fixed';
+      dropdown.style.left = `${rect.left}px`;
+      dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+      dropdown.style.minWidth = `${Math.max(180, rect.width)}px`;
     }
   }
 
