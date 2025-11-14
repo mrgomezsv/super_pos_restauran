@@ -572,34 +572,49 @@
     .status-option {
       padding: var(--spacing-md) var(--spacing-lg);
       cursor: pointer;
-      transition: background-color var(--transition-fast);
+      transition: all var(--transition-fast);
       color: var(--text);
       font-size: var(--text-base);
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
+      border-radius: var(--border-radius-md);
+      margin: 2px 4px;
       
       &:hover:not(.disabled) {
-        background: var(--primary-light);
+        background: rgba(1, 126, 132, 0.08);
+        color: var(--primary);
       }
       
       &.current {
-        background: var(--primary-light);
+        background: rgba(1, 126, 132, 0.12);
         color: var(--primary);
         font-weight: var(--font-weight-semibold);
+        
+        .check-icon {
+          color: var(--primary);
+        }
       }
       
       &.disabled {
-        opacity: 0.5;
+        opacity: 0.4;
         cursor: not-allowed;
-        background: var(--input-bg);
+        background: transparent;
+        color: var(--text-placeholder);
+        
+        &:hover {
+          background: transparent;
+          color: var(--text-placeholder);
+        }
       }
       
       mat-icon {
-        font-size: 20px;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
         
-        &.disabled-icon {
-          color: var(--error);
+        &.check-icon {
+          color: var(--primary);
         }
       }
     }

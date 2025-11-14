@@ -442,9 +442,17 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   getAvailableStatuses(order: PurchaseOrder): Array<{ value: string; label: string; disabled: boolean }> {
-    const currentStatus = order.status;
+    // Normalizar el estado actual (pending y created son equivalentes)
+    const currentStatus = order.status === 'pending' ? 'created' : order.status;
     const statusHistory = order.statusHistory || [];
-    const previousStatus = statusHistory.length > 1 ? statusHistory[statusHistory.length - 2]?.status : null;
+    
+    // Obtener todos los estados anteriores del historial (excluyendo el actual)
+    const previousStatuses = statusHistory
+      .map(sh => sh.status === 'pending' ? 'created' : sh.status)
+      .filter(status => status !== currentStatus);
+    
+    // El estado anterior es el último en el historial que no sea el actual
+    const previousStatus = previousStatuses.length > 0 ? previousStatuses[previousStatuses.length - 1] : null;
     
     const allStatuses = [
       { value: 'created', label: 'Creada' },
@@ -453,10 +461,17 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       { value: 'cancelled', label: 'Cancelada' }
     ];
 
-    return allStatuses.map(status => ({
-      ...status,
-      disabled: status.value === currentStatus || status.value === previousStatus
-    }));
+    return allStatuses.map(status => {
+      // Normalizar el valor del estado para comparación
+      const normalizedStatusValue = status.value === 'created' ? 'created' : status.value;
+      const normalizedCurrentStatus = currentStatus === 'pending' ? 'created' : currentStatus;
+      const normalizedPreviousStatus = previousStatus === 'pending' ? 'created' : previousStatus;
+      
+      return {
+        ...status,
+        disabled: normalizedStatusValue === normalizedCurrentStatus || normalizedStatusValue === normalizedPreviousStatus
+      };
+    });
   }
 
   changeOrderStatus(order: PurchaseOrder, newStatus: string): void {

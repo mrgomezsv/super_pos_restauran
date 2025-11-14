@@ -153,11 +153,10 @@
                     *ngFor="let statusOption of getAvailableStatuses(order)"
                     class="status-option"
                     [class.disabled]="statusOption.disabled"
-                    [class.current]="statusOption.value === order.status"
+                    [class.current]="statusOption.value === order.status || (statusOption.value === 'created' && order.status === 'pending')"
                     (click)="!statusOption.disabled && changeOrderStatus(order, statusOption.value); $event.stopPropagation()">
-                    <mat-icon *ngIf="statusOption.value === order.status">check_circle</mat-icon>
+                    <mat-icon *ngIf="statusOption.value === order.status || (statusOption.value === 'created' && order.status === 'pending')" class="check-icon">check_circle</mat-icon>
                     <span>{{ statusOption.label }}</span>
-                    <mat-icon *ngIf="statusOption.disabled" class="disabled-icon">block</mat-icon>
                   </div>
                 </div>
               </div>
