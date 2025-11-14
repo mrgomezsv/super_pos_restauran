@@ -120,6 +120,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.removeScrollListener();
   }
 
   private loadPurchaseOrders(): void {
@@ -336,6 +337,23 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     if (!target.closest('.status-dropdown-container') && !target.closest('.custom-select-field')) {
       this.isStatusDropdownOpen = false;
       this.statusDropdownOpenFor = null;
+      this.removeScrollListener();
+    }
+  }
+
+  // Actualizar posición del dropdown cuando se hace scroll
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll(): void {
+    if (this.statusDropdownOpenFor) {
+      this.updateDropdownPosition(this.statusDropdownOpenFor);
+    }
+  }
+
+  // Actualizar posición del dropdown cuando se redimensiona la ventana
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(): void {
+    if (this.statusDropdownOpenFor) {
+      this.updateDropdownPosition(this.statusDropdownOpenFor);
     }
   }
 
@@ -352,9 +370,41 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       // Usar setTimeout para asegurar que el DOM se actualice
       setTimeout(() => {
         this.updateDropdownPosition(orderId);
+        // Agregar listener de scroll en el contenedor de la tabla si existe
+        this.addScrollListener();
       }, 0);
     } else {
       this.statusDropdownOpenFor = null;
+      this.removeScrollListener();
+    }
+  }
+
+  private scrollListener?: () => void;
+  private resizeListener?: () => void;
+
+  private addScrollListener(): void {
+    // Remover listener anterior si existe
+    this.removeScrollListener();
+    
+    // Agregar listener al contenedor de la tabla
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+      this.scrollListener = () => {
+        if (this.statusDropdownOpenFor) {
+          this.updateDropdownPosition(this.statusDropdownOpenFor);
+        }
+      };
+      tableContainer.addEventListener('scroll', this.scrollListener, { passive: true });
+    }
+  }
+
+  private removeScrollListener(): void {
+    if (this.scrollListener) {
+      const tableContainer = document.querySelector('.table-container');
+      if (tableContainer) {
+        tableContainer.removeEventListener('scroll', this.scrollListener);
+      }
+      this.scrollListener = undefined;
     }
   }
 
