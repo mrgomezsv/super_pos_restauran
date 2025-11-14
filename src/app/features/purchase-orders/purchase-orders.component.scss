@@ -444,37 +444,31 @@
       z-index: 1001;
     }
 
-    .status-chip-wrapper {
-      display: inline-flex;
-      align-items: center;
-      gap: 0;
-      position: relative;
-    }
-
     .status-chip {
       margin: 0;
       pointer-events: none;
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      padding-right: 24px;
+      cursor: pointer;
+      
+      .chip-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
     }
 
     .dropdown-icon {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
       font-size: 16px;
       width: 16px;
       height: 16px;
       line-height: 16px;
       color: rgba(255, 255, 255, 0.9);
       transition: transform var(--transition-normal), color var(--transition-normal);
-      pointer-events: none;
-      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
       
       &.rotated {
-        transform: translateY(-50%) rotate(180deg);
+        transform: rotate(180deg);
       }
     }
 
@@ -482,10 +476,13 @@
       color: rgba(255, 255, 255, 1);
     }
 
-    // Asegurar que el chip tenga el icono integrado visualmente
+    // Asegurar que el contenido del chip se muestre correctamente
     ::ng-deep .status-chip {
-      .mdc-evolution-chip__action--primary {
-        padding-right: 24px;
+      .mdc-evolution-chip__action--primary,
+      .mat-mdc-chip-action-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
     }
   }
