@@ -472,6 +472,11 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        color: white !important;
+        
+        span {
+          color: white !important;
+        }
       }
     }
 
@@ -502,6 +507,14 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        color: white !important;
+      }
+      
+      // Asegurar que todo el texto dentro del chip sea blanco
+      .mdc-evolution-chip__text-label,
+      .mat-mdc-chip-action-label,
+      span {
+        color: white !important;
       }
     }
   }
@@ -652,6 +665,14 @@
           border-width: 0 !important;
           outline: none !important;
           box-shadow: none !important;
+          
+          // Asegurar que todo el texto sea blanco
+          .mdc-evolution-chip__text-label,
+          .mat-mdc-chip-action-label,
+          .chip-content,
+          span {
+            color: white !important;
+          }
         }
         
         &.mat-mdc-chip.mat-accent,
