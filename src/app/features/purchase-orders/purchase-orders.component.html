@@ -136,17 +136,13 @@
               <div class="status-dropdown-container" [attr.data-order-id]="order.id" (click)="$event.stopPropagation()">
                 <button 
                   type="button"
-                  class="status-btn"
-                  [class]="'status-btn status-' + order.status"
+                  class="status-select-btn"
+                  [class]="'status-select-btn status-' + order.status"
                   [class.open]="isStatusDropdownOpenForOrder(order.id)"
                   (click)="toggleOrderStatusDropdown(order.id, $event)"
                   [matTooltip]="'Click para cambiar estado'">
-                  <mat-chip [color]="getStatusColor(order.status)" class="status-chip">
-                    <span class="chip-content">
-                      {{ getStatusText(order.status) }}
-                      <mat-icon class="dropdown-icon" [class.rotated]="isStatusDropdownOpenForOrder(order.id)">arrow_drop_down</mat-icon>
-                    </span>
-                  </mat-chip>
+                  <span class="status-text">{{ getStatusText(order.status) }}</span>
+                  <mat-icon class="dropdown-icon" [class.rotated]="isStatusDropdownOpenForOrder(order.id)">arrow_drop_down</mat-icon>
                 </button>
                 <div 
                   class="status-dropdown" 

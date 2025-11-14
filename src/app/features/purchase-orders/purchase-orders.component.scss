@@ -441,18 +441,24 @@
   display: inline-block;
   z-index: 10000;
 
-  .status-btn {
+  .status-select-btn {
     display: inline-flex;
     align-items: center;
-    padding: 0;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 16px;
     border: none;
-    background: transparent;
+    border-radius: 20px;
     cursor: pointer;
     transition: all var(--transition-normal);
-    vertical-align: middle;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 120px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
     &:hover {
-      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
 
     &:focus {
@@ -461,30 +467,21 @@
 
     &.open {
       z-index: 1001;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    .status-chip {
-      margin: 0;
-      pointer-events: none;
-      cursor: pointer;
-      
-      .chip-content {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: white !important;
-        
-        span {
-          color: white !important;
-        }
-      }
+    .status-text {
+      flex: 1;
+      text-align: left;
+      color: white;
+      font-weight: 500;
     }
 
     .dropdown-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      line-height: 16px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
       color: rgba(255, 255, 255, 0.9);
       transition: transform var(--transition-normal), color var(--transition-normal);
       display: inline-flex;
@@ -500,22 +497,26 @@
       color: rgba(255, 255, 255, 1);
     }
 
-    // Asegurar que el contenido del chip se muestre correctamente
-    ::ng-deep .status-chip {
-      .mdc-evolution-chip__action--primary,
-      .mat-mdc-chip-action-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: white !important;
-      }
-      
-      // Asegurar que todo el texto dentro del chip sea blanco
-      .mdc-evolution-chip__text-label,
-      .mat-mdc-chip-action-label,
-      span {
-        color: white !important;
-      }
+    // Colores según el estado
+    &.status-pending,
+    &.status-created {
+      background: #dc2626;
+      color: white;
+    }
+
+    &.status-approved {
+      background: linear-gradient(135deg, #017E84, #20C997);
+      color: white;
+    }
+
+    &.status-received {
+      background: #059669;
+      color: white;
+    }
+
+    &.status-cancelled {
+      background: #6b7280;
+      color: white;
     }
   }
 
