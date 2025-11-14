@@ -3,6 +3,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: 100%;
+  overflow: hidden;
 
   mat-card {
     border-radius: 16px;
@@ -322,6 +324,9 @@
 
     .table-container {
       overflow-x: auto;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
 
       table {
         width: 100%;

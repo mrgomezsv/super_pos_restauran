@@ -3,7 +3,10 @@
   max-width: 100%;
   margin: 0;
   background: var(--background);
-  min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 // Header Styles
@@ -411,9 +414,16 @@
   border-radius: var(--border-radius-xl);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   
   .table-container {
     overflow-x: auto;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
     
     .products-table {
       width: 100%;
