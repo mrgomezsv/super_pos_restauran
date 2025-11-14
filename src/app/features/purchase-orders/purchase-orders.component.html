@@ -141,10 +141,12 @@
                   [class.open]="isStatusDropdownOpenForOrder(order.id)"
                   (click)="toggleOrderStatusDropdown(order.id); $event.stopPropagation()"
                   [matTooltip]="'Click para cambiar estado'">
-                  <mat-chip [color]="getStatusColor(order.status)" class="status-chip">
-                    {{ getStatusText(order.status) }}
+                  <span class="status-chip-wrapper">
+                    <mat-chip [color]="getStatusColor(order.status)" class="status-chip">
+                      {{ getStatusText(order.status) }}
+                    </mat-chip>
                     <mat-icon class="dropdown-icon" [class.rotated]="isStatusDropdownOpenForOrder(order.id)">arrow_drop_down</mat-icon>
-                  </mat-chip>
+                  </span>
                 </button>
                 <div 
                   class="status-dropdown" 

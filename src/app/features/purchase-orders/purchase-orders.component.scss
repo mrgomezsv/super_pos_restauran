@@ -444,41 +444,49 @@
       z-index: 1001;
     }
 
+    .status-chip-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      position: relative;
+    }
+
     .status-chip {
       margin: 0;
       pointer-events: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding-right: 8px;
-    }
-
-    ::ng-deep .status-chip {
-      .mdc-evolution-chip__action--primary,
-      .mat-mdc-chip-action-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      }
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      padding-right: 24px;
     }
 
     .dropdown-icon {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
       font-size: 16px;
       width: 16px;
       height: 16px;
       line-height: 16px;
-      color: rgba(255, 255, 255, 0.8);
-      transition: transform var(--transition-normal);
-      margin-left: 4px;
-      display: inline-block;
+      color: rgba(255, 255, 255, 0.9);
+      transition: transform var(--transition-normal), color var(--transition-normal);
+      pointer-events: none;
+      z-index: 1;
       
       &.rotated {
-        transform: rotate(180deg);
+        transform: translateY(-50%) rotate(180deg);
       }
     }
 
     &:hover .dropdown-icon {
       color: rgba(255, 255, 255, 1);
+    }
+
+    // Asegurar que el chip tenga el icono integrado visualmente
+    ::ng-deep .status-chip {
+      .mdc-evolution-chip__action--primary {
+        padding-right: 24px;
+      }
     }
   }
 
