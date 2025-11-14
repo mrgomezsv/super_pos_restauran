@@ -289,7 +289,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   getStatusText(status: string): string {
     switch (status) {
       case 'pending':
-        return 'Pendiente';
+        return 'Creada';
       case 'approved':
         return 'Aprobada';
       case 'received':
@@ -316,8 +316,8 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     const status = this.filtersForm.get('status')?.value;
     if (status === '') {
       return 'Todos los estados';
-    } else if (status === 'pending') {
-      return 'Pendientes';
+    } else if (status === 'creadted') {
+      return 'Creadas';
     } else if (status === 'approved') {
       return 'Aprobadas';
     } else if (status === 'received') {
@@ -357,7 +357,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     const previousStatus = statusHistory.length > 1 ? statusHistory[statusHistory.length - 2]?.status : null;
     
     const allStatuses = [
-      { value: 'pending', label: 'Pendiente' },
+      { value: 'created', label: 'Creada' },
       { value: 'approved', label: 'Aprobada' },
       { value: 'received', label: 'Recibida' },
       { value: 'cancelled', label: 'Cancelada' }
