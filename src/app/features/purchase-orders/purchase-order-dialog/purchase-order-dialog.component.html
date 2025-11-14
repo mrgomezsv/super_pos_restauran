@@ -95,7 +95,7 @@
           </div>
 
           <div formArrayName="items" *ngFor="let item of itemsFormArray.controls; let i = index">
-            <div [formGroupName]="i" class="item-row">
+            <div [formGroupName]="i" class="item-row" [class.has-received-fields]="viewMode && isOrderReceived()">
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Ingrediente *</mat-label>
                 <mat-select formControlName="ingredientId" (selectionChange)="onIngredientSelected(i)">

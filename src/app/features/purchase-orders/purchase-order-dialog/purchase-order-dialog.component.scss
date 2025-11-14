@@ -809,6 +809,11 @@
   padding: var(--spacing-md);
   background: var(--background-light, #f8f9fa);
   border-radius: var(--border-radius-md, 8px);
+  
+  // Cuando tiene campos de recibido, ajustar el grid
+  &.has-received-fields {
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
+  }
 }
 
 .total-section {
@@ -849,7 +854,7 @@
     grid-template-columns: 1fr;
     gap: var(--spacing-sm);
     
-    &:has(ng-container[ng-reflect-ng-if="true"]) {
+    &.has-received-fields {
       grid-template-columns: 1fr;
     }
   }
