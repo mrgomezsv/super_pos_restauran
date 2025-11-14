@@ -1,0 +1,132 @@
+<div class="modal-overlay">
+  <div class="modal-container product-modal">
+    <!-- Header del Modal -->
+    <div class="modal-header">
+      <div class="header-content">
+        <mat-icon class="header-icon">inventory</mat-icon>
+        <div class="header-text">
+          <h2 class="modal-title">Recibir Orden de Compra</h2>
+          <p class="modal-subtitle">
+            Ingresa las cantidades recibidas para cada producto de la orden {{ purchaseOrder?.orderNumber }}
+          </p>
+        </div>
+      </div>
+      <button mat-icon-button class="close-btn" (click)="onCancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Contenido del Modal -->
+    <div class="modal-content">
+      <form [formGroup]="receiveForm" class="product-form">
+        <!-- Datos de la Orden (Solo Lectura) -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>info</mat-icon>
+            Información de la Orden
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Número de Orden</mat-label>
+              <input matInput [value]="purchaseOrder?.orderNumber" readonly>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Proveedor</mat-label>
+              <input matInput [value]="purchaseOrder?.supplierName || 'N/A'" readonly>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Fecha</mat-label>
+              <input matInput [value]="purchaseOrder?.date | date:'short'" readonly>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Items de la Orden -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <mat-icon>list</mat-icon>
+              Items de la Orden
+            </h3>
+          </div>
+
+          <div formArrayName="items" *ngFor="let item of itemsFormArray.controls; let i = index">
+            <div [formGroupName]="i" class="item-row receive-item-row">
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Ingrediente</mat-label>
+                <input matInput formControlName="ingredientName" readonly>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Cantidad Ordenada</mat-label>
+                <input matInput formControlName="quantity" readonly>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Unidad</mat-label>
+                <input matInput formControlName="unitOfMeasure" readonly>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Precio Unitario</mat-label>
+                <input matInput formControlName="unitPrice" readonly>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Cantidad Recibida *</mat-label>
+                <input 
+                  matInput 
+                  type="number"
+                  formControlName="receivedQuantity" 
+                  placeholder="0"
+                  min="0"
+                  [max]="item.get('quantity')?.value"
+                  step="0.01">
+                <mat-error *ngIf="item.get('receivedQuantity')?.hasError('required') && item.get('receivedQuantity')?.touched">
+                  Requerido
+                </mat-error>
+                <mat-error *ngIf="item.get('receivedQuantity')?.hasError('max') && item.get('receivedQuantity')?.touched">
+                  No puede exceder la cantidad ordenada
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Total</mat-label>
+                <input 
+                  matInput 
+                  formControlName="total" 
+                  readonly
+                  [value]="(item.get('receivedQuantity')?.value || 0) * (item.get('unitPrice')?.value || 0)">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="total-section">
+            <h4>Total Recibido: ${{ getTotalReceived() | number:'1.2-2' }}</h4>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Acciones del Modal -->
+    <div class="modal-actions">
+      <button mat-button (click)="onCancel()" class="cancel-btn">
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary"
+        (click)="onSave()"
+        [disabled]="receiveForm.invalid"
+        class="save-btn">
+        <mat-icon>check</mat-icon>
+        Confirmar Recepción
+      </button>
+    </div>
+  </div>
+</div>
+

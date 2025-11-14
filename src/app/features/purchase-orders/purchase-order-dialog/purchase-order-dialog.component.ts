@@ -353,9 +353,19 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
           // Crear nueva orden
           const ordersRef = collection(this.firestore, 'purchase-orders');
           const newOrderRef = doc(ordersRef);
+          
+          // Inicializar historial de estados con el estado inicial
+          const initialStatusHistory = [{
+            status: orderData.status || 'pending',
+            changedAt: new Date(),
+            changedBy: 'system',
+            notes: 'Orden creada'
+          }];
+          
           const newOrderData = {
             ...orderData,
             id: newOrderRef.id,
+            statusHistory: initialStatusHistory,
             createdAt: serverTimestamp()
           };
           

@@ -13,11 +13,20 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ToastrService } from 'ngx-toastr';
-import { Firestore, collection, getDocs, doc, deleteDoc, query, orderBy } from '@angular/fire/firestore';
+import { Firestore, collection, getDocs, doc, deleteDoc, setDoc, query, orderBy, serverTimestamp } from '@angular/fire/firestore';
 import { from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 import { PurchaseOrderDialogComponent } from './purchase-order-dialog/purchase-order-dialog.component';
+import { ReceiveOrderDialogComponent } from './receive-order-dialog/receive-order-dialog.component';
+import { AuthService } from '../../core/services/auth.service';
+
+export interface StatusHistory {
+  status: 'pending' | 'approved' | 'received' | 'cancelled';
+  changedAt: Date;
+  changedBy?: string;
+  notes?: string;
+}
 
 export interface PurchaseOrder {
   id: string;
@@ -28,6 +37,7 @@ export interface PurchaseOrder {
   status: 'pending' | 'approved' | 'received' | 'cancelled';
   total: number;
   items: PurchaseOrderItem[];
+  statusHistory?: StatusHistory[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +49,7 @@ export interface PurchaseOrderItem {
   unitOfMeasure: string;
   unitPrice: number;
   total: number;
+  receivedQuantity?: number; // Cantidad recibida
 }
 
 @Component({
@@ -56,7 +67,8 @@ export interface PurchaseOrderItem {
         MatChipsModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
-        PurchaseOrderDialogComponent
+        PurchaseOrderDialogComponent,
+        ReceiveOrderDialogComponent
     ],
     templateUrl: './purchase-orders.component.html',
     styleUrls: ['./purchase-orders.component.scss']
@@ -71,11 +83,13 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   
   // Dropdown states
   isStatusDropdownOpen = false;
+  statusDropdownOpenFor: string | null = null; // ID de la orden para la cual está abierto el dropdown
 
   constructor(
     private fb: FormBuilder,
     private toastr: ToastrService,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private authService: AuthService
   ) {
     this.filtersForm = this.fb.group({
       search: [''],
@@ -118,6 +132,13 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
         map((snapshot) => {
           return snapshot.docs.map((docSnap) => {
             const data = docSnap.data();
+            const statusHistory = (data['statusHistory'] || []).map((sh: any) => ({
+              status: sh.status,
+              changedAt: sh.changedAt?.toDate() || new Date(sh.changedAt),
+              changedBy: sh.changedBy,
+              notes: sh.notes
+            })) as StatusHistory[];
+            
             return {
               id: docSnap.id,
               orderNumber: data['orderNumber'] || '',
@@ -126,7 +147,11 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
               date: data['date']?.toDate() || new Date(),
               status: (data['status'] || 'pending') as 'pending' | 'approved' | 'received' | 'cancelled',
               total: data['total'] || 0,
-              items: (data['items'] || []) as PurchaseOrderItem[],
+              items: (data['items'] || []).map((item: any) => ({
+                ...item,
+                receivedQuantity: item.receivedQuantity || 0
+              })) as PurchaseOrderItem[],
+              statusHistory: statusHistory,
               createdAt: data['createdAt']?.toDate() || new Date(),
               updatedAt: data['updatedAt']?.toDate() || new Date()
             } as PurchaseOrder;
@@ -307,8 +332,119 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.custom-select-field')) {
+    if (!target.closest('.custom-select-field') && !target.closest('.status-dropdown-container')) {
       this.isStatusDropdownOpen = false;
+      this.statusDropdownOpenFor = null;
+    }
+  }
+
+  // Métodos para cambiar estado de una orden específica
+  toggleOrderStatusDropdown(orderId: string): void {
+    if (this.statusDropdownOpenFor === orderId) {
+      this.statusDropdownOpenFor = null;
+    } else {
+      this.statusDropdownOpenFor = orderId;
+    }
+  }
+
+  isStatusDropdownOpenForOrder(orderId: string): boolean {
+    return this.statusDropdownOpenFor === orderId;
+  }
+
+  getAvailableStatuses(order: PurchaseOrder): Array<{ value: string; label: string; disabled: boolean }> {
+    const currentStatus = order.status;
+    const statusHistory = order.statusHistory || [];
+    const previousStatus = statusHistory.length > 1 ? statusHistory[statusHistory.length - 2]?.status : null;
+    
+    const allStatuses = [
+      { value: 'pending', label: 'Pendiente' },
+      { value: 'approved', label: 'Aprobada' },
+      { value: 'received', label: 'Recibida' },
+      { value: 'cancelled', label: 'Cancelada' }
+    ];
+
+    return allStatuses.map(status => ({
+      ...status,
+      disabled: status.value === currentStatus || status.value === previousStatus
+    }));
+  }
+
+  changeOrderStatus(order: PurchaseOrder, newStatus: string): void {
+    const status = newStatus as 'pending' | 'approved' | 'received' | 'cancelled';
+    if (status === order.status) {
+      return;
+    }
+
+    // Si el nuevo estado es 'received', abrir modal de recepción
+    if (status === 'received') {
+      this.openReceiveOrderDialog(order);
+      this.statusDropdownOpenFor = null;
+      return;
+    }
+
+    // Para otros estados, cambiar directamente
+    this.updateOrderStatus(order, status);
+  }
+
+  private updateOrderStatus(order: PurchaseOrder, newStatus: 'pending' | 'approved' | 'received' | 'cancelled'): void {
+    const currentUser = this.authService.getCurrentUser();
+    const statusHistory = order.statusHistory || [];
+    
+    // Agregar nuevo estado al historial
+    const newStatusEntry: StatusHistory = {
+      status: newStatus,
+      changedAt: new Date(),
+      changedBy: currentUser?.id || 'system',
+      notes: `Cambio de estado de ${this.getStatusText(order.status)} a ${this.getStatusText(newStatus)}`
+    };
+
+    const updatedHistory = [...statusHistory, newStatusEntry];
+
+    const orderRef = doc(this.firestore, 'purchase-orders', order.id);
+    from(setDoc(orderRef, {
+      status: newStatus,
+      statusHistory: updatedHistory.map(sh => ({
+        status: sh.status,
+        changedAt: sh.changedAt,
+        changedBy: sh.changedBy,
+        notes: sh.notes
+      })),
+      updatedAt: serverTimestamp()
+    }, { merge: true }))
+      .pipe(
+        catchError((error) => {
+          console.error('Error updating order status:', error);
+          this.toastr.error('Error al actualizar el estado de la orden');
+          return of(null);
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success(`Estado cambiado a ${this.getStatusText(newStatus)}`);
+          this.statusDropdownOpenFor = null;
+          this.loadPurchaseOrders();
+        }
+      });
+  }
+
+  showReceiveOrderDialog = false;
+  selectedOrderForReceive: PurchaseOrder | null = null;
+
+  openReceiveOrderDialog(order: PurchaseOrder): void {
+    this.selectedOrderForReceive = order;
+    this.showReceiveOrderDialog = true;
+  }
+
+  closeReceiveOrderDialog(): void {
+    this.showReceiveOrderDialog = false;
+    this.selectedOrderForReceive = null;
+  }
+
+  onReceiveOrderComplete(result: boolean): void {
+    this.closeReceiveOrderDialog();
+    if (result) {
+      this.loadPurchaseOrders();
     }
   }
 }
