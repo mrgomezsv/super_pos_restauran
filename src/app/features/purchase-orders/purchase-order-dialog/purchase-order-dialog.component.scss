@@ -501,10 +501,18 @@
         box-shadow: 0 0 0 3px rgba(1, 126, 132, 0.1) !important;
       }
       
-      .mat-mdc-form-field-label {
-        color: #017E84 !important;
+      .mat-mdc-form-field-label,
+      .mdc-floating-label,
+      .mat-mdc-form-field-label-wrapper {
+        color: #64748b !important;
         position: absolute !important;
-        top: -8px !important;
+        top: -10px !important;
+        background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0.95) 50%) !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
         left: 12px !important;
         background: #ffffff !important;
         padding: 0 4px !important;
