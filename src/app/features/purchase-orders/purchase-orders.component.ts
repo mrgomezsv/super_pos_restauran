@@ -332,7 +332,8 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.custom-select-field') && !target.closest('.status-dropdown-container')) {
+    // Cerrar solo si el click no está dentro del contenedor del dropdown de estado
+    if (!target.closest('.status-dropdown-container') && !target.closest('.custom-select-field')) {
       this.isStatusDropdownOpen = false;
       this.statusDropdownOpenFor = null;
     }
