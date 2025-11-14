@@ -72,7 +72,7 @@
 
               <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Precio Unitario</mat-label>
-                <input matInput formControlName="unitPrice" readonly [value]="formatCurrency(item.get('unitPrice')?.value)">
+                <input matInput formControlName="unitPrice" readonly>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="form-field">
@@ -98,8 +98,7 @@
                 <input 
                   matInput 
                   formControlName="total" 
-                  readonly
-                  [value]="getItemTotal(item)">
+                  readonly>
               </mat-form-field>
             </div>
           </div>

@@ -79,10 +79,22 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
         ingredientName: [{ value: item.ingredientName, disabled: true }],
         quantity: [{ value: item.quantity, disabled: true }],
         unitOfMeasure: [{ value: item.unitOfMeasure, disabled: true }],
-        unitPrice: [{ value: item.unitPrice, disabled: true }],
-        total: [{ value: item.total, disabled: true }],
-        receivedQuantity: [item.receivedQuantity || 0, [Validators.required, Validators.min(0), Validators.max(item.quantity)]]
+        unitPrice: [{ value: this.formatCurrency(item.unitPrice), disabled: true }],
+        total: [{ value: this.formatCurrency(item.total), disabled: true }],
+        receivedQuantity: [item.receivedQuantity || 0, [Validators.required, Validators.min(0), Validators.max(item.quantity)]],
+        // Guardar valores numéricos originales para cálculos
+        _unitPrice: item.unitPrice,
+        _total: item.total
       });
+      
+      // Actualizar el total cuando cambie la cantidad recibida
+      itemGroup.get('receivedQuantity')?.valueChanges.subscribe(() => {
+        const quantity = itemGroup.get('receivedQuantity')?.value || 0;
+        const unitPrice = itemGroup.get('_unitPrice')?.value || 0;
+        const total = quantity * unitPrice;
+        itemGroup.patchValue({ total: this.formatCurrency(total) }, { emitEvent: false });
+      });
+      
       itemsArray.push(itemGroup);
     });
   }
