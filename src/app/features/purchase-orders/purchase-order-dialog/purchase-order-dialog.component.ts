@@ -177,7 +177,7 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
       supplierId: ['', [Validators.required]],
       supplierName: [''],
       date: [new Date(), [Validators.required]],
-      status: ['pending', [Validators.required]],
+      status: [{ value: 'pending', disabled: true }], // Solo lectura, siempre "Creada" para nuevas órdenes
       items: this.fb.array([])
     });
   }
@@ -416,6 +416,17 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
       return `El valor mínimo es ${control.errors?.['min'].min}`;
     }
     return '';
+  }
+
+  getStatusText(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'pending': 'Creada',
+      'created': 'Creada',
+      'approved': 'Aprobada',
+      'received': 'Recibida',
+      'cancelled': 'Cancelada'
+    };
+    return statusMap[status] || status;
   }
 }
 

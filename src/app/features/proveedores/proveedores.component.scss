@@ -369,8 +369,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.35);
-    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(3px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -498,4 +498,3 @@
     }
   }
 }
-

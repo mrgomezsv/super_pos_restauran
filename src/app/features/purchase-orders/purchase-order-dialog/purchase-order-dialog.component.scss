@@ -813,15 +813,18 @@
 
 .total-section {
   margin-top: var(--spacing-lg);
-  padding: var(--spacing-md);
-  background: var(--primary-light, #e3f2fd);
-  border-radius: var(--border-radius-md, 8px);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: var(--border-radius-lg, 12px);
   text-align: right;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   h4 {
     margin: 0;
     font-size: var(--text-xl, 1.25rem);
     font-weight: var(--font-weight-bold, 700);
+    color: #017E84;
     color: var(--primary, #1976d2);
   }
 }
