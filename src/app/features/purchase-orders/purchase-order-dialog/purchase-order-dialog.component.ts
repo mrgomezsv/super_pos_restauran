@@ -195,8 +195,21 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
       quantity: [item?.quantity || 0, [Validators.required, Validators.min(0.01)]],
       unitOfMeasure: [item?.unitOfMeasure || '', [Validators.required]],
       unitPrice: [item?.unitPrice || 0, [Validators.required, Validators.min(0)]],
-      total: [item?.total || 0]
+      total: [item?.total || 0],
+      receivedQuantity: [item?.receivedQuantity || 0] // Cantidad recibida
     });
+  }
+
+  // Verificar si la orden está recibida
+  isOrderReceived(): boolean {
+    return this.purchaseOrder?.status === 'received';
+  }
+
+  // Calcular el monto recibido para un item
+  getReceivedAmount(item: any): number {
+    const receivedQty = item.get('receivedQuantity')?.value || 0;
+    const unitPrice = item.get('unitPrice')?.value || 0;
+    return receivedQty * unitPrice;
   }
 
   onIngredientSelected(index: number): void {

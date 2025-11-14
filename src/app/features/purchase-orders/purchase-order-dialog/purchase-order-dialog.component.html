@@ -161,6 +161,26 @@
                   [value]="item.get('total')?.value || 0">
               </mat-form-field>
 
+              <!-- Campos adicionales cuando la orden está recibida y en modo vista -->
+              <ng-container *ngIf="viewMode && isOrderReceived()">
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Cantidad Recibida</mat-label>
+                  <input 
+                    matInput 
+                    [value]="item.get('receivedQuantity')?.value || 0"
+                    readonly>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Monto Recibido</mat-label>
+                  <input 
+                    matInput 
+                    [value]="getReceivedAmount(item) | number:'1.2-2'"
+                    readonly>
+                  <span matPrefix>$&nbsp;</span>
+                </mat-form-field>
+              </ng-container>
+
               <button 
                 type="button" 
                 mat-icon-button 
