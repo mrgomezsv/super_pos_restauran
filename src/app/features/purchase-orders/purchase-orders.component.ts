@@ -463,13 +463,14 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
     return allStatuses.map(status => {
       // Normalizar el valor del estado para comparación
-      const normalizedStatusValue = status.value === 'created' ? 'created' : status.value;
-      const normalizedCurrentStatus = currentStatus === 'pending' ? 'created' : currentStatus;
-      const normalizedPreviousStatus = previousStatus === 'pending' ? 'created' : previousStatus;
+      const normalizedStatusValue = status.value;
+      const normalizedCurrentStatus = currentStatus;
+      const normalizedPreviousStatus = previousStatus;
       
       return {
         ...status,
-        disabled: normalizedStatusValue === normalizedCurrentStatus || normalizedStatusValue === normalizedPreviousStatus
+        disabled: normalizedStatusValue === normalizedCurrentStatus || 
+                  (normalizedPreviousStatus !== null && normalizedStatusValue === normalizedPreviousStatus)
       };
     });
   }
