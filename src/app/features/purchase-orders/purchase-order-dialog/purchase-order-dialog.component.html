@@ -3,11 +3,11 @@
     <!-- Header del Modal -->
     <div class="modal-header">
       <div class="header-content">
-        <mat-icon class="header-icon">{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+        <mat-icon class="header-icon">{{ viewMode ? 'visibility' : (isEdit ? 'edit' : 'add_circle') }}</mat-icon>
         <div class="header-text">
-          <h2 class="modal-title">{{ isEdit ? 'Editar Orden de Compra' : 'Nueva Orden de Compra' }}</h2>
+          <h2 class="modal-title">{{ viewMode ? 'Ver Orden de Compra' : (isEdit ? 'Editar Orden de Compra' : 'Nueva Orden de Compra') }}</h2>
           <p class="modal-subtitle">
-            {{ isEdit ? 'Actualiza la información de la orden de compra' : 'Crea una nueva orden de compra de ingredientes' }}
+            {{ viewMode ? 'Visualiza la información de la orden de compra' : (isEdit ? 'Actualiza la información de la orden de compra' : 'Crea una nueva orden de compra de ingredientes') }}
           </p>
         </div>
       </div>
@@ -84,7 +84,12 @@
               <mat-icon>list</mat-icon>
               Items de la Orden
             </h3>
-            <button type="button" mat-button color="primary" (click)="addItem()">
+            <button 
+              type="button" 
+              mat-button 
+              color="primary" 
+              (click)="addItem()"
+              *ngIf="!viewMode">
               <mat-icon>add</mat-icon>
               Agregar Item
             </button>
@@ -158,7 +163,12 @@
                   [value]="item.get('total')?.value || 0">
               </mat-form-field>
 
-              <button type="button" mat-icon-button (click)="removeItem(i)" matTooltip="Eliminar item">
+              <button 
+                type="button" 
+                mat-icon-button 
+                (click)="removeItem(i)" 
+                matTooltip="Eliminar item"
+                *ngIf="!viewMode">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -174,10 +184,11 @@
     <!-- Acciones del Modal -->
     <div class="modal-actions">
       <button mat-button (click)="onCancel()" class="cancel-btn">
-        <mat-icon>close</mat-icon>
-        Cancelar
+        <mat-icon>{{ viewMode ? 'close' : 'close' }}</mat-icon>
+        {{ viewMode ? 'Cerrar' : 'Cancelar' }}
       </button>
       <button 
+        *ngIf="!viewMode"
         mat-raised-button 
         color="primary"
         (click)="onSave()"

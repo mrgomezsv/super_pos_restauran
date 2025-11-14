@@ -149,8 +149,14 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let order">
+              <button mat-icon-button (click)="viewPurchaseOrder(order)" matTooltip="Ver">
+                <mat-icon>visibility</mat-icon>
+              </button>
               <button mat-icon-button (click)="editPurchaseOrder(order)" matTooltip="Editar">
                 <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="printPurchaseOrder(order)" matTooltip="Imprimir">
+                <mat-icon>print</mat-icon>
               </button>
               <button mat-icon-button (click)="deletePurchaseOrder(order)" matTooltip="Eliminar">
                 <mat-icon>delete</mat-icon>
@@ -181,6 +187,7 @@
   <app-purchase-order-dialog 
     *ngIf="showPurchaseOrderDialog"
     [purchaseOrder]="selectedPurchaseOrder"
+    [viewMode]="isViewMode"
     (close)="onPurchaseOrderDialogResult($event)">
   </app-purchase-order-dialog>
 </div>

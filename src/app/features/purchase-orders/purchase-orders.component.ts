@@ -176,9 +176,10 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   showPurchaseOrderDialog = false;
   selectedPurchaseOrder: PurchaseOrder | null = null;
+  isViewMode = false;
   private scrollYPosition = 0;
 
-  openPurchaseOrderDialog(order?: PurchaseOrder): void {
+  openPurchaseOrderDialog(order?: PurchaseOrder, viewMode: boolean = false): void {
     // Guardar la posición actual del scroll
     this.scrollYPosition = window.scrollY;
     
@@ -187,6 +188,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     document.body.style.top = `-${this.scrollYPosition}px`;
     
     this.selectedPurchaseOrder = order || null;
+    this.isViewMode = viewMode;
     this.showPurchaseOrderDialog = true;
   }
 
@@ -200,6 +202,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     
     this.showPurchaseOrderDialog = false;
     this.selectedPurchaseOrder = null;
+    this.isViewMode = false;
   }
 
   onPurchaseOrderDialogResult(result: boolean): void {
@@ -209,8 +212,17 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     }
   }
 
+  viewPurchaseOrder(order: PurchaseOrder): void {
+    this.openPurchaseOrderDialog(order, true);
+  }
+
   editPurchaseOrder(order: PurchaseOrder): void {
-    this.openPurchaseOrderDialog(order);
+    this.openPurchaseOrderDialog(order, false);
+  }
+
+  printPurchaseOrder(order: PurchaseOrder): void {
+    // Por el momento no hace nada
+    this.toastr.info('Funcionalidad de impresión próximamente disponible');
   }
 
   deletePurchaseOrder(order: PurchaseOrder): void {

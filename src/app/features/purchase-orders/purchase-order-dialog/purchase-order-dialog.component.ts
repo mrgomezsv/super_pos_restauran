@@ -39,6 +39,7 @@ import { Product } from '../../../core/models/product.model';
 })
 export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
   @Input() purchaseOrder: PurchaseOrder | null = null;
+  @Input() viewMode: boolean = false;
   @Output() close = new EventEmitter<boolean>();
 
   purchaseOrderForm!: FormGroup;
@@ -59,6 +60,11 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.isEdit = !!this.purchaseOrder;
     
+    // Si está en modo vista, deshabilitar todo el formulario
+    if (this.viewMode) {
+      this.purchaseOrderForm.disable();
+    }
+    
     // Cargar ingredientes y proveedores
     this.loadIngredients();
     this.loadSuppliers();
@@ -78,16 +84,22 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
       itemsArray.clear();
       if (this.purchaseOrder.items && this.purchaseOrder.items.length > 0) {
         this.purchaseOrder.items.forEach(item => {
-          itemsArray.push(this.createItemFormGroup(item));
+          const itemGroup = this.createItemFormGroup(item);
+          if (this.viewMode) {
+            itemGroup.disable();
+          }
+          itemsArray.push(itemGroup);
         });
       } else {
         this.addItem();
       }
     } else {
-      // Nueva orden - generar número automáticamente
-      this.generateOrderNumber();
-      // Agregar un item por defecto
-      this.addItem();
+      // Nueva orden - generar número automáticamente solo si no está en modo vista
+      if (!this.viewMode) {
+        this.generateOrderNumber();
+        // Agregar un item por defecto
+        this.addItem();
+      }
     }
   }
 
@@ -228,7 +240,11 @@ export class PurchaseOrderDialogComponent implements OnInit, OnDestroy {
 
   addItem(): void {
     const itemsArray = this.itemsFormArray;
-    itemsArray.push(this.createItemFormGroup());
+    const itemGroup = this.createItemFormGroup();
+    if (this.viewMode) {
+      itemGroup.disable();
+    }
+    itemsArray.push(itemGroup);
   }
 
   removeItem(index: number): void {
