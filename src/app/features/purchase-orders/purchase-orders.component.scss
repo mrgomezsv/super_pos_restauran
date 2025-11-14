@@ -534,7 +534,14 @@
     visibility: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
     margin-top: 0;
+    margin-bottom: 0;
     transform: translateY(0);
+    
+    // Cuando se abre hacia arriba
+    &.open-up {
+      margin-bottom: 4px;
+      margin-top: 0;
+    }
 
     &.open {
       max-height: 300px;

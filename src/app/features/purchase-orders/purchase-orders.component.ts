@@ -414,10 +414,26 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     
     if (container && dropdown) {
       const rect = container.getBoundingClientRect();
+      const dropdownHeight = 300; // Altura máxima del dropdown
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const shouldOpenUp = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      
       dropdown.style.position = 'fixed';
       dropdown.style.left = `${rect.left}px`;
-      dropdown.style.top = `${rect.bottom + 4}px`;
       dropdown.style.minWidth = `${Math.max(180, rect.width)}px`;
+      
+      if (shouldOpenUp) {
+        // Abrir hacia arriba
+        dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+        dropdown.style.top = 'auto';
+        dropdown.classList.add('open-up');
+      } else {
+        // Abrir hacia abajo
+        dropdown.style.top = `${rect.bottom + 4}px`;
+        dropdown.style.bottom = 'auto';
+        dropdown.classList.remove('open-up');
+      }
     }
   }
 
