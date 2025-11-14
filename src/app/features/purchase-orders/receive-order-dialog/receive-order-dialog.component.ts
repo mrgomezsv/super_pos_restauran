@@ -99,6 +99,13 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatCurrency(value: number | null | undefined): string {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '$0.00';
+    }
+    return '$' + value.toFixed(2);
+  }
+
   onSave(): void {
     if (this.receiveForm.valid && this.purchaseOrder) {
       const formData = this.receiveForm.getRawValue();
@@ -164,22 +171,8 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
   getTotalReceived(): number {
     const items = this.itemsFormArray.value;
     return items.reduce((sum: number, item: any) => {
-      return sum + (item.receivedQuantity || 0) * (item.unitPrice || 0);
+      return sum + (item.receivedQuantity || 0) * (item._unitPrice || 0);
     }, 0);
-  }
-
-  formatCurrency(value: number | null | undefined): string {
-    if (value === null || value === undefined || isNaN(value)) {
-      return '$0.00';
-    }
-    return '$' + value.toFixed(2);
-  }
-
-  getItemTotal(item: any): string {
-    const quantity = item.get('receivedQuantity')?.value || 0;
-    const unitPrice = item.get('unitPrice')?.value || 0;
-    const total = quantity * unitPrice;
-    return this.formatCurrency(total);
   }
 }
 
