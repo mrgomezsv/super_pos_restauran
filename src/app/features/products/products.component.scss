@@ -7,11 +7,14 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  // Asegurar que ocupe todo el espacio disponible
+  min-height: calc(100vh - 80px);
 }
 
 // Header Styles
 .products-header {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
+  flex-shrink: 0;
   
   .header-content {
     display: flex;
@@ -92,7 +95,8 @@
 
 // Filters Section
 .filters-section {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
+  flex-shrink: 0;
   
   .filters-header {
     margin-bottom: var(--spacing-lg);
@@ -431,6 +435,19 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  // Asegurar que la tarjeta ocupe todo el espacio disponible
+  height: 100%;
+  margin-bottom: 0;
+  
+  ::ng-deep mat-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 !important;
+    height: 100%;
+  }
   
   .table-container {
     overflow-x: auto;
@@ -438,37 +455,95 @@
     flex: 1;
     min-height: 0;
     position: relative;
+    // Altura fija para mostrar exactamente 6 filas de ingredientes
+    // Altura del header (~56px) + 6 filas (~56px cada una = 336px) = 392px
+    height: 392px;
+    max-height: 392px;
+    // Forzar siempre mostrar scrollbar vertical
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--btn-bg);
+    
+    // Asegurar que el scrollbar sea visible
+    &::-webkit-scrollbar {
+      -webkit-appearance: none;
+      width: 12px;
+    }
+    
+    &::-webkit-scrollbar:vertical {
+      width: 12px;
+    }
+    
+    &::-webkit-scrollbar:horizontal {
+      height: 12px;
+    }
     
     .products-table {
       width: 100%;
       min-width: 800px;
       background: transparent;
+      display: table;
+      border-collapse: separate;
+      border-spacing: 0;
       
       // Mantener tamaño de letra de 16px en toda la tabla
       .mat-mdc-header-cell,
       .mat-mdc-cell {
         font-size: 16px;
+        padding: 16px;
+        min-height: 56px;
+        box-sizing: border-box;
+      }
+      
+      // Asegurar altura consistente de filas
+      .mat-mdc-row {
+        height: 56px;
+        min-height: 56px;
+      }
+      
+      .mat-mdc-header-row {
+        height: 56px;
+        min-height: 56px;
       }
       
       // Hacer que los encabezados sean sticky (fijos al hacer scroll)
       ::ng-deep {
-        thead {
+        .mat-mdc-header-row {
           position: sticky;
           top: 0;
-          z-index: 10;
-          background: var(--surface-color);
-          
-          tr {
-            background: var(--surface-color);
-          }
+          z-index: 100;
+          background: var(--surface-color) !important;
           
           .mat-mdc-header-cell {
             background: var(--surface-color) !important;
             position: sticky;
             top: 0;
-            z-index: 11;
+            z-index: 101;
             border-bottom: 2px solid var(--border);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+        }
+        
+        .mat-mdc-row {
+          background: var(--surface-color);
+          
+          &:hover {
+            background: rgba(1, 126, 132, 0.05) !important;
+          }
+          
+          // Última fila - agregar borde inferior
+          &:last-child {
+            .mat-mdc-cell {
+              border-bottom: 1px solid var(--border);
+            }
+          }
+        }
+        
+        // Asegurar que la última fila tenga borde visible
+        tbody {
+          tr:last-child {
+            td {
+              border-bottom: 1px solid var(--border) !important;
+            }
           }
         }
       }
@@ -758,20 +833,63 @@
   }
 }
 
-// Custom scrollbar for table
-.products-table-card .table-container::-webkit-scrollbar {
-  height: 8px;
-}
+// Custom scrollbar for table - Mejorado para mejor visibilidad
+.products-table-card .table-container {
+  // Scrollbar vertical - Siempre visible
+  &::-webkit-scrollbar {
+    width: 14px !important;
+    -webkit-appearance: none;
+  }
 
-.products-table-card .table-container::-webkit-scrollbar-track {
-  background: var(--btn-bg);
-}
+  &::-webkit-scrollbar-track {
+    background: var(--btn-bg) !important;
+    border-radius: var(--border-radius-full);
+    border: 1px solid var(--border);
+  }
 
-.products-table-card .table-container::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: var(--border-radius-full);
-}
-
-.products-table-card .table-container::-webkit-scrollbar-thumb:hover {
-  background: var(--text-gray);
+  &::-webkit-scrollbar-thumb {
+    background: var(--border) !important;
+    border-radius: var(--border-radius-full);
+    border: 2px solid var(--btn-bg);
+    min-height: 50px;
+    
+    &:hover {
+      background: var(--text-gray) !important;
+    }
+    
+    &:active {
+      background: var(--primary) !important;
+    }
+  }
+  
+  // Scrollbar horizontal
+  &::-webkit-scrollbar:horizontal {
+    height: 14px !important;
+    -webkit-appearance: none;
+  }
+  
+  &::-webkit-scrollbar-track:horizontal {
+    background: var(--btn-bg) !important;
+    border-radius: var(--border-radius-full);
+    border: 1px solid var(--border);
+  }
+  
+  &::-webkit-scrollbar-thumb:horizontal {
+    background: var(--border) !important;
+    border-radius: var(--border-radius-full);
+    border: 2px solid var(--btn-bg);
+    min-width: 50px;
+    
+    &:hover {
+      background: var(--text-gray) !important;
+    }
+    
+    &:active {
+      background: var(--primary) !important;
+    }
+  }
+  
+  // Para Firefox
+  scrollbar-width: auto;
+  scrollbar-color: var(--border) var(--btn-bg);
 }
