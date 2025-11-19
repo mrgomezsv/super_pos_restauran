@@ -9,10 +9,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { Firestore, doc, setDoc, serverTimestamp } from '@angular/fire/firestore';
-import { from } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { from, forkJoin } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { ProductService } from '../../../core/services/product.service';
 import { PurchaseOrder, PurchaseOrderItem, StatusHistory } from '../purchase-orders.component';
 
 @Component({
@@ -41,7 +42,8 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private toastr: ToastrService,
     private firestore: Firestore,
-    private authService: AuthService
+    private authService: AuthService,
+    private productService: ProductService
   ) {
     this.initializeForm();
   }
@@ -128,6 +130,8 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
       const updatedHistory = [...statusHistory, newStatusEntry];
 
       const orderRef = doc(this.firestore, 'purchase-orders', this.purchaseOrder.id);
+      
+      // Primero actualizar la orden
       from(setDoc(orderRef, {
         status: 'received',
         items: items,
@@ -140,6 +144,32 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
         updatedAt: serverTimestamp()
       }, { merge: true }))
         .pipe(
+          // Después de actualizar la orden, actualizar el inventario de cada ingrediente
+          switchMap(() => {
+            // Crear un array de observables para actualizar el stock de cada ingrediente
+            const stockUpdates = items
+              .filter((item: PurchaseOrderItem) => item.receivedQuantity && item.receivedQuantity > 0)
+              .map((item: PurchaseOrderItem) => 
+                this.productService.addIngredientStock(
+                  item.ingredientId, 
+                  item.receivedQuantity || 0
+                ).pipe(
+                  catchError((error) => {
+                    console.error(`Error actualizando stock de ${item.ingredientName}:`, error);
+                    // Continuar con los demás aunque uno falle
+                    return of(null);
+                  })
+                )
+              );
+            
+            // Si no hay items con cantidad recibida, retornar un observable vacío
+            if (stockUpdates.length === 0) {
+              return of([]);
+            }
+            
+            // Ejecutar todas las actualizaciones en paralelo
+            return forkJoin(stockUpdates);
+          }),
           catchError((error) => {
             console.error('Error receiving order:', error);
             this.toastr.error('Error al recibir la orden');
@@ -147,9 +177,11 @@ export class ReceiveOrderDialogComponent implements OnInit, OnDestroy {
           })
         )
         .subscribe({
-          next: () => {
-            this.toastr.success('Orden recibida exitosamente');
-            this.close.emit(true);
+          next: (result) => {
+            if (result !== null) {
+              this.toastr.success('Orden recibida exitosamente. Inventario actualizado.');
+              this.close.emit(true);
+            }
           }
         });
     } else {

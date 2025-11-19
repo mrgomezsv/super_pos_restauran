@@ -204,6 +204,67 @@ export class ProductService {
   }
 
   /**
+   * Obtener un ingrediente por ID desde Firestore
+   */
+  getIngredientById(id: string): Observable<Product | null> {
+    const ingredientRef = doc(this.firestore, this.INGREDIENTS_COLLECTION, id);
+    return from(getDoc(ingredientRef)).pipe(
+      map((docSnap) => {
+        if (!docSnap.exists()) {
+          return null;
+        }
+        const data = docSnap.data();
+        const firestoreId = docSnap.id;
+        return {
+          id: firestoreId as any,
+          code: data['code'] || '',
+          name: data['name'] || '',
+          description: '',
+          presentation: data['presentation'] || undefined,
+          price: 0,
+          cost: 0,
+          category: '',
+          brand: '',
+          stock: data['stock'] || 0,
+          minStock: data['minStock'] || 0,
+          maxStock: data['maxStock'] || null,
+          isActive: data['isActive'] !== undefined ? data['isActive'] : true,
+          barcode: '',
+          taxRate: 0,
+          productType: 'ingredient' as const,
+          unitOfMeasure: data['unitOfMeasure'] || 'unidad',
+          createdAt: data['createdAt']?.toDate() || new Date(),
+          updatedAt: data['updatedAt']?.toDate() || new Date(),
+          _firestoreId: firestoreId
+        } as Product & { _firestoreId?: string };
+      }),
+      catchError((error) => {
+        console.error('Error getting ingredient:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Actualizar el stock de un ingrediente (sumar cantidad)
+   */
+  addIngredientStock(id: string, quantity: number): Observable<Product> {
+    return this.getIngredientById(id).pipe(
+      switchMap((ingredient) => {
+        if (!ingredient) {
+          throw new Error('Ingrediente no encontrado');
+        }
+        const newStock = (ingredient.stock || 0) + quantity;
+        return this.updateIngredient(id, { stock: newStock });
+      }),
+      catchError((error) => {
+        console.error('Error adding stock to ingredient:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
    * Eliminar ingrediente de Firestore
    */
   deleteIngredient(id: string): Observable<void> {
