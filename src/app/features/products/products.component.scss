@@ -424,6 +424,7 @@
     overflow-y: auto;
     flex: 1;
     min-height: 0;
+    position: relative;
     
     .products-table {
       width: 100%;
@@ -434,6 +435,29 @@
       .mat-mdc-header-cell,
       .mat-mdc-cell {
         font-size: 16px;
+      }
+      
+      // Hacer que los encabezados sean sticky (fijos al hacer scroll)
+      ::ng-deep {
+        thead {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: var(--surface-color);
+          
+          tr {
+            background: var(--surface-color);
+          }
+          
+          .mat-mdc-header-cell {
+            background: var(--surface-color) !important;
+            position: sticky;
+            top: 0;
+            z-index: 11;
+            border-bottom: 2px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          }
+        }
       }
     }
     
