@@ -44,7 +44,7 @@ import { ProductDialogComponent } from './product-dialog/product-dialog.componen
 export class ProductsComponent implements OnInit, OnDestroy {
   products: Product[] = [];
   allProducts: Product[] = []; // Lista completa para filtrar
-  displayedColumns: string[] = ['code', 'name', 'presentation', 'unitOfMeasure', 'status', 'actions'];
+  displayedColumns: string[] = ['code', 'name', 'presentation', 'unitOfMeasure', 'stock', 'status', 'actions'];
   isLoading = true;
   isImporting = false;
   filtersForm: FormGroup;
@@ -453,6 +453,19 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   getStatusText(isActive: boolean): string {
     return isActive ? 'Activo' : 'Inactivo';
+  }
+
+  getStockClass(stock: number): string {
+    // Clasificar stock según niveles (puedes ajustar estos valores)
+    if (stock === 0) {
+      return 'stock-zero';
+    } else if (stock < 10) {
+      return 'stock-low';
+    } else if (stock < 50) {
+      return 'stock-medium';
+    } else {
+      return 'stock-high';
+    }
   }
 
   exportToExcel(): void {

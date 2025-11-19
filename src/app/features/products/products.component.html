@@ -144,6 +144,15 @@
             <td mat-cell *matCellDef="let product">{{ product.unitOfMeasure }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="stock">
+            <th mat-header-cell *matHeaderCellDef>Existencia</th>
+            <td mat-cell *matCellDef="let product">
+              <span [class]="getStockClass(product.stock || 0)">
+                {{ (product.stock || 0) | number:'1.2-2' }} {{ product.unitOfMeasure }}
+              </span>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
             <td mat-cell *matCellDef="let product">
