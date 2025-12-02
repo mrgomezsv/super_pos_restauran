@@ -720,6 +720,33 @@
             color: var(--pos-text-gray);
             font-weight: 600;
           }
+
+          .item-complements {
+            margin-top: var(--pos-spacing-xs);
+            display: flex;
+            flex-direction: column;
+            gap: var(--pos-spacing-xs);
+
+            .complement-chip {
+              display: inline-flex;
+              align-items: center;
+              gap: var(--pos-spacing-xs);
+              padding: 2px 8px;
+              background: rgba(66, 165, 245, 0.1);
+              border: 1px solid rgba(66, 165, 245, 0.3);
+              border-radius: var(--pos-radius-sm);
+              font-size: 0.75rem;
+              color: var(--pos-primary);
+              font-weight: 500;
+
+              mat-icon {
+                font-size: 14px;
+                width: 14px;
+                height: 14px;
+                color: var(--pos-primary);
+              }
+            }
+          }
         }
         
         .item-quantity {

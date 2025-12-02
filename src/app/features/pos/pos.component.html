@@ -154,6 +154,12 @@
             <div class="item-details">
               <h4 class="item-name">{{ item.productName }}</h4>
               <div class="item-price">${{ item.unitPrice | number:'1.2-2' }}</div>
+              <div class="item-complements" *ngIf="item.complements && item.complements.length > 0">
+                <div class="complement-chip" *ngFor="let comp of item.complements">
+                  <mat-icon>add_circle</mat-icon>
+                  <span>{{ comp.complement_name }} (+${{ comp.price | number:'1.2-2' }})</span>
+                </div>
+              </div>
             </div>
             <div class="item-quantity">
               <button class="qty-btn decrease" (click)="decreaseQuantity(i)" [disabled]="item.quantity <= 1">
