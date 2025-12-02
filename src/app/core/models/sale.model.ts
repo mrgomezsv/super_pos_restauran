@@ -1,5 +1,13 @@
 import { Product } from './product.model';
 
+export interface CartItemComplement {
+  complement_product_id: number;
+  complement_product_name: string;
+  complement_name: string; // Nombre del complemento (ej: "Papas Fritas")
+  price: number; // Precio adicional del complemento
+  quantity: number; // Cantidad del complemento
+}
+
 export interface CartItem {
   productId: number;
   productName: string;
@@ -8,6 +16,7 @@ export interface CartItem {
   subtotal: number;
   tax: number;
   total: number;
+  complements?: CartItemComplement[]; // Complementos agregados a este item
 }
 
 export interface Sale {

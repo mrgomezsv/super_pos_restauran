@@ -16,6 +16,7 @@ export interface Product {
   taxRate: number; // Porcentaje de impuesto (ej: 15 para 15%)
   productType: 'ingredient' | 'preparation' | 'final';
   unitOfMeasure: string;
+  hasComplements?: boolean; // Indica si el producto tiene complementos disponibles
   createdAt: Date;
   updatedAt: Date;
 }
