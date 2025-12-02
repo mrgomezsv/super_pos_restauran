@@ -36,6 +36,7 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
 
   productForm!: FormGroup;
   isEdit = false;
+  productType: 'ingredient' | 'preparation' | 'final' = 'ingredient';
   readonly unitHint = 'Ej: unidad, g, kg, lb, ml, porción';
   unitOptions: string[] = [
 'bandeja',
@@ -103,13 +104,18 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
     this.isEdit = !!this.product;
 
     if (this.isEdit && this.product) {
+      this.productType = this.product.productType || 'ingredient';
       this.ensureUnitOption(this.product.unitOfMeasure);
       this.productForm.patchValue({
-        ...this.product
+        ...this.product,
+        productType: this.product.productType || 'ingredient'
       });
+      this.updateFormForProductType(this.productType);
     } else {
-      // Para ingredientes nuevos, consultar el siguiente SKU que se asignará
-      this.loadNextSKU();
+      // Para productos nuevos, consultar el siguiente SKU que se asignará (solo ingredientes)
+      if (this.productType === 'ingredient') {
+        this.loadNextSKU();
+      }
     }
   }
 
@@ -120,12 +126,55 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
 
   private initializeForm(): void {
     this.productForm = this.fb.group({
+      productType: ['ingredient', Validators.required],
       code: [{ value: '', disabled: true }], // SKU autogenerado, solo lectura
       unitOfMeasure: ['unidad', [Validators.required, Validators.maxLength(20)]],
-      name: ['', [Validators.required, Validators.minLength(2)]], // Descripción del ingrediente
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      description: [''],
       presentation: [''], // Presentación del producto (ej: "500 ml", "1 kg")
+      price: [0, [Validators.min(0)]], // Solo para productos finales
+      cost: [0, [Validators.min(0)]], // Solo para productos finales
+      category: [''],
+      taxRate: [13, [Validators.min(0), Validators.max(100)]], // Solo para productos finales
       isActive: [true]
     });
+
+    // Actualizar campos según el tipo de producto
+    this.productForm.get('productType')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(type => {
+      this.productType = type;
+      this.updateFormForProductType(type);
+    });
+  }
+
+  private updateFormForProductType(type: string): void {
+    const priceControl = this.productForm.get('price');
+    const costControl = this.productForm.get('cost');
+    const taxRateControl = this.productForm.get('taxRate');
+    const categoryControl = this.productForm.get('category');
+
+    if (type === 'ingredient') {
+      // Para ingredientes, resetear precio y costo
+      priceControl?.setValue(0);
+      costControl?.setValue(0);
+      taxRateControl?.setValue(0);
+      priceControl?.clearValidators();
+      costControl?.clearValidators();
+      taxRateControl?.clearValidators();
+    } else {
+      // Para productos finales, hacer requeridos precio y costo
+      priceControl?.setValidators([Validators.required, Validators.min(0)]);
+      costControl?.setValidators([Validators.required, Validators.min(0)]);
+      taxRateControl?.setValidators([Validators.required, Validators.min(0), Validators.max(100)]);
+      if (!priceControl?.value) priceControl?.setValue(0);
+      if (!costControl?.value) costControl?.setValue(0);
+      if (!taxRateControl?.value) taxRateControl?.setValue(13);
+    }
+    
+    priceControl?.updateValueAndValidity();
+    costControl?.updateValueAndValidity();
+    taxRateControl?.updateValueAndValidity();
   }
 
   private loadNextSKU(): void {
@@ -154,52 +203,116 @@ export class ProductDialogComponent implements OnInit, OnDestroy {
 
   onSave(): void {
     if (this.productForm.valid) {
-      const productData = { ...this.productForm.getRawValue() };
+      const formValue = this.productForm.getRawValue();
+      const productType = formValue.productType || 'ingredient';
       
-      // El modal solo se usa para crear códigos de ingredientes
-      // No se maneja stock aquí
-      productData.stock = 0;
-      productData.minStock = 0;
-      productData.maxStock = null;
-      
-      if (this.isEdit && this.product) {
-        // Para edición, usar updateIngredient con Firestore
-        // Obtener el ID de Firestore (puede estar en _firestoreId o en id si es string)
-        const productId = (this.product as any)._firestoreId || 
-                         (typeof this.product.id === 'string' ? this.product.id : this.product.id.toString());
-        delete productData.code;
-        this.productService.updateIngredient(productId, productData)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: () => {
-              this.toastr.success('Ingrediente actualizado exitosamente');
-              this.close.emit(true);
-            },
-            error: (error) => {
-              console.error('Error updating ingredient:', error);
-              this.toastr.error('Error al actualizar el ingrediente');
-            }
-          });
+      if (productType === 'ingredient') {
+        this.saveIngredient(formValue);
       } else {
-        // Para creación, usar createIngredient con Firestore (SKU se genera automáticamente)
-        delete productData.code;
-        this.productService.createIngredient(productData)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (response) => {
-              // Mostrar el SKU asignado
-              this.toastr.success(`✅ Ingrediente creado exitosamente`, `SKU asignado: ${response.code}`);
-              this.close.emit(true);
-            },
-            error: (error) => {
-              console.error('Error creating ingredient:', error);
-              this.toastr.error('Error al crear el ingrediente');
-            }
-          });
+        this.saveFinalProduct(formValue, productType);
       }
     } else {
       this.markFormGroupTouched();
       this.toastr.warning('Por favor, completa todos los campos requeridos');
+    }
+  }
+
+  private saveIngredient(productData: any): void {
+    // El modal solo se usa para crear códigos de ingredientes
+    // No se maneja stock aquí
+    productData.stock = 0;
+    productData.minStock = 0;
+    productData.maxStock = null;
+    productData.productType = 'ingredient';
+    productData.price = 0;
+    productData.cost = 0;
+    productData.taxRate = 0;
+    
+    if (this.isEdit && this.product) {
+      // Para edición, usar updateIngredient con Firestore
+      const productId = (this.product as any)._firestoreId || 
+                       (typeof this.product.id === 'string' ? this.product.id : this.product.id.toString());
+      delete productData.code;
+      delete productData.productType; // No cambiar tipo en edición
+      this.productService.updateIngredient(productId, productData)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.toastr.success('Ingrediente actualizado exitosamente');
+            this.close.emit(true);
+          },
+          error: (error) => {
+            console.error('Error updating ingredient:', error);
+            this.toastr.error('Error al actualizar el ingrediente');
+          }
+        });
+    } else {
+      // Para creación, usar createIngredient con Firestore (SKU se genera automáticamente)
+      delete productData.code;
+      this.productService.createIngredient(productData)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.toastr.success(`✅ Ingrediente creado exitosamente`, `SKU asignado: ${response.code}`);
+            this.close.emit(true);
+          },
+          error: (error) => {
+            console.error('Error creating ingredient:', error);
+            this.toastr.error('Error al crear el ingrediente');
+          }
+        });
+    }
+  }
+
+  private saveFinalProduct(productData: any, productType: 'preparation' | 'final'): void {
+    // Preparar datos para producto final
+    const finalProductData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
+      code: productData.code || '', // El backend generará el código si no se proporciona
+      name: productData.name,
+      description: productData.description || undefined,
+      presentation: productData.presentation || undefined,
+      price: productData.price || 0,
+      cost: productData.cost || 0,
+      category: productData.category || undefined,
+      brand: undefined,
+      stock: 0, // Stock inicial en 0
+      minStock: 0,
+      maxStock: null,
+      isActive: productData.isActive !== false,
+      barcode: undefined,
+      taxRate: productData.taxRate || 13,
+      productType: productType,
+      unitOfMeasure: productData.unitOfMeasure
+    };
+
+    if (this.isEdit && this.product) {
+      // Editar producto final en backend API
+      this.productService.updateProduct(this.product.id, finalProductData)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.toastr.success('Producto actualizado exitosamente');
+            this.close.emit(true);
+          },
+          error: (error) => {
+            console.error('Error updating product:', error);
+            this.toastr.error(error.error?.detail || 'Error al actualizar el producto');
+          }
+        });
+    } else {
+      // Crear producto final en backend API
+      this.productService.createProduct(finalProductData)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.toastr.success(`✅ Producto ${productType === 'final' ? 'final' : 'de preparación'} creado exitosamente`);
+            this.close.emit(true);
+          },
+          error: (error) => {
+            console.error('Error creating product:', error);
+            this.toastr.error(error.error?.detail || 'Error al crear el producto');
+          }
+        });
     }
   }
 
