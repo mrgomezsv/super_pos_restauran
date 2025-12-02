@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -245,7 +245,7 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
     return ingredient ? ingredient.stock : 0;
   }
 
-  calculateCost(): void {
+  calculateCost(): number {
     // El costo se calcula en el backend, pero podemos mostrar un estimado
     // basado en los costos de los ingredientes
     let totalCost = 0;
@@ -334,9 +334,11 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
     });
     
     this.ingredientsFormArray.controls.forEach(control => {
-      Object.keys(control.controls).forEach(key => {
-        control.get(key)?.markAsTouched();
-      });
+      if (control instanceof FormGroup) {
+        Object.keys(control.controls).forEach(key => {
+          control.get(key)?.markAsTouched();
+        });
+      }
     });
   }
 
