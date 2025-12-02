@@ -73,7 +73,7 @@ export class LoginComponent implements OnInit {
           if (user.role === 'cashier') {
             this.router.navigate(['/pos']);
           } else {
-            this.router.navigate(['/dashboard']);
+          this.router.navigate(['/dashboard']);
           }
         },
         error: (error) => {
