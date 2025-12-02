@@ -224,9 +224,11 @@ export class ComplementDialogComponent implements OnInit, OnDestroy {
 
   private markFormGroupTouched(): void {
     this.complementsFormArray.controls.forEach(control => {
-      Object.keys(control.controls).forEach(key => {
-        control.get(key)?.markAsTouched();
-      });
+      if (control instanceof FormGroup) {
+        Object.keys(control.controls).forEach(key => {
+          control.get(key)?.markAsTouched();
+        });
+      }
     });
   }
 

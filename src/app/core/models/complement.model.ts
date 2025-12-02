@@ -32,3 +32,12 @@ export interface ProductComplementGroup {
   complements: ProductComplement[];
 }
 
+// Tipo para complementos en el carrito de compras
+export interface CartItemComplement {
+  complement_product_id: number;
+  complement_product_name: string;
+  complement_name: string; // Nombre del complemento (ej: "Papas Fritas")
+  price: number; // Precio adicional del complemento
+  quantity: number; // Cantidad del complemento
+}
+
