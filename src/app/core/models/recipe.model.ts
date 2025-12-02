@@ -25,6 +25,9 @@ export interface RecipeIngredient {
   recipe_id: number;
   ingredient_product_id: number;
   ingredient_product_name?: string;
+  ingredient_recipe_id?: number; // ID de receta si es una sub-receta
+  ingredient_recipe_name?: string; // Nombre de receta si es una sub-receta
+  is_sub_recipe: boolean; // Indica si es un ingrediente (false) o una sub-receta (true)
   quantity: number;
   unit_of_measure: string;
   unit_cost: number;
@@ -44,7 +47,9 @@ export interface RecipeCreate {
 }
 
 export interface RecipeIngredientCreate {
-  ingredient_product_id: number;
+  ingredient_product_id?: number; // Requerido si is_sub_recipe es false
+  ingredient_recipe_id?: number; // Requerido si is_sub_recipe es true
+  is_sub_recipe: boolean; // Indica si es un ingrediente o una sub-receta
   quantity: number;
   unit_of_measure: string;
   notes?: string;
