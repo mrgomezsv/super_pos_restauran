@@ -1,0 +1,105 @@
+<div class="complement-selector-dialog">
+  <div class="dialog-header">
+    <h2 class="dialog-title">
+      <mat-icon>add_circle</mat-icon>
+      Complementos para {{ product.name }}
+    </h2>
+    <button mat-icon-button class="close-btn" (click)="onCancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-content" *ngIf="!isLoading">
+    <div class="product-info">
+      <div class="info-card">
+        <mat-icon>inventory_2</mat-icon>
+        <div>
+          <h3>{{ product.name }}</h3>
+          <p>Cantidad: {{ quantity }} | Precio: {{ formatCurrency(product.price) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="complementForm" class="complement-form">
+      <div class="complements-section" *ngIf="complements.length > 0; else noComplements">
+        <h3 class="section-title">
+          <mat-icon>add_shopping_cart</mat-icon>
+          Selecciona los complementos
+        </h3>
+        <p class="section-description">
+          Puedes agregar complementos adicionales a este producto. Los complementos marcados como requeridos son obligatorios.
+        </p>
+
+        <div class="complements-list">
+          <div 
+            *ngFor="let complementControl of complementCheckboxes.controls; let i = index" 
+            class="complement-item"
+            [formGroup]="$any(complementControl)">
+            
+            <mat-checkbox 
+              formControlName="selected"
+              [disabled]="complementControl.get('is_required')?.value"
+              class="complement-checkbox">
+              <div class="complement-content">
+                <div class="complement-header">
+                  <span class="complement-name">{{ complementControl.get('complement_name')?.value }}</span>
+                  <span class="complement-badge required" *ngIf="complementControl.get('is_required')?.value">
+                    <mat-icon>check_circle</mat-icon>
+                    Requerido
+                  </span>
+                </div>
+                <div class="complement-details">
+                  <span class="complement-product">{{ complementControl.get('complement_product_name')?.value }}</span>
+                  <span class="complement-price">
+                    +{{ formatCurrency(complementControl.get('price')?.value || 0) }}
+                    <span class="per-unit">por unidad</span>
+                  </span>
+                </div>
+              </div>
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <div class="total-section">
+          <div class="total-row">
+            <span class="total-label">Total de Complementos:</span>
+            <span class="total-value">{{ formatCurrency(getTotalComplementPrice()) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noComplements>
+        <div class="empty-complements">
+          <mat-icon>info</mat-icon>
+          <p>Este producto no tiene complementos disponibles.</p>
+        </div>
+      </ng-template>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando complementos...</p>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div class="dialog-actions" *ngIf="!isLoading">
+    <button 
+      mat-button 
+      type="button"
+      (click)="onCancel()">
+      Cancelar
+    </button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      type="button"
+      (click)="onConfirm()"
+      [disabled]="hasRequiredComplements()">
+      <mat-icon>add_shopping_cart</mat-icon>
+      Agregar al Carrito
+    </button>
+  </div>
+</div>
+

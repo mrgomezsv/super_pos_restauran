@@ -16,12 +16,14 @@ import { SaleService } from '../../core/services/sale.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { BusinessService } from '../../core/services/business.service';
+import { ComplementService } from '../../core/services/complement.service';
 import { Product } from '../../core/models/product.model';
-import { CartItem, Sale } from '../../core/models/sale.model';
+import { CartItem, Sale, CartItemComplement } from '../../core/models/sale.model';
 import { User } from '../../core/models/user.model';
 import { BusinessConfiguration } from '../../core/models/business.model';
 import { PaymentDialogComponent } from './payment-dialog/payment-dialog.component';
 import { ReceiptModalComponent } from '../../shared/components/receipt-modal/receipt-modal.component';
+import { ComplementSelectorDialogComponent } from './complement-selector-dialog/complement-selector-dialog.component';
 
 interface CartTotals {
   subtotal: number;
@@ -89,6 +91,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private productService: ProductService,
     private saleService: SaleService,
     private authService: AuthService,
+    private complementService: ComplementService,
     private dialog: MatDialog,
     private overlay: Overlay,
     private toastr: ToastrService,
@@ -181,6 +184,27 @@ export class PosComponent implements OnInit, OnDestroy {
       next: (products) => {
         this.products = products;
         this.filteredProducts = products;
+        
+        // Verificar complementos para productos finales
+        const finalProducts = products.filter(p => p.productType === 'final');
+        if (finalProducts.length > 0) {
+          finalProducts.forEach(product => {
+            this.complementService.getProductComplements(product.id).pipe(
+              takeUntil(this.destroy$)
+            ).subscribe({
+              next: (complements) => {
+                if (complements.length > 0) {
+                  product.hasComplements = true;
+                }
+              },
+              error: () => {
+                // Si hay error, asumir que no tiene complementos
+                product.hasComplements = false;
+              }
+            });
+          });
+        }
+        
         this.loadCategories();
         this.isLoadingProducts = false;
       },
@@ -412,10 +436,51 @@ export class PosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (quantity > product.stock) {
+      this.notificationService.insufficientStock(product.name);
+      this.playSound('error');
+      return;
+    }
+
+    // Verificar si el producto tiene complementos disponibles
+    if (product.productType === 'final' && product.hasComplements) {
+      this.openComplementSelector(product, quantity);
+    } else {
+      this.addItemToCart(product, quantity, []);
+    }
+  }
+
+  private openComplementSelector(product: Product, quantity: number): void {
+    const dialogRef = this.dialog.open(ComplementSelectorDialogComponent, {
+      width: '600px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      hasBackdrop: true,
+      data: { product, quantity }
+    });
+
+    dialogRef.afterClosed().subscribe((selectedComplements: CartItemComplement[] | null) => {
+      if (selectedComplements !== null) {
+        // Si el usuario canceló, selectedComplements será null
+        // Si confirmó, selectedComplements será un array (puede estar vacío)
+        this.addItemToCart(product, quantity, selectedComplements || []);
+      }
+    });
+  }
+
+  private addItemToCart(product: Product, quantity: number, complements: CartItemComplement[]): void {
     // Obtener el precio correcto (con o sin IVA según configuración)
     const displayPrice = this.getDisplayPrice(product);
 
-    const existingItem = this.cartItems.find(item => item.productId === product.id);
+    // Calcular precio total incluyendo complementos
+    const complementTotal = complements.reduce((sum, comp) => sum + (comp.price * comp.quantity), 0);
+    const itemSubtotal = (displayPrice * quantity) + complementTotal;
+
+    const existingItem = this.cartItems.find(item => 
+      item.productId === product.id &&
+      JSON.stringify(item.complements || []) === JSON.stringify(complements)
+    );
     
     if (existingItem) {
       const newQuantity = existingItem.quantity + quantity;
@@ -425,21 +490,18 @@ export class PosComponent implements OnInit, OnDestroy {
         return;
       }
       existingItem.quantity = newQuantity;
-      existingItem.total = existingItem.unitPrice * existingItem.quantity;
+      existingItem.subtotal = (displayPrice * existingItem.quantity) + (complementTotal * existingItem.quantity);
+      existingItem.total = existingItem.subtotal * (1 + existingItem.tax / 100);
     } else {
-      if (quantity > product.stock) {
-        this.notificationService.insufficientStock(product.name);
-        this.playSound('error');
-        return;
-      }
       const newItem: CartItem = {
         productId: product.id,
         productName: product.name,
         unitPrice: displayPrice,
         quantity: quantity,
-        total: displayPrice * quantity,
-        tax: 13, // 13% de impuesto
-        subtotal: displayPrice * quantity
+        subtotal: itemSubtotal,
+        tax: product.taxRate || 13, // Usar el taxRate del producto o 13% por defecto
+        total: itemSubtotal * (1 + (product.taxRate || 13) / 100),
+        complements: complements.length > 0 ? complements : undefined
       };
       this.cartItems.push(newItem);
     }
@@ -456,7 +518,10 @@ export class PosComponent implements OnInit, OnDestroy {
     
     if (product && item.quantity < product.stock) {
       item.quantity += 1;
-      item.total = item.unitPrice * item.quantity;
+      // Recalcular total incluyendo complementos
+      const complementTotal = (item.complements || []).reduce((sum, comp) => sum + (comp.price * comp.quantity), 0);
+      item.subtotal = (item.unitPrice * item.quantity) + (complementTotal * item.quantity);
+      item.total = item.subtotal * (1 + item.tax / 100);
       this.calculateCartTotals();
       this.playSound('click');
     } else {
@@ -469,7 +534,10 @@ export class PosComponent implements OnInit, OnDestroy {
     const item = this.cartItems[index];
     if (item.quantity > 1) {
       item.quantity -= 1;
-      item.total = item.unitPrice * item.quantity;
+      // Recalcular total incluyendo complementos
+      const complementTotal = (item.complements || []).reduce((sum, comp) => sum + (comp.price * comp.quantity), 0);
+      item.subtotal = (item.unitPrice * item.quantity) + (complementTotal * item.quantity);
+      item.total = item.subtotal * (1 + item.tax / 100);
       this.calculateCartTotals();
       this.playSound('click');
     }
@@ -486,13 +554,18 @@ export class PosComponent implements OnInit, OnDestroy {
     
     if (product && quantity <= product.stock) {
       item.quantity = quantity;
-      item.total = item.unitPrice * item.quantity;
+      // Recalcular total incluyendo complementos
+      const complementTotal = (item.complements || []).reduce((sum, comp) => sum + (comp.price * comp.quantity), 0);
+      item.subtotal = (item.unitPrice * item.quantity) + (complementTotal * item.quantity);
+      item.total = item.subtotal * (1 + item.tax / 100);
       this.calculateCartTotals();
     } else {
       this.toastr.warning('No hay suficiente stock disponible');
       // Restaurar cantidad anterior
       item.quantity = Math.min(quantity, product?.stock || 1);
-      item.total = item.unitPrice * item.quantity;
+      const complementTotal = (item.complements || []).reduce((sum, comp) => sum + (comp.price * comp.quantity), 0);
+      item.subtotal = (item.unitPrice * item.quantity) + (complementTotal * item.quantity);
+      item.total = item.subtotal * (1 + item.tax / 100);
       this.calculateCartTotals();
     }
   }
@@ -518,7 +591,10 @@ export class PosComponent implements OnInit, OnDestroy {
     // Si los precios ya incluyen IVA, el total es simplemente la suma de los items
     if (this.businessConfig?.showPricesWithTax) {
       const total = this.cartItems.reduce((sum, item) => {
-        return sum + (item.unitPrice * item.quantity);
+        // Incluir complementos en el cálculo
+        const complementTotal = (item.complements || []).reduce((compSum, comp) => 
+          compSum + (comp.price * comp.quantity), 0);
+        return sum + (item.unitPrice * item.quantity) + complementTotal;
       }, 0);
       
       // Calcular el subtotal (precio sin IVA) y el impuesto desde el total
@@ -533,14 +609,20 @@ export class PosComponent implements OnInit, OnDestroy {
       };
     } else {
       // Cálculo original cuando los precios NO incluyen IVA
+      // Incluir complementos en el subtotal
       const subtotal = this.cartItems.reduce((sum, item) => {
         const itemTotal = item.unitPrice * item.quantity;
-        return sum + itemTotal;
+        const complementTotal = (item.complements || []).reduce((compSum, comp) => 
+          compSum + (comp.price * comp.quantity), 0);
+        return sum + itemTotal + complementTotal;
       }, 0);
 
       const taxAmount = this.cartItems.reduce((sum, item) => {
         const itemTotal = item.unitPrice * item.quantity;
-        const itemTax = itemTotal * (item.tax / 100);
+        const complementTotal = (item.complements || []).reduce((compSum, comp) => 
+          compSum + (comp.price * comp.quantity), 0);
+        const itemSubtotal = itemTotal + complementTotal;
+        const itemTax = itemSubtotal * (item.tax / 100);
         return sum + itemTax;
       }, 0);
 
