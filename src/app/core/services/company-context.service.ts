@@ -8,10 +8,10 @@ export interface CompanyInfo extends UserCompany {}
 export interface CompanyContext {
   user: {
     id: string;
-    name: string;
-    email: string;
-    role: string;
-    is_sudo: boolean;
+  name: string;
+  email: string;
+  role: string;
+  is_sudo: boolean;
   };
   company?: CompanyInfo;
   permissions: string[];
@@ -45,8 +45,8 @@ export class CompanyContextService {
       permissions: user.permissions ?? []
     };
 
-    this.currentContextSubject.next(context);
-    localStorage.setItem('companyContext', JSON.stringify(context));
+        this.currentContextSubject.next(context);
+        localStorage.setItem('companyContext', JSON.stringify(context));
   }
 
   getCurrentContext(): CompanyContext | null {
@@ -99,7 +99,7 @@ export class CompanyContextService {
 
   restoreContextFromStorage(): void {
     const savedContext = localStorage.getItem('companyContext');
-
+    
     if (savedContext) {
       try {
         const context: CompanyContext = JSON.parse(savedContext);
