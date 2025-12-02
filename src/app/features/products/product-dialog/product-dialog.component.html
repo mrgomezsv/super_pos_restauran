@@ -5,9 +5,17 @@
       <div class="header-content">
         <mat-icon class="header-icon">{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
         <div class="header-text">
-          <h2 class="modal-title">{{ isEdit ? 'Editar Ingrediente' : 'Nuevo Ingrediente' }}</h2>
+          <h2 class="modal-title">
+            {{ isEdit 
+              ? (productType === 'ingredient' ? 'Editar Ingrediente' : 'Editar Producto')
+              : (productType === 'ingredient' ? 'Nuevo Ingrediente' : 'Nuevo Producto')
+            }}
+          </h2>
           <p class="modal-subtitle">
-            {{ isEdit ? 'Actualiza la información del ingrediente' : 'Registra un ingrediente para tu inventario y recetas' }}
+            {{ isEdit 
+              ? (productType === 'ingredient' ? 'Actualiza la información del ingrediente' : 'Actualiza la información del producto')
+              : (productType === 'ingredient' ? 'Registra un ingrediente para tu inventario y recetas' : 'Registra un producto final para venta')
+            }}
           </p>
         </div>
       </div>
@@ -19,11 +27,56 @@
     <!-- Contenido del Modal -->
     <div class="modal-content">
       <form [formGroup]="productForm" class="product-form">
-        <!-- Datos del Ingrediente -->
+        <!-- Tipo de Producto -->
+        <div class="form-section" *ngIf="!isEdit">
+          <h3 class="section-title">
+            <mat-icon>category</mat-icon>
+            Tipo de Producto
+          </h3>
+          
+          <mat-form-field appearance="outline" class="form-field full-width">
+            <mat-label>Tipo de Producto *</mat-label>
+            <mat-select formControlName="productType" panelClass="product-type-select-panel">
+              <mat-option value="ingredient">
+                <div class="product-type-option">
+                  <mat-icon>egg_alt</mat-icon>
+                  <div>
+                    <strong>Ingrediente</strong>
+                    <p>Materia prima para recetas (almacenado en Firestore)</p>
+                  </div>
+                </div>
+              </mat-option>
+              <mat-option value="preparation">
+                <div class="product-type-option">
+                  <mat-icon>restaurant</mat-icon>
+                  <div>
+                    <strong>Preparación</strong>
+                    <p>Producto intermedio para recetas (almacenado en Backend)</p>
+                  </div>
+                </div>
+              </mat-option>
+              <mat-option value="final">
+                <div class="product-type-option">
+                  <mat-icon>inventory_2</mat-icon>
+                  <div>
+                    <strong>Producto Final</strong>
+                    <p>Producto terminado para venta (almacenado en Backend)</p>
+                  </div>
+                </div>
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>category</mat-icon>
+            <mat-error *ngIf="productForm.get('productType')?.hasError('required')">
+              El tipo de producto es requerido
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Datos del Producto -->
         <div class="form-section">
           <h3 class="section-title">
             <mat-icon>info</mat-icon>
-            Datos del Ingrediente
+            {{ productType === 'ingredient' ? 'Datos del Ingrediente' : 'Datos del Producto' }}
           </h3>
           
           <div class="form-row">
@@ -80,6 +133,96 @@
             <mat-icon matSuffix>inventory</mat-icon>
             <mat-hint align="end">{{ productForm.get('presentation')?.value?.length || 0 }}/50</mat-hint>
           </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field full-width" *ngIf="productType !== 'ingredient'">
+            <mat-label>Descripción</mat-label>
+            <textarea 
+              matInput 
+              formControlName="description" 
+              placeholder="Descripción detallada del producto"
+              rows="3"
+              maxlength="500">
+            </textarea>
+            <mat-hint align="end">{{ productForm.get('description')?.value?.length || 0 }}/500</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field" *ngIf="productType !== 'ingredient'">
+            <mat-label>Categoría</mat-label>
+            <input 
+              matInput 
+              formControlName="category" 
+              placeholder="Ej: Bebidas, Comidas, Postres"
+              autocomplete="off"
+              maxlength="50">
+            <mat-icon matPrefix>label</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <!-- Información de Precios (Solo para productos finales) -->
+        <div class="form-section" *ngIf="productType !== 'ingredient'">
+          <h3 class="section-title">
+            <mat-icon>attach_money</mat-icon>
+            Información de Precios
+          </h3>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Precio de Venta *</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="price" 
+                placeholder="0.00"
+                min="0"
+                step="0.01">
+              <mat-icon matPrefix>monetization_on</mat-icon>
+              <span matTextPrefix>$&nbsp;</span>
+              <mat-error *ngIf="productForm.get('price')?.hasError('required')">
+                El precio es requerido
+              </mat-error>
+              <mat-error *ngIf="productForm.get('price')?.hasError('min')">
+                El precio debe ser mayor o igual a 0
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Costo *</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="cost" 
+                placeholder="0.00"
+                min="0"
+                step="0.01">
+              <mat-icon matPrefix>account_balance_wallet</mat-icon>
+              <span matTextPrefix>$&nbsp;</span>
+              <mat-error *ngIf="productForm.get('cost')?.hasError('required')">
+                El costo es requerido
+              </mat-error>
+              <mat-error *ngIf="productForm.get('cost')?.hasError('min')">
+                El costo debe ser mayor o igual a 0
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Impuesto (%) *</mat-label>
+              <input 
+                matInput 
+                type="number" 
+                formControlName="taxRate" 
+                placeholder="13"
+                min="0"
+                max="100"
+                step="0.01">
+              <mat-icon matPrefix>percent</mat-icon>
+              <mat-error *ngIf="productForm.get('taxRate')?.hasError('required')">
+                El impuesto es requerido
+              </mat-error>
+              <mat-error *ngIf="productForm.get('taxRate')?.hasError('min') || productForm.get('taxRate')?.hasError('max')">
+                El impuesto debe estar entre 0 y 100
+              </mat-error>
+            </mat-form-field>
+          </div>
         </div>
 
         <!-- Información Adicional -->
@@ -93,10 +236,17 @@
             <mat-checkbox formControlName="isActive" class="status-checkbox">
               <span class="checkbox-label">
                 <mat-icon>check_circle</mat-icon>
-                <span class="checkbox-text">Ingrediente activo</span>
+                <span class="checkbox-text">
+                  {{ productType === 'ingredient' ? 'Ingrediente activo' : 'Producto activo' }}
+                </span>
               </span>
             </mat-checkbox>
-            <p class="checkbox-hint">Los ingredientes inactivos no aparecerán como disponibles en producción ni recetas.</p>
+            <p class="checkbox-hint">
+              {{ productType === 'ingredient' 
+                ? 'Los ingredientes inactivos no aparecerán como disponibles en producción ni recetas.'
+                : 'Los productos inactivos no aparecerán disponibles para venta.'
+              }}
+            </p>
           </div>
         </div>
       </form>
@@ -115,7 +265,10 @@
         [disabled]="productForm.invalid || productForm.pristine"
         class="save-btn">
         <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
-        {{ isEdit ? 'Actualizar ingrediente' : 'Registrar ingrediente' }}
+        {{ isEdit 
+          ? (productType === 'ingredient' ? 'Actualizar ingrediente' : 'Actualizar producto')
+          : (productType === 'ingredient' ? 'Registrar ingrediente' : 'Registrar producto')
+        }}
       </button>
     </div>
   </div>
