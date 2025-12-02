@@ -51,6 +51,7 @@ export class CreateProductionDialogComponent implements OnInit, OnDestroy {
   isSaving = false;
   recipe: Recipe | null = null;
   ingredients: Product[] = [];
+  allRecipes: Recipe[] = []; // Todas las recetas para expandir sub-recetas
   ingredientAvailability: IngredientAvailability[] = [];
   hasInsufficientStock = false;
 
@@ -107,18 +108,20 @@ export class CreateProductionDialogComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    // Cargar ingredientes desde Firestore
-    this.productService.getIngredients().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (ingredients) => {
+    // Cargar ingredientes y recetas para expandir sub-recetas
+    forkJoin({
+      ingredients: this.productService.getIngredients().pipe(takeUntil(this.destroy$)),
+      recipes: this.recipeService.getRecipes().pipe(takeUntil(this.destroy$))
+    }).subscribe({
+      next: ({ ingredients, recipes }) => {
         this.ingredients = ingredients;
+        this.allRecipes = recipes;
         this.calculateIngredientAvailability();
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading ingredients:', error);
-        this.toastr.error('Error al cargar los ingredientes');
+        console.error('Error loading data:', error);
+        this.toastr.error('Error al cargar los datos');
         this.isLoading = false;
       }
     });
@@ -131,30 +134,82 @@ export class CreateProductionDialogComponent implements OnInit, OnDestroy {
     const batchSize = this.recipe.batch_size || 1;
     const multiplier = quantityToProduce / batchSize;
 
-    this.ingredientAvailability = this.recipe.ingredients.map(recipeIngredient => {
-      const ingredient = this.ingredients.find(i => i.id === recipeIngredient.ingredient_product_id);
-      const required = recipeIngredient.quantity * multiplier;
-      const available = ingredient?.stock || 0;
-      const isAvailable = available >= required;
-      const shortfall = Math.max(0, required - available);
-
-      // Calcular costo unitario
-      const unitCost = ingredient ? (ingredient.cost > 0 ? ingredient.cost : ingredient.price) : 0;
-
-      return {
-        ingredientId: recipeIngredient.ingredient_product_id,
-        ingredientName: ingredient?.name || recipeIngredient.ingredient_product_name || 'Desconocido',
-        required: required,
-        available: available,
-        unitOfMeasure: recipeIngredient.unit_of_measure,
-        unitCost: unitCost,
-        isAvailable: isAvailable,
-        shortfall: shortfall
-      };
+    // Expandir sub-recetas y calcular todos los ingredientes base requeridos
+    const expandedIngredients = this.expandSubRecipes(this.recipe.ingredients, multiplier);
+    
+    // Agrupar ingredientes por ID y sumar cantidades
+    const ingredientMap = new Map<number, IngredientAvailability>();
+    
+    expandedIngredients.forEach(expanded => {
+      const existing = ingredientMap.get(expanded.ingredientId);
+      if (existing) {
+        existing.required += expanded.required;
+        existing.shortfall = Math.max(0, existing.required - existing.available);
+        existing.isAvailable = existing.available >= existing.required;
+      } else {
+        ingredientMap.set(expanded.ingredientId, expanded);
+      }
     });
+
+    this.ingredientAvailability = Array.from(ingredientMap.values());
 
     // Verificar si hay stock insuficiente
     this.hasInsufficientStock = this.ingredientAvailability.some(ing => !ing.isAvailable);
+  }
+
+  /**
+   * Expande sub-recetas recursivamente para obtener todos los ingredientes base
+   */
+  private expandSubRecipes(ingredients: any[], multiplier: number, visitedRecipes: Set<number> = new Set()): IngredientAvailability[] {
+    const expanded: IngredientAvailability[] = [];
+
+    ingredients.forEach(recipeIngredient => {
+      if (recipeIngredient.is_sub_recipe && recipeIngredient.ingredient_recipe_id) {
+        // Es una sub-receta, expandirla
+        const subRecipeId = recipeIngredient.ingredient_recipe_id;
+        
+        // Prevenir dependencias circulares
+        if (visitedRecipes.has(subRecipeId)) {
+          console.warn(`Dependencia circular detectada en receta ${subRecipeId}`);
+          return;
+        }
+
+        const subRecipe = this.allRecipes.find(r => r.id === subRecipeId);
+        if (subRecipe && subRecipe.ingredients) {
+          // Calcular el multiplicador para la sub-receta
+          const subRecipeBatchSize = subRecipe.batch_size || 1;
+          const subRecipeMultiplier = (recipeIngredient.quantity * multiplier) / subRecipeBatchSize;
+          
+          // Expandir recursivamente
+          visitedRecipes.add(subRecipeId);
+          const subExpanded = this.expandSubRecipes(subRecipe.ingredients, subRecipeMultiplier, new Set(visitedRecipes));
+          visitedRecipes.delete(subRecipeId);
+          
+          expanded.push(...subExpanded);
+        }
+      } else {
+        // Es un ingrediente base
+        const ingredient = this.ingredients.find(i => i.id === recipeIngredient.ingredient_product_id);
+        const required = recipeIngredient.quantity * multiplier;
+        const available = ingredient?.stock || 0;
+        const isAvailable = available >= required;
+        const shortfall = Math.max(0, required - available);
+        const unitCost = ingredient ? (ingredient.cost > 0 ? ingredient.cost : ingredient.price) : 0;
+
+        expanded.push({
+          ingredientId: recipeIngredient.ingredient_product_id,
+          ingredientName: ingredient?.name || recipeIngredient.ingredient_product_name || 'Desconocido',
+          required: required,
+          available: available,
+          unitOfMeasure: recipeIngredient.unit_of_measure,
+          unitCost: unitCost,
+          isAvailable: isAvailable,
+          shortfall: shortfall
+        });
+      }
+    });
+
+    return expanded;
   }
 
   getIngredientStatusClass(ingredient: IngredientAvailability): string {
