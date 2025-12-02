@@ -117,22 +117,64 @@
           </div>
         </div>
 
-        <!-- Buscar Ingrediente -->
+        <!-- Selector de Tipo y Búsqueda -->
         <div class="ingredient-search" *ngIf="!viewMode">
-          <mat-form-field appearance="outline" class="full-width">
+          <div class="type-selector">
+            <mat-form-field appearance="outline" class="type-field">
+              <mat-label>Tipo</mat-label>
+              <mat-select [formControl]="ingredientTypeControl">
+                <mat-option value="ingredient">
+                  <div class="type-option">
+                    <mat-icon>egg_alt</mat-icon>
+                    <span>Ingrediente</span>
+                  </div>
+                </mat-option>
+                <mat-option value="recipe">
+                  <div class="type-option">
+                    <mat-icon>restaurant</mat-icon>
+                    <span>Sub-Receta</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>category</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <!-- Buscar Ingrediente -->
+          <mat-form-field appearance="outline" class="full-width" *ngIf="ingredientTypeControl.value === 'ingredient'">
             <mat-label>Buscar Ingrediente</mat-label>
             <input 
               matInput 
               [formControl]="ingredientSearchControl"
-              [matAutocomplete]="auto"
+              [matAutocomplete]="ingredientAuto"
               placeholder="Buscar por código o nombre">
             <mat-icon matPrefix>search</mat-icon>
-            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onIngredientSelected($event.option.value)">
+            <mat-autocomplete #ingredientAuto="matAutocomplete" (optionSelected)="onIngredientSelected($event.option.value)">
               <mat-option *ngFor="let ingredient of filteredIngredients" [value]="ingredient.id">
                 <div class="ingredient-option">
                   <span class="ingredient-code">{{ ingredient.code }}</span>
                   <span class="ingredient-name">{{ ingredient.name }}</span>
                   <span class="ingredient-stock">Stock: {{ ingredient.stock }} {{ ingredient.unitOfMeasure }}</span>
+                </div>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <!-- Buscar Sub-Receta -->
+          <mat-form-field appearance="outline" class="full-width" *ngIf="ingredientTypeControl.value === 'recipe'">
+            <mat-label>Buscar Sub-Receta</mat-label>
+            <input 
+              matInput 
+              [formControl]="recipeSearchControl"
+              [matAutocomplete]="recipeAuto"
+              placeholder="Buscar receta por código o nombre">
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-autocomplete #recipeAuto="matAutocomplete" (optionSelected)="onRecipeSelected($event.option.value)">
+              <mat-option *ngFor="let recipe of filteredRecipes" [value]="recipe.id">
+                <div class="recipe-option">
+                  <span class="recipe-code">{{ recipe.code }}</span>
+                  <span class="recipe-name">{{ recipe.name }}</span>
+                  <span class="recipe-batch">Lote: {{ recipe.batch_size }} {{ recipe.unit_of_measure }}</span>
                 </div>
               </mat-option>
             </mat-autocomplete>
@@ -148,13 +190,21 @@
             
             <div class="ingredient-header">
               <div class="ingredient-info">
-                <mat-icon>egg_alt</mat-icon>
-                <span class="ingredient-name-display">
-                  {{ getIngredientName(ingredientGroup.get('ingredient_product_id')?.value) }}
-                </span>
-                <span class="ingredient-stock-display">
-                  (Stock: {{ getIngredientStock(ingredientGroup.get('ingredient_product_id')?.value) }})
-                </span>
+                <mat-icon>{{ ingredientGroup.get('is_sub_recipe')?.value ? 'restaurant' : 'egg_alt' }}</mat-icon>
+                <div class="ingredient-details-info">
+                  <div class="ingredient-type-badge" [ngClass]="ingredientGroup.get('is_sub_recipe')?.value ? 'sub-recipe' : 'ingredient'">
+                    {{ getItemType(ingredientGroup) }}
+                  </div>
+                  <span class="ingredient-name-display">
+                    {{ getItemName(ingredientGroup) }}
+                  </span>
+                  <span class="ingredient-stock-display" *ngIf="!ingredientGroup.get('is_sub_recipe')?.value">
+                    (Stock: {{ getIngredientStock(ingredientGroup.get('ingredient_product_id')?.value) }})
+                  </span>
+                  <span class="recipe-batch-display" *ngIf="ingredientGroup.get('is_sub_recipe')?.value">
+                    (Lote: {{ getRecipeBatchSize(ingredientGroup.get('ingredient_recipe_id')?.value) }})
+                  </span>
+                </div>
               </div>
               <button 
                 *ngIf="!viewMode"
@@ -162,12 +212,36 @@
                 type="button"
                 color="warn" 
                 (click)="removeIngredient(i)"
-                [matTooltip]="'Eliminar ingrediente'">
+                [matTooltip]="'Eliminar ' + (ingredientGroup.get('is_sub_recipe')?.value ? 'sub-receta' : 'ingrediente')">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
 
             <div class="ingredient-fields">
+              <mat-form-field appearance="outline" *ngIf="!ingredientGroup.get('is_sub_recipe')?.value">
+                <mat-label>Ingrediente</mat-label>
+                <mat-select formControlName="ingredient_product_id" required>
+                  <mat-option *ngFor="let ingredient of ingredients" [value]="ingredient.id">
+                    {{ ingredient.code }} - {{ ingredient.name }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="ingredientGroup.get('ingredient_product_id')?.hasError('required')">
+                  Seleccione un ingrediente
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" *ngIf="ingredientGroup.get('is_sub_recipe')?.value">
+                <mat-label>Sub-Receta</mat-label>
+                <mat-select formControlName="ingredient_recipe_id" required>
+                  <mat-option *ngFor="let recipe of availableRecipes" [value]="recipe.id">
+                    {{ recipe.code }} - {{ recipe.name }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="ingredientGroup.get('ingredient_recipe_id')?.hasError('required')">
+                  Seleccione una sub-receta
+                </mat-error>
+              </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Cantidad</mat-label>
                 <input 
