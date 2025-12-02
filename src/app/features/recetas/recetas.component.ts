@@ -19,6 +19,7 @@ import { RecipeService } from '../../core/services/recipe.service';
 import { ProductService } from '../../core/services/product.service';
 import { Recipe, RecipeCreate } from '../../core/models/recipe.model';
 import { Product } from '../../core/models/product.model';
+import { RecipeDialogComponent } from './recipe-dialog/recipe-dialog.component';
 
 @Component({
     selector: 'app-recetas',
@@ -128,18 +129,68 @@ export class RecetasComponent implements OnInit, OnDestroy {
   }
 
   openRecipeDialog(recipe?: Recipe): void {
-    // TODO: Implementar diálogo de receta
-    this.toastr.info('Diálogo de receta en desarrollo');
+    const dialogRef = this.dialog.open(RecipeDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      hasBackdrop: true,
+      data: { 
+        recipe: recipe || null,
+        viewMode: false
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadRecipes();
+      }
+    });
   }
 
   deleteRecipe(recipe: Recipe): void {
-    // TODO: Implementar confirmación y eliminación
-    this.toastr.info('Eliminación de receta en desarrollo');
+    if (confirm(`¿Está seguro de eliminar la receta "${recipe.name}"?`)) {
+      this.recipeService.deleteRecipe(recipe.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.toastr.success('Receta eliminada exitosamente');
+            this.loadRecipes();
+          },
+          error: (error) => {
+            console.error('Error deleting recipe:', error);
+            this.toastr.error(error.error?.detail || 'Error al eliminar la receta');
+          }
+        });
+    }
   }
 
   viewRecipeDetails(recipe: Recipe): void {
-    // TODO: Implementar vista de detalles
-    this.toastr.info('Vista de detalles en desarrollo');
+    // Cargar receta completa con ingredientes
+    this.recipeService.getRecipe(recipe.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (fullRecipe) => {
+          // Abrir diálogo en modo solo lectura
+          const dialogRef = this.dialog.open(RecipeDialogComponent, {
+            width: '900px',
+            maxWidth: '95vw',
+            maxHeight: '90vh',
+            disableClose: false,
+            hasBackdrop: true,
+            data: { 
+              recipe: fullRecipe, 
+              viewMode: true 
+            }
+          });
+
+          dialogRef.afterClosed().subscribe();
+        },
+        error: (error) => {
+          console.error('Error loading recipe details:', error);
+          this.toastr.error('Error al cargar los detalles de la receta');
+        }
+      });
   }
 }
 
