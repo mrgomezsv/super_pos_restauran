@@ -50,7 +50,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   filtersForm: FormGroup;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   private destroy$ = new Subject<void>();
-
+  
   // Dropdown states
   isStatusDropdownOpen = false;
 
