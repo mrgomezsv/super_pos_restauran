@@ -53,8 +53,14 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
   ingredients: Product[] = [];
   filteredIngredients: Product[] = [];
   
+  // Recetas disponibles para usar como sub-recetas
+  availableRecipes: Recipe[] = [];
+  filteredRecipes: Recipe[] = [];
+  
   // Autocomplete
   ingredientSearchControl = new FormControl('');
+  recipeSearchControl = new FormControl('');
+  ingredientTypeControl = new FormControl<'ingredient' | 'recipe'>('ingredient');
   
   private destroy$ = new Subject<void>();
 
@@ -124,14 +130,18 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     );
     
+    // Cargar recetas disponibles (excluyendo la receta actual para evitar dependencias circulares)
+    const recipes$ = this.recipeService.getRecipes().pipe(
+      takeUntil(this.destroy$)
+    );
+    
     forkJoin({
       products: finalProducts$,
-      ingredients: ingredients$
+      ingredients: ingredients$,
+      recipes: recipes$
     }).subscribe({
-      next: ({ products, ingredients }) => {
+      next: ({ products, ingredients, recipes }) => {
         // Filtrar productos finales (que no sean ingredientes)
-        // En el backend, los productos finales deberían tener productType: 'final' o 'preparation'
-        // Por ahora, asumimos que todos los productos del backend son finales
         this.finalProducts = products.filter(p => 
           p.productType === 'final' || 
           p.productType === 'preparation' || 
@@ -143,6 +153,12 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
         // Los ingredientes vienen de Firestore
         this.ingredients = ingredients.filter(i => i.isActive);
         this.filteredIngredients = [...this.ingredients];
+        
+        // Filtrar recetas disponibles (excluir la receta actual si estamos editando)
+        this.availableRecipes = recipes.filter(r => 
+          r.isActive && (!this.recipe || r.id !== this.recipe.id)
+        );
+        this.filteredRecipes = [...this.availableRecipes];
         
         this.isLoading = false;
       },
@@ -167,10 +183,14 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
       preparation_time: this.recipe.preparation_time
     });
     
-    // Cargar ingredientes de la receta
+    // Cargar ingredientes y sub-recetas de la receta
     if (this.recipe.ingredients && this.recipe.ingredients.length > 0) {
       this.recipe.ingredients.forEach(ing => {
-        this.addIngredient(ing.ingredient_product_id, ing.quantity, ing.unit_of_measure);
+        if (ing.is_sub_recipe && ing.ingredient_recipe_id) {
+          this.addIngredient(undefined, ing.quantity, ing.unit_of_measure, true, ing.ingredient_recipe_id);
+        } else {
+          this.addIngredient(ing.ingredient_product_id, ing.quantity, ing.unit_of_measure, false);
+        }
       });
     }
   }
@@ -187,18 +207,57 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
         );
       }
     });
+
+    this.recipeSearchControl.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
+      if (typeof value === 'string') {
+        const searchTerm = value.toLowerCase();
+        this.filteredRecipes = this.availableRecipes.filter(recipe =>
+          recipe.name.toLowerCase().includes(searchTerm) ||
+          recipe.code.toLowerCase().includes(searchTerm)
+        );
+      }
+    });
   }
 
-  addIngredient(ingredientId?: number, quantity?: number, unitOfMeasure?: string): void {
+  addIngredient(ingredientId?: number, quantity?: number, unitOfMeasure?: string, isSubRecipe: boolean = false, recipeId?: number): void {
     const ingredientGroup = this.fb.group({
-      ingredient_product_id: [ingredientId || '', Validators.required],
+      is_sub_recipe: [isSubRecipe, Validators.required],
+      ingredient_product_id: [ingredientId || null],
+      ingredient_recipe_id: [recipeId || null],
       quantity: [quantity || 0, [Validators.required, Validators.min(0.001)]],
       unit_of_measure: [unitOfMeasure || 'unidad', Validators.required],
       notes: ['']
     });
+
+    // Validación condicional: requerir ingredient_product_id si no es sub-receta, o ingredient_recipe_id si es sub-receta
+    ingredientGroup.get('is_sub_recipe')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isSub => {
+      const productIdControl = ingredientGroup.get('ingredient_product_id');
+      const recipeIdControl = ingredientGroup.get('ingredient_recipe_id');
+      
+      if (isSub) {
+        productIdControl?.clearValidators();
+        recipeIdControl?.setValidators([Validators.required]);
+      } else {
+        productIdControl?.setValidators([Validators.required]);
+        recipeIdControl?.clearValidators();
+      }
+      
+      productIdControl?.updateValueAndValidity({ emitEvent: false });
+      recipeIdControl?.updateValueAndValidity({ emitEvent: false });
+    });
     
-    // Calcular costo cuando cambie el ingrediente o cantidad
+    // Calcular costo cuando cambie el ingrediente, receta o cantidad
     ingredientGroup.get('ingredient_product_id')?.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.calculateCost();
+    });
+
+    ingredientGroup.get('ingredient_recipe_id')?.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.calculateCost();
@@ -223,16 +282,97 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
     if (ingredient) {
       // Agregar ingrediente si no existe ya
       const existingIndex = this.ingredientsFormArray.controls.findIndex(
-        control => control.get('ingredient_product_id')?.value === ingredientId
+        control => !control.get('is_sub_recipe')?.value && 
+                   control.get('ingredient_product_id')?.value === ingredientId
       );
       
       if (existingIndex === -1) {
-        this.addIngredient(ingredientId, 1, ingredient.unitOfMeasure);
+        this.addIngredient(ingredientId, 1, ingredient.unitOfMeasure, false);
         this.ingredientSearchControl.setValue('');
       } else {
         this.toastr.warning('Este ingrediente ya está en la receta');
       }
     }
+  }
+
+  onRecipeSelected(recipeId: number): void {
+    const recipe = this.availableRecipes.find(r => r.id === recipeId);
+    if (recipe) {
+      // Validar dependencia circular (mejorado)
+      if (this.checkCircularDependency(recipeId)) {
+        this.toastr.error('No se puede agregar esta receta: crearía una dependencia circular');
+        return;
+      }
+
+      // Agregar sub-receta si no existe ya
+      const existingIndex = this.ingredientsFormArray.controls.findIndex(
+        control => control.get('is_sub_recipe')?.value && 
+                   control.get('ingredient_recipe_id')?.value === recipeId
+      );
+      
+      if (existingIndex === -1) {
+        this.addIngredient(undefined, 1, recipe.unit_of_measure, true, recipeId);
+        this.recipeSearchControl.setValue('');
+      } else {
+        this.toastr.warning('Esta receta ya está en la lista');
+      }
+    }
+  }
+
+  private wouldCreateCircularDependency(recipeId: number): boolean {
+    // Si estamos editando y la receta a agregar es la misma que estamos editando
+    if (this.recipe && recipeId === this.recipe.id) {
+      return true;
+    }
+
+    // Verificar si ya tenemos esta receta en los ingredientes actuales
+    const alreadyInList = this.ingredientsFormArray.controls.some(control => {
+      return control.get('is_sub_recipe')?.value && 
+             control.get('ingredient_recipe_id')?.value === recipeId;
+    });
+
+    if (alreadyInList) {
+      return false; // Ya está en la lista, no es circular
+    }
+
+    // Verificar dependencias indirectas: cargar la receta y verificar si contiene esta receta
+    // Por ahora, solo verificamos dependencias directas en los ingredientes actuales
+    // El backend debería hacer una validación más completa
+    return false;
+  }
+
+  // Método para validar dependencias circulares recursivamente (mejorado)
+  private checkCircularDependency(recipeId: number, visited: Set<number> = new Set()): boolean {
+    if (visited.has(recipeId)) {
+      return true; // Dependencia circular detectada
+    }
+
+    // Si estamos editando esta receta, es circular
+    if (this.recipe && recipeId === this.recipe.id) {
+      return true;
+    }
+
+    visited.add(recipeId);
+
+    // Verificar si alguno de los ingredientes actuales es esta receta
+    const hasThisRecipe = this.ingredientsFormArray.controls.some(control => {
+      const isSubRecipe = control.get('is_sub_recipe')?.value;
+      const subRecipeId = control.get('ingredient_recipe_id')?.value;
+      
+      if (isSubRecipe && subRecipeId === recipeId) {
+        return true;
+      }
+      
+      // Verificar recursivamente si alguna sub-receta contiene esta receta
+      if (isSubRecipe && subRecipeId) {
+        return this.checkCircularDependency(subRecipeId, new Set(visited));
+      }
+      
+      return false;
+    });
+
+    visited.delete(recipeId);
+    return hasThisRecipe;
   }
 
   getIngredientName(ingredientId: number): string {
@@ -245,26 +385,69 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
     return ingredient ? ingredient.stock : 0;
   }
 
+  getRecipeName(recipeId: number): string {
+    const recipe = this.availableRecipes.find(r => r.id === recipeId);
+    return recipe ? recipe.name : 'Receta desconocida';
+  }
+
+  getRecipeBatchSize(recipeId: number): string {
+    const recipe = this.availableRecipes.find(r => r.id === recipeId);
+    if (recipe) {
+      return `${recipe.batch_size} ${recipe.unit_of_measure}`;
+    }
+    return 'N/A';
+  }
+
+  getItemName(control: any): string {
+    const isSubRecipe = control.get('is_sub_recipe')?.value;
+    if (isSubRecipe) {
+      const recipeId = control.get('ingredient_recipe_id')?.value;
+      return recipeId ? this.getRecipeName(recipeId) : 'Receta no seleccionada';
+    } else {
+      const ingredientId = control.get('ingredient_product_id')?.value;
+      return ingredientId ? this.getIngredientName(ingredientId) : 'Ingrediente no seleccionado';
+    }
+  }
+
+  getItemType(control: any): string {
+    return control.get('is_sub_recipe')?.value ? 'Sub-Receta' : 'Ingrediente';
+  }
+
   calculateCost(): number {
     // El costo se calcula en el backend, pero podemos mostrar un estimado
-    // basado en los costos de los ingredientes
+    // basado en los costos de los ingredientes y sub-recetas (cálculo en cascada)
     let totalCost = 0;
     
     this.ingredientsFormArray.controls.forEach(control => {
-      const ingredientId = control.get('ingredient_product_id')?.value;
+      const isSubRecipe = control.get('is_sub_recipe')?.value;
       const quantity = control.get('quantity')?.value || 0;
       
-      if (ingredientId) {
-        const ingredient = this.ingredients.find(i => i.id === ingredientId);
-        if (ingredient) {
-          // Usar costo del ingrediente si está disponible, sino precio
-          const unitCost = ingredient.cost > 0 ? ingredient.cost : ingredient.price;
-          totalCost += unitCost * quantity;
+      if (isSubRecipe) {
+        // Si es una sub-receta, usar su costo por lote
+        const recipeId = control.get('ingredient_recipe_id')?.value;
+        if (recipeId) {
+          const recipe = this.availableRecipes.find(r => r.id === recipeId);
+          if (recipe) {
+            const batchSize = recipe.batch_size || 1;
+            const costPerUnit = recipe.cost_per_batch / batchSize;
+            totalCost += costPerUnit * quantity;
+          }
+        }
+      } else {
+        // Si es un ingrediente, usar su costo unitario
+        const ingredientId = control.get('ingredient_product_id')?.value;
+        if (ingredientId) {
+          const ingredient = this.ingredients.find(i => i.id === ingredientId);
+          if (ingredient) {
+            // Usar costo del ingrediente si está disponible, sino precio
+            const unitCost = ingredient.cost > 0 ? ingredient.cost : ingredient.price;
+            totalCost += unitCost * quantity;
+          }
         }
       }
     });
     
-    // Actualizar el costo estimado (el backend calculará el costo real)
+    // Actualizar el costo estimado (el backend calculará el costo real en cascada)
     return totalCost;
   }
 
@@ -286,7 +469,9 @@ export class RecipeDialogComponent implements OnInit, OnDestroy {
         unit_of_measure: formValue.unit_of_measure,
         preparation_time: formValue.preparation_time,
         ingredients: formValue.ingredients.map((ing: any) => ({
-          ingredient_product_id: ing.ingredient_product_id,
+          ingredient_product_id: ing.is_sub_recipe ? undefined : ing.ingredient_product_id,
+          ingredient_recipe_id: ing.is_sub_recipe ? ing.ingredient_recipe_id : undefined,
+          is_sub_recipe: ing.is_sub_recipe || false,
           quantity: ing.quantity,
           unit_of_measure: ing.unit_of_measure,
           notes: ing.notes || undefined
