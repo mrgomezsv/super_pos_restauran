@@ -1,0 +1,182 @@
+<div class="production-dialog-container">
+  <div class="dialog-header">
+    <h2 class="dialog-title">
+      <mat-icon>play_arrow</mat-icon>
+      Crear Orden de Producción
+    </h2>
+    <button mat-icon-button class="close-btn" (click)="onCancel()" [disabled]="isSaving">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-content" *ngIf="!isLoading">
+    <div class="recipe-info" *ngIf="recipe">
+      <div class="info-card">
+        <mat-icon>restaurant</mat-icon>
+        <div>
+          <h3>{{ recipe.name }}</h3>
+          <p>Código: {{ recipe.code }} | Tamaño de lote: {{ recipe.batch_size }} {{ recipe.unit_of_measure }}</p>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="productionForm" class="production-form">
+      <!-- Configuración de Producción -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <mat-icon>settings</mat-icon>
+          Configuración de Producción
+        </h3>
+        
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Cantidad a Producir *</mat-label>
+            <input 
+              matInput 
+              type="number" 
+              formControlName="quantity_to_produce" 
+              min="0.01" 
+              step="0.01"
+              required>
+            <mat-icon matPrefix>scale</mat-icon>
+            <mat-error *ngIf="productionForm.get('quantity_to_produce')?.hasError('required')">
+              La cantidad es requerida
+            </mat-error>
+            <mat-error *ngIf="productionForm.get('quantity_to_produce')?.hasError('min')">
+              Debe ser mayor a 0
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Unidad de Medida *</mat-label>
+            <input matInput formControlName="unit_of_measure" required>
+            <mat-icon matPrefix>straighten</mat-icon>
+            <mat-error *ngIf="productionForm.get('unit_of_measure')?.hasError('required')">
+              La unidad de medida es requerida
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha de Inicio Planificada</mat-label>
+            <input matInput type="date" formControlName="planned_start_date">
+            <mat-icon matPrefix>event</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fecha de Fin Planificada</mat-label>
+            <input matInput type="date" formControlName="planned_end_date">
+            <mat-icon matPrefix>event_available</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notas (opcional)</mat-label>
+            <textarea matInput formControlName="notes" rows="3" placeholder="Notas adicionales sobre esta orden de producción"></textarea>
+            <mat-icon matPrefix>notes</mat-icon>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Disponibilidad de Ingredientes -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <mat-icon>inventory</mat-icon>
+            Disponibilidad de Ingredientes
+          </h3>
+          <div class="estimated-cost" *ngIf="ingredientAvailability.length > 0">
+            <span class="cost-label">Costo Estimado:</span>
+            <span class="cost-value">{{ formatCurrency(getTotalEstimatedCost()) }}</span>
+          </div>
+        </div>
+
+        <div class="stock-warning" *ngIf="hasInsufficientStock">
+          <mat-icon>warning</mat-icon>
+          <div>
+            <strong>Stock Insuficiente</strong>
+            <p>No hay suficiente stock de algunos ingredientes. Revisa la disponibilidad antes de crear la orden.</p>
+          </div>
+        </div>
+
+        <div class="ingredients-list" *ngIf="ingredientAvailability.length > 0">
+          <div 
+            *ngFor="let ingredient of ingredientAvailability" 
+            class="ingredient-item"
+            [ngClass]="getIngredientStatusClass(ingredient)">
+            
+            <div class="ingredient-header">
+              <div class="ingredient-info">
+                <mat-icon [ngClass]="getIngredientStatusClass(ingredient)">
+                  {{ getIngredientStatusIcon(ingredient) }}
+                </mat-icon>
+                <div>
+                  <span class="ingredient-name">{{ ingredient.ingredientName }}</span>
+                  <span class="ingredient-status" [ngClass]="getIngredientStatusClass(ingredient)">
+                    {{ getIngredientStatusText(ingredient) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ingredient-details">
+              <div class="detail-item">
+                <span class="detail-label">Requerido:</span>
+                <span class="detail-value">{{ ingredient.required.toFixed(2) }} {{ ingredient.unitOfMeasure }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Disponible:</span>
+                <span class="detail-value" [ngClass]="getIngredientStatusClass(ingredient)">
+                  {{ ingredient.available.toFixed(2) }} {{ ingredient.unitOfMeasure }}
+                </span>
+              </div>
+              <div class="detail-item" *ngIf="!ingredient.isAvailable">
+                <span class="detail-label">Falta:</span>
+                <span class="detail-value unavailable">{{ ingredient.shortfall.toFixed(2) }} {{ ingredient.unitOfMeasure }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Costo Unitario:</span>
+                <span class="detail-value">{{ formatCurrency(ingredient.unitCost) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Costo Total:</span>
+                <span class="detail-value">{{ formatCurrency(ingredient.required * ingredient.unitCost) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-ingredients" *ngIf="ingredientAvailability.length === 0 && !isLoading">
+          <mat-icon>info</mat-icon>
+          <p>No hay ingredientes configurados en esta receta.</p>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando disponibilidad de ingredientes...</p>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div class="dialog-actions" *ngIf="!isLoading">
+    <button 
+      mat-button 
+      type="button"
+      (click)="onCancel()" 
+      [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      type="button"
+      (click)="onSave()" 
+      [disabled]="isSaving || productionForm.invalid || hasInsufficientStock">
+      <mat-icon *ngIf="!isSaving">add</mat-icon>
+      <mat-spinner *ngIf="isSaving" diameter="20" class="inline-spinner"></mat-spinner>
+      <span>{{ isSaving ? 'Creando...' : 'Crear Orden' }}</span>
+    </button>
+  </div>
+</div>
+
