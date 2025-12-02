@@ -358,12 +358,12 @@ export class ProveedoresComponent implements OnInit, OnDestroy {
           return of(null);
         })
       ).subscribe({
-        next: () => {
+      next: () => {
           this.toastr.success('Proveedor agregado exitosamente');
-          this.closeDialog();
-          this.load();
-        }
-      });
+        this.closeDialog();
+        this.load();
+      }
+    });
     }
   }
 
