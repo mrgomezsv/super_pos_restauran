@@ -124,6 +124,9 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let recipe">
+              <button mat-icon-button [matTooltip]="'Crear orden de producción'" (click)="createProductionOrder(recipe)" color="primary">
+                <mat-icon>play_arrow</mat-icon>
+              </button>
               <button mat-icon-button [matTooltip]="'Ver detalles'" (click)="viewRecipeDetails(recipe)">
                 <mat-icon>visibility</mat-icon>
               </button>

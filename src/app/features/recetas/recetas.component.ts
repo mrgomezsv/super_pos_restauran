@@ -20,6 +20,7 @@ import { ProductService } from '../../core/services/product.service';
 import { Recipe, RecipeCreate } from '../../core/models/recipe.model';
 import { Product } from '../../core/models/product.model';
 import { RecipeDialogComponent } from './recipe-dialog/recipe-dialog.component';
+import { CreateProductionDialogComponent } from '../produccion/create-production-dialog/create-production-dialog.component';
 
 @Component({
     selector: 'app-recetas',
@@ -163,6 +164,37 @@ export class RecetasComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  createProductionOrder(recipe: Recipe): void {
+    // Cargar receta completa con ingredientes
+    this.recipeService.getRecipe(recipe.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (fullRecipe) => {
+          // Abrir diálogo para crear orden de producción
+          const dialogRef = this.dialog.open(CreateProductionDialogComponent, {
+            width: '800px',
+            maxWidth: '95vw',
+            maxHeight: '90vh',
+            disableClose: false,
+            hasBackdrop: true,
+            data: { 
+              recipe: fullRecipe
+            }
+          });
+
+          dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+              this.toastr.info('Puedes ver la orden de producción en el módulo de Producción');
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error loading recipe:', error);
+          this.toastr.error('Error al cargar la receta');
+        }
+      });
   }
 
   viewRecipeDetails(recipe: Recipe): void {
