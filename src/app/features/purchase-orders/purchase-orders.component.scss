@@ -451,7 +451,7 @@
     border-radius: 20px;
     cursor: pointer;
     transition: all var(--transition-normal);
-    font-size: 14px;
+      font-size: 14px;
     font-weight: 500;
     min-width: 120px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -505,10 +505,10 @@
     }
 
     &.status-approved {
-      background: linear-gradient(135deg, #017E84, #20C997);
-      color: white;
-    }
-
+        background: linear-gradient(135deg, #017E84, #20C997);
+        color: white;
+      }
+      
     &.status-received {
       background: #059669;
       color: white;
