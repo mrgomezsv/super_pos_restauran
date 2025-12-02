@@ -1,5 +1,5 @@
 .products-container {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-lg);
   max-width: 100%;
   margin: 0;
   background: var(--background);
@@ -13,7 +13,7 @@
 
 // Header Styles
 .products-header {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   flex-shrink: 0;
   
   .header-content {
@@ -32,6 +32,9 @@
         margin: 0 0 var(--spacing-sm) 0;
         line-height: var(--leading-tight);
         font-family: 'Poppins', sans-serif;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       
       .page-subtitle {
@@ -39,6 +42,9 @@
         color: var(--text-gray);
         margin: 0;
         line-height: var(--leading-relaxed);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     
@@ -57,7 +63,7 @@
       padding: var(--spacing-md) var(--spacing-lg);
       
       mat-icon {
-        font-size: 20px;
+        display: none; // Ocultar iconos
       }
     }
     
@@ -95,11 +101,11 @@
 
 // Filters Section
 .filters-section {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   flex-shrink: 0;
   
   .filters-header {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
     
     .filters-title {
       display: flex;
@@ -456,9 +462,9 @@
     min-height: 0;
     position: relative;
     // Altura fija para mostrar exactamente 6 filas de ingredientes
-    // Altura del header (~56px) + 6 filas (~56px cada una = 336px) = 392px
-    height: 392px;
-    max-height: 392px;
+    // Altura del header (44px) + 6 filas (36px cada una = 216px) = 260px
+    height: 260px;
+    max-height: 260px;
     // Forzar siempre mostrar scrollbar vertical
     scrollbar-width: thin;
     scrollbar-color: var(--border) var(--btn-bg);
@@ -489,20 +495,21 @@
       .mat-mdc-header-cell,
       .mat-mdc-cell {
         font-size: 16px;
-        padding: 16px;
-        min-height: 56px;
+        padding: 6px 16px;
+        min-height: 36px;
         box-sizing: border-box;
+        line-height: 1.4;
       }
       
-      // Asegurar altura consistente de filas
+      // Asegurar altura consistente de filas - reducida para menos espacio
       .mat-mdc-row {
-        height: 56px;
-        min-height: 56px;
+        height: 36px;
+        min-height: 36px;
       }
       
       .mat-mdc-header-row {
-        height: 56px;
-        min-height: 56px;
+        height: 44px;
+        min-height: 44px;
       }
       
       // Hacer que los encabezados sean sticky (fijos al hacer scroll)
@@ -563,10 +570,10 @@
       mat-chip,
       .mat-mdc-chip-set,
       .mat-chip-list {
-        font-size: 14px;
-        font-weight: 500;
-        padding: 8px 12px;
-        border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 20px;
         border: none !important;
         border-width: 0 !important;
         outline: none !important;
@@ -614,8 +621,8 @@
           border-width: 0 !important;
           outline: none !important;
           box-shadow: none !important;
-        }
-        
+      }
+      
         &.mat-mdc-chip.mat-warn,
         &[color="warn"] {
           background: #dc2626 !important;
@@ -845,7 +852,7 @@
     background: var(--btn-bg) !important;
     border-radius: var(--border-radius-full);
     border: 1px solid var(--border);
-  }
+}
 
   &::-webkit-scrollbar-thumb {
     background: var(--border) !important;
@@ -876,7 +883,7 @@
   
   &::-webkit-scrollbar-thumb:horizontal {
     background: var(--border) !important;
-    border-radius: var(--border-radius-full);
+  border-radius: var(--border-radius-full);
     border: 2px solid var(--btn-bg);
     min-width: 50px;
     
