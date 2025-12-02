@@ -1,0 +1,182 @@
+<div class="complement-dialog-container">
+  <div class="dialog-header">
+    <h2 class="dialog-title">
+      <mat-icon>add_circle</mat-icon>
+      Complementos de {{ product.name }}
+    </h2>
+    <button mat-icon-button class="close-btn" (click)="onCancel()" [disabled]="isSaving">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-content" *ngIf="!isLoading">
+    <div class="product-info">
+      <div class="info-card">
+        <mat-icon>inventory_2</mat-icon>
+        <div>
+          <h3>{{ product.name }}</h3>
+          <p>Código: {{ product.code }} | Precio: {{ formatCurrency(product.price) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="complementForm" class="complement-form">
+      <div class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <mat-icon>add_shopping_cart</mat-icon>
+            Complementos Disponibles
+          </h3>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="button"
+            (click)="addComplement()"
+            [disabled]="availableProducts.length === 0">
+            <mat-icon>add</mat-icon>
+            Agregar Complemento
+          </button>
+        </div>
+
+        <p class="section-description">
+          Los complementos son productos adicionales que se pueden agregar a este producto en el punto de venta.
+          Ejemplo: Papas fritas, bebidas, etc.
+        </p>
+
+        <!-- Lista de Complementos -->
+        <div class="complements-list" *ngIf="complementsFormArray.length > 0">
+          <div 
+            *ngFor="let complementGroup of complementsFormArray.controls; let i = index" 
+            class="complement-item"
+            [formGroup]="$any(complementGroup)">
+            
+            <div class="complement-header">
+              <div class="complement-info">
+                <mat-icon>add_circle</mat-icon>
+                <span class="complement-number">Complemento {{ i + 1 }}</span>
+              </div>
+              <button 
+                mat-icon-button 
+                type="button"
+                color="warn" 
+                (click)="removeComplement(i)"
+                [matTooltip]="'Eliminar complemento'">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <div class="complement-fields">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Producto Complemento *</mat-label>
+                <mat-select formControlName="complement_product_id" required>
+                  <mat-option *ngFor="let product of availableProducts" [value]="product.id">
+                    {{ product.code }} - {{ product.name }} ({{ formatCurrency(product.price) }})
+                  </mat-option>
+                </mat-select>
+                <mat-icon matPrefix>inventory_2</mat-icon>
+                <mat-error *ngIf="complementGroup.get('complement_product_id')?.hasError('required')">
+                  Seleccione un producto
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nombre del Complemento *</mat-label>
+                <input 
+                  matInput 
+                  formControlName="name" 
+                  placeholder="Ej: Papas Fritas, Bebida, etc."
+                  required>
+                <mat-icon matPrefix>label</mat-icon>
+                <mat-error *ngIf="complementGroup.get('name')?.hasError('required')">
+                  El nombre es requerido
+                </mat-error>
+                <mat-error *ngIf="complementGroup.get('name')?.hasError('minlength')">
+                  Mínimo 2 caracteres
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Precio Adicional *</mat-label>
+                <input 
+                  matInput 
+                  type="number" 
+                  formControlName="price" 
+                  min="0" 
+                  step="0.01"
+                  required>
+                <span matTextPrefix>$&nbsp;</span>
+                <mat-icon matPrefix>attach_money</mat-icon>
+                <mat-error *ngIf="complementGroup.get('price')?.hasError('required')">
+                  El precio es requerido
+                </mat-error>
+                <mat-error *ngIf="complementGroup.get('price')?.hasError('min')">
+                  Debe ser mayor o igual a 0
+                </mat-error>
+                <mat-hint>Precio adicional que se suma al producto principal (puede ser 0)</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Orden de Visualización *</mat-label>
+                <input 
+                  matInput 
+                  type="number" 
+                  formControlName="display_order" 
+                  min="0"
+                  required>
+                <mat-icon matPrefix>sort</mat-icon>
+                <mat-error *ngIf="complementGroup.get('display_order')?.hasError('required')">
+                  El orden es requerido
+                </mat-error>
+              </mat-form-field>
+
+              <div class="checkbox-container">
+                <mat-checkbox formControlName="is_required">
+                  <span class="checkbox-label">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Complemento Requerido</span>
+                  </span>
+                </mat-checkbox>
+                <p class="checkbox-hint">
+                  Si está marcado, el complemento será obligatorio al vender este producto
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-complements" *ngIf="complementsFormArray.length === 0">
+          <mat-icon>info</mat-icon>
+          <p>No hay complementos configurados. Haz clic en "Agregar Complemento" para comenzar.</p>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- Dialog Actions -->
+  <div class="dialog-actions" *ngIf="!isLoading">
+    <button 
+      mat-button 
+      type="button"
+      (click)="onCancel()" 
+      [disabled]="isSaving">
+      Cancelar
+    </button>
+    <button 
+      mat-raised-button 
+      color="primary" 
+      type="button"
+      (click)="onSave()" 
+      [disabled]="isSaving || complementForm.invalid">
+      <mat-icon *ngIf="!isSaving">save</mat-icon>
+      <mat-spinner *ngIf="isSaving" diameter="20" class="inline-spinner"></mat-spinner>
+      <span>{{ isSaving ? 'Guardando...' : 'Guardar Complementos' }}</span>
+    </button>
+  </div>
+</div>
+

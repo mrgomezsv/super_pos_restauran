@@ -171,6 +171,14 @@
               <button mat-icon-button (click)="deleteProduct(product)" matTooltip="Eliminar">
                 <mat-icon>delete</mat-icon>
               </button>
+              <button 
+                *ngIf="product.productType === 'final'" 
+                mat-icon-button 
+                color="accent"
+                (click)="openComplementDialog(product)" 
+                matTooltip="Gestionar Complementos">
+                <mat-icon>add_circle</mat-icon>
+              </button>
             </td>
           </ng-container>
 

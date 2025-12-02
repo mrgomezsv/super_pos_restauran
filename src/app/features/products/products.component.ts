@@ -20,6 +20,7 @@ import { switchMap, catchError } from 'rxjs/operators';
 import { ProductService } from '../../core/services/product.service';
 import { Product } from '../../core/models/product.model';
 import { ProductDialogComponent } from './product-dialog/product-dialog.component';
+import { ComplementDialogComponent } from './complement-dialog/complement-dialog.component';
 
 @Component({
     selector: 'app-products',
@@ -207,6 +208,23 @@ export class ProductsComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  openComplementDialog(product: Product): void {
+    const dialogRef = this.dialog.open(ComplementDialogComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      hasBackdrop: true,
+      data: { product }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.toastr.success('Complementos actualizados exitosamente');
+      }
+    });
   }
 
   // Dropdown methods for Status
