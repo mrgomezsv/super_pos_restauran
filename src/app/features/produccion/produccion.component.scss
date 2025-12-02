@@ -93,9 +93,9 @@
     
     .filters-form {
       .form-row {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: var(--spacing-lg);
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--spacing-lg);
         margin-bottom: var(--spacing-xl);
         
         .form-group {
@@ -112,8 +112,8 @@
               font-size: 18px;
               color: var(--primary);
             }
-          }
-          
+    }
+    
           .input-container {
             position: relative;
             
@@ -295,8 +295,8 @@
       }
       
       .filters-actions {
-        display: flex;
-        gap: var(--spacing-md);
+      display: flex;
+      gap: var(--spacing-md);
         justify-content: flex-end;
         
         .filter-btn {
